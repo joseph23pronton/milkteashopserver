@@ -1,0 +1,790 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Sep 25, 2025 at 05:53 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `milkteashop2`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `branches`
+--
+
+CREATE TABLE `branches` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `city` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `branches`
+--
+
+INSERT INTO `branches` (`id`, `name`, `city`) VALUES
+(245, 'Llano', 'Caloocan'),
+(892, 'Antipolo Branch', 'Antipolo City'),
+(964, 'Almar', 'Caloocan'),
+(8954, 'Congressional', 'Caloocan');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ingredients`
+--
+
+CREATE TABLE `ingredients` (
+  `id` int(11) NOT NULL,
+  `ingredientsID` int(11) DEFAULT NULL,
+  `ingredientsName` varchar(255) DEFAULT NULL,
+  `branchesID` int(11) DEFAULT NULL,
+  `currentStock` int(11) DEFAULT NULL,
+  `lastRestock` date DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ingredients`
+--
+
+INSERT INTO `ingredients` (`id`, `ingredientsID`, `ingredientsName`, `branchesID`, `currentStock`, `lastRestock`, `updated_at`) VALUES
+(1095, 13, NULL, 245, 990, '2024-12-21', '2024-12-20 16:00:00'),
+(1130, 8, NULL, 964, 980, '2024-12-21', '2024-12-20 16:00:00'),
+(1303, 20, NULL, 964, 490, '2024-12-21', '2024-12-20 16:00:00'),
+(1337, 9, NULL, 245, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(1515, 3, NULL, 964, 1090, '2024-12-21', '2024-12-20 16:00:00'),
+(1689, 14, NULL, 964, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(2013, 11, NULL, 964, 2020, '2024-12-21', '2024-12-20 18:33:11'),
+(2030, 18, NULL, 245, 500, '2024-12-21', '2024-12-20 16:00:00'),
+(2107, 16, NULL, 245, 800, '2024-12-21', '2024-12-20 16:00:00'),
+(2156, 21, NULL, 964, 53, '2024-12-21', '2024-12-20 16:00:00'),
+(2225, 23, NULL, 964, 63, '2024-12-21', '2024-12-20 16:00:00'),
+(2256, 15, NULL, 245, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(2289, 10, NULL, 245, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(2568, 7, NULL, 964, 950, '2024-12-21', '2024-12-20 16:00:00'),
+(2599, 24, NULL, 245, 480, '2024-12-21', '2024-12-20 16:00:00'),
+(2777, 22, NULL, 964, 50, '2024-12-21', '2024-12-20 16:00:00'),
+(2936, 9, NULL, 964, 1200, '2024-12-21', '2024-12-20 16:00:00'),
+(2989, 25, NULL, 245, 200, '2024-12-21', '2024-12-20 16:00:00'),
+(3381, 12, NULL, 245, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(4108, 17, NULL, 964, 500, '2024-12-21', '2024-12-20 16:00:00'),
+(4216, 4, NULL, 964, 655, '2024-12-21', '2024-12-20 16:00:00'),
+(4594, 21, NULL, 245, 480, '2024-12-21', '2024-12-20 16:00:00'),
+(4938, 7, NULL, 245, 800, '2024-12-21', '2024-12-20 16:00:00'),
+(5032, 17, NULL, 245, 500, '2024-12-21', '2024-12-20 16:00:00'),
+(5173, 15, NULL, 964, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(5177, 12, NULL, 964, 550, '2024-12-21', '2024-12-20 16:00:00'),
+(5411, 24, NULL, 964, 63, '2024-12-21', '2024-12-20 16:00:00'),
+(5743, 19, NULL, 245, 500, '2024-12-21', '2024-12-20 19:27:09'),
+(5944, 23, NULL, 245, 480, '2024-12-21', '2024-12-20 16:00:00'),
+(6143, 10, NULL, 964, 1050, '2024-12-21', '2024-12-20 16:00:00'),
+(6291, 13, NULL, 964, 1050, '2024-12-21', '2024-12-20 16:00:00'),
+(6422, 8, NULL, 245, 980, '2024-12-21', '2024-12-20 16:00:00'),
+(6843, 14, NULL, 245, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(6952, 16, NULL, 964, 20, '2024-12-21', '2024-12-20 16:00:00'),
+(7037, 22, NULL, 245, 500, '2024-12-21', '2024-12-20 16:00:00'),
+(7249, 20, NULL, 245, 600, '2024-12-21', '2024-12-20 16:00:00'),
+(7430, 6, NULL, 245, 970, '2024-12-21', '2024-12-20 16:00:00'),
+(7450, 18, NULL, 964, 50, '2024-12-20', '2024-12-20 13:17:13'),
+(8104, 19, NULL, 964, 550, '2024-12-21', '2024-12-20 16:00:00'),
+(8156, 2, NULL, 245, 1100, '2024-12-21', '2024-12-20 16:00:00'),
+(8262, 5, NULL, 964, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(8320, 11, NULL, 245, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(8543, 5, NULL, 245, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(8572, 6, NULL, 964, 1000, '2024-12-21', '2024-12-20 16:00:00'),
+(8972, 2, NULL, 964, 950, '2024-12-21', '2024-12-20 16:00:00'),
+(9503, 3, NULL, 245, 600, '2024-12-21', '2024-12-20 16:00:00'),
+(9855, 25, NULL, 964, 15, '2024-12-21', '2024-12-20 16:00:00'),
+(9951, 4, NULL, 245, 100, '2024-12-21', '2024-12-20 20:09:03');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ingredientsheader`
+--
+
+CREATE TABLE `ingredientsheader` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `ingredients_limit` int(11) NOT NULL DEFAULT 300,
+  `unit` varchar(5) NOT NULL DEFAULT 'g'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ingredientsheader`
+--
+
+INSERT INTO `ingredientsheader` (`id`, `name`, `ingredients_limit`, `unit`) VALUES
+(2, 'Malaysian Non-Dairy Creamer', 300, 'g'),
+(3, 'Fructose Corn Syrup', 300, 'g'),
+(4, 'Loose Tea', 300, 'g'),
+(5, 'Wintermelon Flavor', 300, 'g'),
+(6, 'Okinawa Flavor', 300, 'g'),
+(7, 'Hokkaido Flavor', 300, 'g'),
+(8, 'Matcha Flavor', 300, 'g'),
+(9, 'Caramel Sugar Flavor', 300, 'g'),
+(10, 'Hazelnut Flavor', 300, 'g'),
+(11, 'Chocolate Flavor', 300, 'g'),
+(12, 'Dark Chocolate Flavor', 300, 'g'),
+(13, 'Cookies & Cream Flavor', 300, 'g'),
+(14, 'Red Velvet Flavor', 300, 'g'),
+(15, 'Mango Cheesecake Flavor', 300, 'g'),
+(16, 'Tapioca Pearls', 300, 'g'),
+(17, 'Nata', 300, 'g'),
+(18, 'Popping Boba', 300, 'g'),
+(19, 'Crushed Cookies', 300, 'g'),
+(20, 'Ice', 300, 'g'),
+(21, 'Plastic Cups - M', 100, 'pcs'),
+(22, 'Plastic Cups - L', 100, 'pcs'),
+(23, 'Plastic Straw', 100, 'pcs'),
+(24, 'Plastic Lids', 100, 'pcs'),
+(25, 'Tissue', 100, 'pcs');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `products`
+--
+
+CREATE TABLE `products` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `size` enum('Medium','Large') NOT NULL DEFAULT 'Medium',
+  `price` decimal(10,0) DEFAULT NULL,
+  `initial_price` decimal(10,0) NOT NULL,
+  `is_active` tinyint(1) DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`id`, `name`, `size`, `price`, `initial_price`, `is_active`, `image`, `created_at`, `updated_at`) VALUES
+(25, 'Classic Milktea', 'Large', 80, 53, 1, '/uploads/product_images/product_675a8a109de268.18871704.png', NULL, NULL),
+(26, 'Classic Milktea', 'Medium', 70, 45, 1, '/uploads/product_images/product_675a8e82ab8bc6.91799638.png', NULL, NULL),
+(29, 'Wintermelon', 'Large', 80, 54, 1, '/uploads/product_images/product_675a5a089e0a03.08280236.png', NULL, NULL),
+(30, 'Wintermelon', 'Medium', 70, 46, 1, '/uploads/product_images/product_675a5a089e0a03.08280236.png', NULL, NULL),
+(31, 'Okinawa', 'Large', 80, 54, 1, '/uploads/product_images/product_675a8a69b5d476.46089103.png', NULL, NULL),
+(32, 'Okinawa', 'Medium', 70, 46, 1, '/uploads/product_images/product_675a8a970505d6.18791711.png', NULL, NULL),
+(33, 'Hokkaido', 'Large', 80, 55, 1, '/uploads/product_images/product_675a601ef29378.59103931.PNG', NULL, NULL),
+(34, 'Hokkaido', 'Medium', 70, 47, 1, '/uploads/product_images/product_675a8aaf557662.60160168.png', NULL, NULL),
+(35, 'Matcha', 'Large', 80, 55, 1, '/uploads/product_images/product_675a63fb8615c4.18567909.png', NULL, NULL),
+(36, 'Matcha', 'Medium', 70, 47, 1, '/uploads/product_images/product_675a63fb8615c4.18567909.png', NULL, NULL),
+(39, 'Hazelnut', 'Large', 80, 56, 1, '/uploads/product_images/product_675a6729e88d23.59938506.png', NULL, NULL),
+(40, 'Hazelnut', 'Medium', 70, 48, 1, '/uploads/product_images/product_675a6729e88d23.59938506.png', NULL, NULL),
+(42, 'Chocolate', 'Medium', 70, 46, 1, '/uploads/product_images/product_675a798f8da0a4.94163823.png', NULL, NULL),
+(43, 'Cookies and Cream', 'Large', 80, 54, 1, '/uploads/product_images/product_675a79d4edc045.26841628.', NULL, NULL),
+(44, 'Cookies and Cream', 'Medium', 70, 46, 1, '/uploads/product_images/product_675a79d4edc045.26841628.', NULL, NULL),
+(46, 'Chocolate', 'Large', 80, 55, 1, '/uploads/product_images/product_675a7a15081e75.24538850.png', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `products_ingredient`
+--
+
+CREATE TABLE `products_ingredient` (
+  `id` int(11) NOT NULL,
+  `productID` int(11) DEFAULT NULL,
+  `ingredientsID` int(11) DEFAULT NULL,
+  `quantityRequired` decimal(10,0) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `products_ingredient`
+--
+
+INSERT INTO `products_ingredient` (`id`, `productID`, `ingredientsID`, `quantityRequired`) VALUES
+(1, 11, 2, 499),
+(2, 12, 3, 500),
+(3, 12, 2, 250),
+(4, 14, 2, 344),
+(5, 15, 2, 299),
+(6, 15, 2, 312),
+(7, 17, 2, 567),
+(8, 17, 3, 345),
+(9, 20, 2, 123),
+(10, 20, 3, 562),
+(11, 22, 2, 123),
+(12, 22, 3, 423),
+(16, 23, 2, 231),
+(17, 24, 2, 123),
+(18, 24, 3, 534),
+(28, 28, 2, 40),
+(29, 28, 3, 40),
+(30, 28, 4, 100),
+(31, 28, 16, 50),
+(32, 28, 22, 1),
+(33, 28, 24, 1),
+(34, 28, 23, 1),
+(35, 28, 25, 5),
+(36, 28, 20, 30),
+(479, 47, 2, 30),
+(480, 47, 3, 40),
+(481, 47, 4, 100),
+(482, 47, 14, 10),
+(483, 47, 16, 50),
+(484, 47, 20, 40),
+(485, 47, 22, 1),
+(486, 47, 23, 1),
+(487, 47, 24, 1),
+(488, 47, 25, 5),
+(509, 48, 2, 20),
+(510, 48, 3, 30),
+(511, 48, 4, 85),
+(512, 48, 14, 10),
+(513, 48, 16, 40),
+(514, 48, 20, 30),
+(515, 48, 21, 1),
+(516, 48, 23, 1),
+(517, 48, 24, 1),
+(518, 48, 25, 5),
+(576, 38, 2, 20),
+(577, 38, 3, 30),
+(578, 38, 4, 85),
+(579, 38, 9, 10),
+(580, 38, 16, 40),
+(581, 38, 20, 30),
+(582, 38, 21, 1),
+(583, 38, 23, 1),
+(584, 38, 24, 1),
+(585, 38, 25, 1),
+(586, 37, 2, 30),
+(587, 37, 3, 40),
+(588, 37, 4, 100),
+(589, 37, 16, 50),
+(590, 37, 22, 1),
+(591, 37, 23, 1),
+(592, 37, 24, 1),
+(593, 37, 20, 40),
+(594, 37, 9, 10),
+(595, 37, 25, 5),
+(614, 50, 2, 1231231),
+(615, 56, 2, 1231231),
+(625, 25, 2, 40),
+(626, 25, 3, 40),
+(627, 25, 4, 40),
+(628, 25, 16, 50),
+(629, 25, 20, 40),
+(630, 25, 22, 1),
+(631, 25, 24, 1),
+(632, 25, 23, 1),
+(633, 25, 25, 5),
+(634, 26, 2, 30),
+(635, 26, 3, 30),
+(636, 26, 4, 85),
+(637, 26, 16, 40),
+(638, 26, 21, 1),
+(639, 26, 23, 1),
+(640, 26, 24, 1),
+(641, 26, 20, 30),
+(642, 26, 25, 5),
+(643, 29, 2, 30),
+(644, 29, 3, 40),
+(645, 29, 4, 100),
+(646, 29, 16, 50),
+(647, 29, 20, 40),
+(648, 29, 22, 1),
+(649, 29, 24, 1),
+(650, 29, 23, 1),
+(651, 29, 25, 5),
+(652, 30, 2, 20),
+(653, 30, 3, 30),
+(654, 30, 4, 85),
+(655, 30, 16, 40),
+(656, 30, 20, 30),
+(657, 30, 21, 1),
+(658, 30, 24, 1),
+(659, 30, 23, 1),
+(660, 30, 25, 5),
+(661, 31, 2, 30),
+(662, 31, 3, 40),
+(663, 31, 4, 100),
+(664, 31, 6, 10),
+(665, 31, 16, 50),
+(666, 31, 20, 40),
+(667, 31, 22, 1),
+(668, 31, 24, 1),
+(669, 31, 23, 1),
+(670, 31, 25, 5),
+(671, 32, 2, 20),
+(672, 32, 3, 30),
+(673, 32, 4, 85),
+(674, 32, 6, 10),
+(675, 32, 16, 40),
+(676, 32, 20, 30),
+(677, 32, 21, 1),
+(678, 32, 24, 1),
+(679, 32, 23, 1),
+(680, 32, 25, 5),
+(681, 33, 2, 30),
+(682, 33, 3, 40),
+(683, 33, 4, 100),
+(684, 33, 7, 10),
+(685, 33, 16, 40),
+(686, 33, 22, 1),
+(687, 33, 20, 30),
+(688, 33, 23, 1),
+(689, 33, 24, 1),
+(690, 33, 25, 5),
+(691, 34, 2, 20),
+(692, 34, 3, 30),
+(693, 34, 4, 85),
+(694, 34, 7, 10),
+(695, 34, 16, 40),
+(696, 34, 20, 30),
+(697, 34, 21, 1),
+(698, 34, 24, 1),
+(699, 34, 23, 1),
+(700, 34, 25, 5),
+(701, 35, 2, 30),
+(702, 35, 3, 40),
+(703, 35, 4, 100),
+(704, 35, 8, 10),
+(705, 35, 16, 50),
+(706, 35, 20, 40),
+(707, 35, 22, 1),
+(708, 35, 23, 1),
+(709, 35, 24, 1),
+(710, 35, 25, 5),
+(711, 36, 2, 20),
+(712, 36, 3, 30),
+(713, 36, 4, 85),
+(714, 36, 8, 10),
+(715, 36, 16, 40),
+(716, 36, 20, 30),
+(717, 36, 21, 1),
+(718, 36, 23, 1),
+(719, 36, 24, 1),
+(720, 36, 25, 5),
+(721, 39, 2, 30),
+(722, 39, 3, 40),
+(723, 39, 4, 100),
+(724, 39, 22, 1),
+(725, 39, 23, 1),
+(726, 39, 24, 1),
+(727, 39, 16, 50),
+(728, 39, 20, 40),
+(729, 39, 10, 10),
+(730, 39, 25, 5),
+(731, 40, 2, 20),
+(732, 40, 3, 30),
+(733, 40, 4, 85),
+(734, 40, 16, 40),
+(735, 40, 21, 1),
+(736, 40, 23, 1),
+(737, 40, 24, 1),
+(738, 40, 20, 30),
+(739, 40, 25, 5),
+(740, 40, 10, 10),
+(741, 42, 2, 20),
+(742, 42, 3, 30),
+(743, 42, 4, 85),
+(744, 42, 16, 40),
+(745, 42, 11, 10),
+(746, 42, 21, 1),
+(747, 42, 23, 1),
+(748, 42, 24, 1),
+(749, 42, 25, 5),
+(750, 42, 20, 30),
+(751, 43, 2, 30),
+(752, 43, 3, 40),
+(753, 43, 4, 100),
+(754, 43, 13, 10),
+(755, 43, 16, 50),
+(756, 43, 20, 40),
+(757, 43, 22, 1),
+(758, 43, 23, 1),
+(759, 43, 24, 1),
+(760, 43, 25, 5),
+(761, 44, 2, 20),
+(762, 44, 3, 30),
+(763, 44, 4, 85),
+(764, 44, 13, 10),
+(765, 44, 16, 40),
+(766, 44, 20, 30),
+(767, 44, 21, 1),
+(768, 44, 23, 1),
+(769, 44, 24, 1),
+(770, 44, 25, 5),
+(771, 46, 2, 30),
+(772, 46, 3, 40),
+(773, 46, 4, 100),
+(774, 46, 11, 10),
+(775, 46, 16, 50),
+(776, 46, 20, 40),
+(777, 46, 22, 1),
+(778, 46, 23, 1),
+(779, 46, 24, 1),
+(780, 46, 25, 5),
+(781, 58, 2, 123),
+(782, 58, 22, 1),
+(783, 60, 2, 30),
+(784, 60, 3, 30),
+(785, 59, 2, 40),
+(786, 59, 3, 40);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `restockorder`
+--
+
+CREATE TABLE `restockorder` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `ingredientsName` varchar(255) NOT NULL,
+  `branchID` int(11) NOT NULL,
+  `ingredientsID` int(11) NOT NULL,
+  `requested_by` varchar(255) NOT NULL,
+  `restock_amount` int(11) NOT NULL,
+  `is_accepted` tinyint(1) DEFAULT 0,
+  `is_confirmed` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `restockorder`
+--
+
+INSERT INTO `restockorder` (`id`, `name`, `ingredientsName`, `branchID`, `ingredientsID`, `requested_by`, `restock_amount`, `is_accepted`, `is_confirmed`) VALUES
+(1, 'encoder almar', 'Caramel Sugar Flavor', 964, 1120, 'encoder almar', 10, 1, 1),
+(2, 'encoder almar', 'Chocolate Flavor', 964, 11, 'encoder almar', 50, 1, 1),
+(3, 'encoder almar', 'Cookies & Cream Flavor', 964, 13, 'encoder almar', 50, 1, 1),
+(4, 'encoder almar', 'Crushed Cookies', 964, 19, 'encoder almar', 50, 1, 1),
+(5, 'encoder almar', 'Dark Chocolate Flavor', 964, 12, 'encoder almar', 50, 1, 1),
+(6, 'encoder almar', 'Fructose Corn Syrup', 964, 3, 'encoder almar', 50, 1, 1),
+(7, 'encoder almar', 'Hazelnut Flavor', 964, 10, 'encoder almar', 50, 1, 1),
+(8, 'encoder almar', 'Fructose Corn Syrup', 964, 3, 'encoder almar', 50, 1, 1),
+(9, 'encoder almar', 'Hokkaido Flavor', 964, 7, '17509', 50, 1, 1),
+(10, 'encoder almar', 'Loose Tea', 964, 4, '17509', 50, 1, 1),
+(11, 'encoder almar', 'Ice', 964, 20, '17509', 150, 1, 1),
+(12, 'encoder almar', 'Popping Boba', 964, 18, '17509', 50, 1, 1),
+(13, 'encoder almar', 'Caramel Sugar Flavor', 964, 9, '17509', 50, 1, 1),
+(14, 'Yheena Mangabat', 'Chocolate Flavor', 964, 11, '10895', 1000, 1, 1),
+(15, 'Aubrey Daraido', 'Crushed Cookies', 245, 19, '12664', 200, 1, 1),
+(16, 'Aubrey Daraido', 'Loose Tea', 245, 4, '12664', 500, 1, 1),
+(17, 'Aubrey Daraido', 'Loose Tea', 245, 4, '12664', 500, 1, 1),
+(18, 'Stock management', 'Tissue', 964, 25, '14939', 1000, 1, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sales`
+--
+
+CREATE TABLE `sales` (
+  `id` int(11) NOT NULL,
+  `branchID` int(11) DEFAULT NULL,
+  `receiptID` varchar(255) DEFAULT NULL,
+  `productName` varchar(255) DEFAULT NULL,
+  `price` int(11) DEFAULT NULL,
+  `initial_price` int(11) DEFAULT NULL,
+  `quantity` int(11) DEFAULT NULL,
+  `totalPrice` int(11) DEFAULT NULL,
+  `sales_date` timestamp NULL DEFAULT NULL,
+  `customerName` varchar(255) DEFAULT NULL,
+  `cashierID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sales`
+--
+
+INSERT INTO `sales` (`id`, `branchID`, `receiptID`, `productName`, `price`, `initial_price`, `quantity`, `totalPrice`, `sales_date`, `customerName`, `cashierID`) VALUES
+(46, 964, 'REC1734408571', 'Classic Milktea', 70, 0, 1, 70, '2024-12-16 20:09:31', 'Walk-in', 1055),
+(47, 964, 'REC1734408626', 'Classic Milktea', 70, 0, 1, 70, '2024-12-16 20:10:26', 'Walk-in', 1055),
+(48, 964, 'REC1734408677', 'Classic Milktea', 70, 0, 1, 70, '2024-12-16 20:11:17', 'Walk-in', 1055),
+(50, 964, 'REC1734408782', 'Classic Milktea', 70, 40, 6, 420, '2024-12-16 20:13:02', 'Walk-in', 1055),
+(51, 964, 'REC1734414627', 'Chocolate', 70, 70, 1, 70, '2024-12-16 21:50:27', 'Walk-in', 1055),
+(52, 964, 'REC1734414655', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-16 21:50:55', 'Walk-in', 1055),
+(53, 964, 'REC1734414673', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-16 21:51:13', 'Walk-in', 1055),
+(54, 964, 'REC1734414882', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-16 21:54:42', 'Walk-in', 1055),
+(55, 964, 'REC1734415001', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-16 21:56:41', 'Walk-in', 1055),
+(56, 964, 'REC1734415038', 'Chocolate', 70, 70, 1, 70, '2024-12-16 21:57:18', 'Walk-in', 1055),
+(57, 964, 'REC1734415054', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-16 21:57:34', 'Walk-in', 1055),
+(58, 964, 'REC1734415127', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-16 21:58:47', 'Walk-in', 1055),
+(59, 964, 'REC1734415171', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-16 21:59:31', 'Walk-in', 1055),
+(60, 964, 'REC1734417572', 'Chocolate', 70, 35, 1, 70, '2024-12-16 22:39:32', 'Walk-in', 1055),
+(61, 964, 'REC1734418347', 'Classic Milktea', 70, 70, 1, 70, '2024-12-16 22:52:27', 'Walk-in', 16519),
+(62, 964, 'REC1734418347', 'Cookies and Cream', 80, 80, 1, 80, '2024-12-16 22:52:27', 'Walk-in', 16519),
+(63, 964, 'REC1734418469', 'Okinawa', 70, 70, 1, 70, '2024-12-16 22:54:29', 'Walk-in', 1055),
+(64, 964, 'REC1734420933', 'Hazelnut', 70, 70, 1, 70, '2024-12-16 23:35:33', 'Walk-in', 1055),
+(65, 964, 'REC1734421017', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-16 23:36:57', 'Walk-in', 1055),
+(66, 964, 'REC1734421102', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-16 23:38:22', 'Walk-in', 1055),
+(67, 964, 'REC1734422348', 'Hokkaido', 70, 70, 1, 70, '2024-12-16 23:59:08', 'Walk-in', 1055),
+(68, 964, 'REC1734422423', 'Hokkaido', 70, 70, 1, 70, '2024-12-17 00:00:23', 'Walk-in', 1055),
+(69, 964, 'REC1734422533', 'Wintermelon', 70, 70, 1, 70, '2024-12-17 00:02:13', 'Walk-in', 1055),
+(70, 964, 'REC1734422655', 'Classic Milktea', 70, 70, 1, 70, '2024-12-17 00:04:15', 'Walk-in', 1055),
+(71, 964, 'REC1734424280', 'Hokkaido', 70, 70, 1, 70, '2024-12-17 00:31:20', 'Walk-in', 16519),
+(72, 964, 'REC1734424693', 'Okinawa', 70, 70, 1, 70, '2024-12-17 00:38:13', 'Walk-in', 16519),
+(73, 8954, 'REC1734424835', 'Wintermelon', 70, 70, 1, 70, '2024-12-17 00:40:35', 'Walk-in', 16519),
+(74, 964, 'REC1734424912', 'Wintermelon', 70, 70, 1, 70, '2024-12-17 00:41:52', 'Walk-in', 16519),
+(75, 964, 'REC1734425145', 'Classic Milktea', 70, 70, 1, 70, '2024-12-17 00:45:45', 'Walk-in', 16519),
+(76, 964, 'REC1734426550', 'Okinawa', 80, 80, 1, 80, '2024-12-17 01:09:10', 'Walk-in', 16519),
+(77, 964, 'REC1734426550', 'Okinawa', 80, 80, 1, 80, '2024-12-17 01:09:10', 'Walk-in', 16519),
+(78, 964, 'REC1734426564', 'Okinawa', 80, 80, 1, 80, '2024-12-17 01:09:24', 'Walk-in', 16519),
+(79, 964, 'REC1734426587', 'Hokkaido', 70, 70, 1, 70, '2024-12-17 01:09:47', 'Walk-in', 1055),
+(80, 964, 'REC1734426587', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-17 01:09:47', 'Walk-in', 1055),
+(81, 964, 'REC1734426686', 'Chocolate', 90, 90, 1, 90, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(82, 964, 'REC1734426686', 'Cookies and Cream', 90, 90, 1, 90, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(83, 964, 'REC1734426686', 'Hokkaido', 70, 70, 1, 70, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(84, 964, 'REC1734426686', 'Hokkaido', 90, 90, 1, 90, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(85, 964, 'REC1734426686', 'Okinawa', 90, 4, 1, 90, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(86, 964, 'REC1734426686', 'Wintermelon', 100, 5, 1, 100, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(87, 964, 'REC1734426686', 'Chocolate', 100, 6, 1, 100, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(88, 964, 'REC1734426686', 'Hazelnut', 100, 5, 1, 100, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(89, 964, 'REC1734426686', 'Hazelnut', 80, 4, 1, 80, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(90, 964, 'REC1734426686', 'Matcha', 100, 5, 1, 100, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(91, 964, 'REC1734426686', 'Hokkaido', 100, 6, 1, 100, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(92, 964, 'REC1734426686', 'Chocolate', 100, 100, 1, 100, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(93, 964, 'REC1734426686', 'Classic Milktea', 100, 6, 1, 100, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(94, 964, 'REC1734426686', 'Classic Milktea', 80, 8, 1, 80, '2024-12-17 01:11:26', 'Walk-in', 16519),
+(95, 964, 'REC1734427469', 'Hokkaido', 90, 10, 1, 90, '2024-12-17 01:24:29', 'Walk-in', 16519),
+(96, 964, 'REC1734427491', 'Okinawa', 90, 13, 1, 90, '2024-12-17 01:24:51', 'Walk-in', 16519),
+(97, 964, 'REC1734427531', 'Cookies and Cream', 100, 14, 1, 100, '2024-12-17 01:25:31', 'Walk-in', 16519),
+(98, 964, 'REC1734427538', 'Cookies and Cream', 100, 14, 1, 100, '2024-12-17 01:25:38', 'Walk-in', 16519),
+(99, 964, 'REC1734427571', 'Cookies and Cream', 100, 14, 1, 100, '2024-12-17 01:26:11', 'Walk-in', 16519),
+(100, 964, 'REC1734427851', 'Cookies and Cream', 70, 70, 1, 70, '2024-12-17 01:30:51', 'Walk-in', 1055),
+(101, 964, 'REC1734427851', 'Cookies and Cream', 80, 10, 1, 80, '2024-12-17 01:30:51', 'Walk-in', 1055),
+(102, 964, 'REC1734427901', 'Cookies and Cream', 80, 13, 1, 80, '2024-12-17 01:31:41', 'Walk-in', 1055),
+(103, 964, 'REC1734428011', 'Chocolate', 80, 11, 1, 80, '2024-12-17 01:33:31', 'Walk-in', 1055),
+(104, 964, 'REC1734428038', 'Hokkaido', 70, 18, 1, 70, '2024-12-17 01:33:58', 'Walk-in', 1055),
+(105, 964, 'REC1734428103', 'Hokkaido', 70, 18, 4, 280, '2024-12-17 01:35:03', 'Walk-in', 1055),
+(106, 964, 'REC1734431759', 'Matcha', 80, 80, 1, 80, '2024-12-17 02:35:59', 'Walk-in', 16519),
+(107, 964, 'REC1734613231', 'Okinawa', 70, 70, 1, 70, '2024-12-19 05:00:31', 'Walk-in', 1055),
+(108, 964, 'REC1734613326', 'Hokkaido', 70, 70, 1, 70, '2024-12-19 05:02:06', 'Walk-in', 1055),
+(109, 964, 'REC1734613373', 'Hokkaido', 70, 70, 1, 70, '2024-12-19 05:02:53', 'Walk-in', 1055),
+(110, 964, 'REC1734620058', 'Hokkaido', 70, 70, 1, 70, '2024-12-19 06:54:18', 'Walk-in', 1055),
+(111, 964, 'REC1734620121', 'Hokkaido', 70, 23, 3, 210, '2024-12-19 06:55:21', 'Walk-in', 1055),
+(112, 964, 'REC1734620150', 'Hokkaido', 70, 18, 4, 280, '2024-12-19 06:55:50', 'Walk-in', 1055),
+(113, 964, 'REC1734620150', 'Cookies and Cream', 70, 12, 6, 420, '2024-12-19 06:55:50', 'Walk-in', 1055),
+(114, 964, 'REC1734622067', 'Hokkaido', 70, 70, 1, 70, '2024-12-19 07:27:47', 'Walk-in', 1055),
+(115, 964, 'REC1734622112', 'Chocolate', 70, 70, 1, 70, '2024-12-19 07:28:32', 'Walk-in', 1055),
+(116, 964, 'REC1734622112', 'Wintermelon', 70, 18, 4, 280, '2024-12-19 07:28:32', 'Walk-in', 1055),
+(117, 964, 'REC1734622144', 'Wintermelon', 70, 70, 1, 70, '2024-12-19 07:29:04', 'Walk-in', 1055),
+(121, 964, 'REC1734623351', 'Wintermelon', 70, 70, 1, 70, '2024-12-19 07:49:11', 'Walk-in', 1055),
+(122, 964, 'REC1734714739', 'Wintermelon', 70, 70, 1, 70, '2024-12-20 09:12:19', 'Walk-in', 1055),
+(123, 964, 'REC1734714776', 'Wintermelon', 70, 70, 1, 70, '2024-12-20 09:12:56', 'Walk-in', 1055),
+(124, 964, 'REC1734714831', 'Wintermelon', 80, 80, 1, 80, '2024-12-20 09:13:51', 'Walk-in', 1055),
+(128, 964, 'REC20241005', 'Wintermelon', 70, 70, 2, 140, '2024-10-05 02:30:00', 'Walk-In', 1055),
+(129, 964, 'REC20241012', 'Wintermelon', 70, 70, 2, 140, '2024-10-12 06:00:00', 'Walk-In', 1055),
+(130, 964, 'REC20241020', 'Wintermelon', 70, 70, 2, 140, '2024-10-20 03:15:00', 'Walk-In', 1055),
+(131, 964, 'REC20241103', 'Wintermelon', 70, 70, 2, 140, '2024-11-03 04:45:00', 'Walk-In', 1055),
+(132, 964, 'REC20241115', 'Wintermelon', 70, 70, 2, 140, '2024-11-15 08:10:00', 'Walk-In', 1055),
+(133, 964, 'REC20241125', 'Wintermelon', 70, 70, 2, 140, '2024-11-25 01:30:00', 'Walk-In', 1055),
+(134, 964, 'REC20241201', 'Wintermelon', 70, 70, 2, 140, '2024-12-01 00:00:00', 'Walk-In', 1055),
+(135, 964, 'REC20241210', 'Wintermelon', 70, 70, 2, 140, '2024-12-10 06:20:00', 'Walk-In', 1055),
+(136, 964, 'REC20241222', 'Wintermelon', 70, 70, 2, 140, '2024-12-22 09:50:00', 'Walk-In', 1055),
+(149, 964, 'REC1734745179', 'Chocolate', 70, 70, 1, 70, '2024-12-20 17:39:39', 'Walk-in', 1055),
+(153, 964, 'REC1734747556', 'Chocolate', 70, 70, 1, 70, '2024-12-20 18:19:16', 'Walk-in', 10895),
+(154, 964, 'REC1734748345', 'Chocolate', 70, 70, 1, 70, '2024-12-20 18:32:25', 'Walk-in', 16519),
+(156, 245, 'REC1734750145', 'Wintermelon', 90, 90, 1, 90, '2024-12-20 19:02:25', 'Walk-in', 13395),
+(157, 245, 'REC1734751419', 'Wintermelon', 70, 35, 2, 140, '2024-12-20 19:23:39', 'Walk-in', 13395),
+(158, 245, 'REC1734751419', 'Hokkaido', 90, 30, 3, 270, '2024-12-20 19:23:39', 'Walk-in', 13395),
+(159, 245, 'REC1734751467', 'Hokkaido', 70, 70, 1, 70, '2024-12-20 19:24:27', 'Walk-in', 13395),
+(160, 245, 'REC1734751827', 'Hokkaido', 90, 18, 5, 450, '2024-12-20 19:30:27', 'Walk-in', 13395),
+(161, 245, 'REC1734754813', 'Cookies and Cream', 100, 100, 1, 100, '2024-12-20 20:20:13', 'Walk-in', 13395),
+(162, 245, 'REC1734754813', 'Matcha', 70, 35, 2, 140, '2024-12-20 20:20:13', 'Walk-in', 13395),
+(163, 245, 'REC1734754813', 'Hokkaido', 70, 70, 1, 70, '2024-12-20 20:20:13', 'Walk-in', 13395),
+(165, 964, 'REC1758732503', 'Classic Milktea', 70, 70, 1, 70, '2025-09-24 10:48:23', 'Walk-in', 15633),
+(166, 964, 'INV20250925173629', 'Wintermelon', 70, 70, 1, 70, '2025-09-25 09:36:29', 'Walk-in', 15633),
+(167, 964, 'INV20250925173653', 'Matcha', 70, 70, 1, 70, '2025-09-25 09:36:53', 'Walk-in', 15633),
+(168, 964, 'INV20250925173720', 'Matcha', 70, 70, 1, 70, '2025-09-25 09:37:20', 'Walk-in', 15633),
+(172, 245, 'INV20250925174207', 'Okinawa', 70, 70, 1, 70, '2025-09-25 09:42:07', 'Walk-in', 15633),
+(173, 245, 'INV20250925174417', 'Okinawa', 70, 70, 1, 70, '2025-09-25 09:44:17', 'Walk-in', 15633),
+(174, 245, 'INV20250925174723', 'Wintermelon', 70, 70, 1, 70, '2025-09-25 09:47:23', 'Walk-in', 15633),
+(175, 245, 'INV20250925174723', 'Okinawa', 70, 70, 1, 70, '2025-09-25 09:47:23', 'Walk-in', 15633);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `transactions`
+--
+
+CREATE TABLE `transactions` (
+  `id` int(11) NOT NULL,
+  `branchID` int(11) DEFAULT NULL,
+  `cashierID` int(11) DEFAULT NULL,
+  `cashierName` varchar(50) DEFAULT NULL,
+  `receiptID` varchar(50) DEFAULT NULL,
+  `transactionNumber` varchar(50) DEFAULT NULL,
+  `invoiceNumber` varchar(50) DEFAULT NULL,
+  `customerName` varchar(100) DEFAULT NULL,
+  `totalAmount` decimal(10,2) DEFAULT NULL,
+  `salesDate` datetime DEFAULT NULL,
+  `orderItems` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`orderItems`))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `transactions`
+--
+
+INSERT INTO `transactions` (`id`, `branchID`, `cashierID`, `cashierName`, `receiptID`, `transactionNumber`, `invoiceNumber`, `customerName`, `totalAmount`, `salesDate`, `orderItems`) VALUES
+(1, 964, 15633, NULL, 'REC1758814589', 'TXN1758814589841', 'INV20250925173629', 'Walk-in', NULL, '2025-09-25 17:36:29', NULL),
+(2, 964, 15633, NULL, 'REC1758814613', 'TXN1758814613358', 'INV20250925173653', 'Walk-in', NULL, '2025-09-25 17:36:53', NULL),
+(3, 964, 15633, NULL, 'REC1758814640', 'TXN1758814640423', 'INV20250925173720', 'Walk-in', NULL, '2025-09-25 17:37:20', NULL),
+(4, 245, 15633, NULL, 'REC1758814927', 'TXN1758814927860', 'INV20250925174207', 'Walk-in', NULL, '2025-09-25 17:42:07', NULL),
+(5, 245, 15633, NULL, 'REC1758815057', 'TXN1758815057279', 'INV20250925174417', 'Walk-in', NULL, '2025-09-25 17:44:17', NULL),
+(6, 245, 15633, NULL, 'REC1758815243', 'TXN1758815243258', 'INV20250925174723', 'Walk-in', NULL, '2025-09-25 17:47:23', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `fname` varchar(255) DEFAULT NULL,
+  `lname` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `password_hash` varchar(255) DEFAULT NULL,
+  `role` enum('admin','manager','cashier','encoder') DEFAULT NULL,
+  `branch_assignment` int(11) DEFAULT NULL,
+  `password_changed` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `fname`, `lname`, `email`, `password_hash`, `role`, `branch_assignment`, `password_changed`) VALUES
+(1017, 'Jerson', 'Sagun', 'jeua.sagun.sjc@phinmaed.com', '$2y$10$Nlo/.HaEfuiXEVBTWG3fwOsc1riz4vOMEblMEEGET3QIKhMYANki2', 'admin', 8954, 0),
+(1055, 'Joseph', 'Pronton', 'joseph23pronton@gmail.com', '$2y$10$6HgrtWYzBJNLffQ3UQTQTuBoscb5U3AKCRJNk0sI9j8zAqV9awgvK', 'admin', 964, 1),
+(10895, 'Yheena', 'Mangabat', 'yheena@lovetea.com', '$2y$10$Gjo4gDmyZzFZwMMwiNmn/u2.8laOxKhVABJVnnrZTlQxhjN4ptZrm', 'encoder', 964, 1),
+(12618, 'cashier', 'almar', 'cashier.almar.branch@lovetea.com', '$2y$10$dwSxSuCEPDq7Rlln87EiheI2snM2Y7JGr/NTicUD7z8W6e5gkzK5q', 'cashier', 964, 1),
+(12664, 'Aubrey', 'Daraido', 'aubrey@lovetea.com', '$2y$10$C.H7eNafNm5pGhpCileQ6OfGFCEzxhLb.Ni4tHnDS.lyLipatF156', 'encoder', 245, 1),
+(12770, 'Alena Beatriz', 'Millano', 'alenamillano@lovetea.com', '$2y$10$OrRU9hhHOsgpIKcyCXOPquz.mJrHp0/1Hx3TgT5XOB/F2BMb87wjy', 'admin', 8954, 1),
+(13395, 'Althea', 'Estandarte', 'althea@lovetea.com', '$2y$10$.6rFKuAyhm7gQI0DvG5V/ey19zwiHXV0aWuH7SdXQLhnhbNnRozlW', 'cashier', 245, 1),
+(14395, 'cashier', 'congress', 'cashier.congress@lovetea.com', '$2y$10$RtIRuvtjNhWh2vZAZfs6QOwUc48cPdD7Ts9FDEZlYMRnEXO3kczzq', 'cashier', 8954, 1),
+(14939, 'Stock', 'management', 'stock@lovetea.com', '$2y$10$lyP.CHNao2cDR/wlLMpCt.GBHGYXsQU435RqdahkzxNfKs1m/TEyu', 'encoder', 245, 1),
+(15478, 'Lebron', 'James', 'lebron@lovetea.com', '$2y$10$HUjA3ecRhRZ4Z3Db6JwSduIn3uAGqH7TJNyzQceDeWeZBO/KAHSvS', 'cashier', 245, 1),
+(15633, 'JOSEPH BENEDICT', 'PRONTON', 'admin@ganbaruby232.xyz', '$2y$10$j6qqIjpX1ERQpVWOUdmO5.AeuuxURbYJ3dR4HnfuobucvseVXM4iS', 'cashier', 245, 1),
+(16195, 'Jerson', 'Sagun', 'jsagun@lovetea.com', '$2y$10$cdwqzwfaWSNSYBBpedglH.IxOEUifTeB1pyzkv9cx9cWqI68gYh5m', 'admin', 8954, 1),
+(16519, 'Beatriz', 'Piedad', 'piedad@lovetea.com', '$2y$10$6iJpAQLVKhiYfjRcwxjAJusx6GnuEbi9tDhnCGo0qr4pvMco5VEla', 'cashier', 964, 1),
+(17509, 'encoder', 'almar', 'encoder.almar@lovetea.com', '$2y$10$4bX0tuyNu8D8ERMrwQT9HeXXJjXOI3kDEzSX37gse0H9MhlSEXsni', 'encoder', 8954, 1);
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `branches`
+--
+ALTER TABLE `branches`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`);
+
+--
+-- Indexes for table `ingredients`
+--
+ALTER TABLE `ingredients`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `ingredientsheader`
+--
+ALTER TABLE `ingredientsheader`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `products`
+--
+ALTER TABLE `products`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `products_ingredient`
+--
+ALTER TABLE `products_ingredient`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `restockorder`
+--
+ALTER TABLE `restockorder`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `sales`
+--
+ALTER TABLE `sales`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `transactions`
+--
+ALTER TABLE `transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `transactionNumber` (`transactionNumber`),
+  ADD UNIQUE KEY `invoiceNumber` (`invoiceNumber`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `ingredientsheader`
+--
+ALTER TABLE `ingredientsheader`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+
+--
+-- AUTO_INCREMENT for table `products`
+--
+ALTER TABLE `products`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+
+--
+-- AUTO_INCREMENT for table `products_ingredient`
+--
+ALTER TABLE `products_ingredient`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=787;
+
+--
+-- AUTO_INCREMENT for table `restockorder`
+--
+ALTER TABLE `restockorder`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `sales`
+--
+ALTER TABLE `sales`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=176;
+
+--
+-- AUTO_INCREMENT for table `transactions`
+--
+ALTER TABLE `transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
