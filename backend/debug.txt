@@ -1,0 +1,17 @@
+Array
+(
+    [customerName] => Walk-in
+    [orderItems] => Array
+        (
+            [0] => Array
+                (
+                    [product] => Wintermelon
+                    [size] => medium
+                    [price] => 70
+                    [initial_price] => 70
+                    [quantity] => 1
+                )
+
+        )
+
+)

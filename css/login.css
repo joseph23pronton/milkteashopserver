@@ -1,0 +1,21 @@
+.LoveTeaBG{
+    background-image: url("/uploads/bg.png");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-clip: inherit;
+}
+
+.marginTop {
+    margin-top: 12vh 
+  }
+
+  .card-link {
+    text-decoration: none; /* Remove underline */
+}
+
+.card-link:hover .card {
+    transform: scale(1.05); /* Slight zoom effect */
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); /* Glow effect */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
