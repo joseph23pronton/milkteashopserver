@@ -59,7 +59,7 @@ $conn = include('database.php');
     
     <div class="max-w-[1600px] mx-auto">
         <div class="text-center mb-8">
-            <h1 class="text-5xl md:text-7xl font-bold gradient-text mb-2">LOVE, TEA ♥</h1>
+            <h1 class="text-5xl md:text-7xl font-bold -text mb-2">LOVE, TEA ♥</h1>
             <p class="text-white text-lg">Your Favorite Tea Shop</p>
         </div>
 
