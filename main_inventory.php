@@ -12,65 +12,186 @@ ob_start();
     <meta name="description" content="">
     <meta name="author" content="">
     <title>Main Inventory</title>
-    <!-- Custom fonts for this template -->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-    <!-- Custom styles for this template -->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
-    <!-- Custom styles for this page -->
     <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <style>
+        .archived-row {
+            background-color: #f8f9fa;
+            opacity: 0.7;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .btn-group-action {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .alert {
+            border-radius: 0.35rem;
+            border-left: 4px solid;
+        }
+        .alert-success {
+            border-left-color: #1cc88a;
+        }
+        .alert-warning {
+            border-left-color: #f6c23e;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4e73df;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #858796;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .switch-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #5a5c69;
+        }
+    </style>
 </head>
 <body id="page-top">
 
-<!-- Page Wrapper -->
 <div id="wrapper">
     <?php include "backend/nav.php"; ?>
 
-    <!-- Begin Page Content -->
     <div class="container-fluid">
         <?php if (isset($_GET['success'])): ?>
-            <div class="alert alert-success mt-3">Inventory Item Add Successfully</div>
+            <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                <strong>Success!</strong> Inventory item added successfully.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
         <?php endif; ?>
-        <?php if (isset($_GET['del_success'])): ?>
-            <div class="alert alert-danger mt-3">Inventory Item Deleted Successfully</div>
+        <?php if (isset($_GET['archived'])): ?>
+            <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
+                <strong>Archived!</strong> Inventory item has been archived successfully.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
         <?php endif; ?>
-        <!-- Page Heading -->
-        <h1 class="h3 mb-2 text-gray-800">Inventory Management</h1>
-        <p class="mb-4">Main Inventory For All Branches</p>
+        <?php if (isset($_GET['restored'])): ?>
+            <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                <strong>Restored!</strong> Inventory item has been restored successfully.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        <?php endif; ?>
 
-        <!-- DataTales Example -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800">Inventory Management</h1>
+                <p class="mb-0 text-gray-600">Main inventory for all branches</p>
+            </div>
+        </div>
+
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Main Inventory List</h6>
+                <div class="header-actions">
+                    <h6 class="m-0 font-weight-bold text-primary">Main Inventory List</h6>
+                    <div class="ml-auto">
+                        <button type="button" class="btn btn-success btn-sm editStockBTN" data-toggle="modal" data-target="#addInventoryModal" data-id="0">
+                            <i class="fas fa-plus"></i> Add Ingredient
+                        </button>
+                        <label class="switch-label">
+                            <span id="viewLabel">Active</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggleArchive">
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
-            <button type='button' class='btn btn-success editStockBTN' data-toggle='modal' data-target='#addInventoryModal' data-id='0'>Add Ingredients</button>
                 <div class="table-responsive">
                     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                         <thead>
                             <tr>
                                 <th>Inventory Name</th>
                                 <th>Inventory Limit (Unit)</th>
+                                <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
                             $mysqli = include('database.php');
-                            $sql = "SELECT * FROM ingredientsHeader";
+                            $sql = "SELECT *, COALESCE(is_archived, 0) as is_archived FROM ingredientsHeader ORDER BY is_archived ASC, id DESC";
                             $result = $mysqli->query($sql);
                             if ($result->num_rows > 0) {
                                 while ($row = $result->fetch_assoc()) {
-                                    echo "<tr> <td>{$row['name']}</td><td>{$row['ingredients_limit']} ({$row['unit']})</td>
-                                        <td>
-                                            <!-- Edit Stock Button -->
-                                            <button type='button' class='btn btn-success editStockBTN' data-toggle='modal' data-target='#addInventoryModal' data-id='{$row['id']}'>Edit Stock Name</button>
-                                            <!-- Delete Stock Button -->
-                                            <button type='button' class='btn btn-danger' data-toggle='modal' data-target='#confirmDeleteModal' data-id='{$row['id']}'>Delete Stock</button>
-                                        </td></tr>";
+                                    $isArchived = $row['is_archived'];
+                                    $rowClass = $isArchived ? 'archived-row' : '';
+                                    $statusBadge = $isArchived ? '<span class="badge badge-secondary">Archived</span>' : '<span class="badge badge-success">Active</span>';
+                                    $actionButton = $isArchived 
+                                        ? "<button type='button' class='btn btn-sm btn-success' data-toggle='modal' data-target='#confirmRestoreModal' data-id='{$row['id']}'><i class='fas fa-undo'></i> Restore</button>"
+                                        : "<button type='button' class='btn btn-sm btn-warning' data-toggle='modal' data-target='#confirmArchiveModal' data-id='{$row['id']}'><i class='fas fa-archive'></i> Archive</button>";
+                                    
+                                    echo "<tr class='{$rowClass}' data-archived='{$isArchived}'>
+                                            <td>{$row['name']}</td>
+                                            <td>" . number_format($row['ingredients_limit'], 2) . " ({$row['unit']})</td>
+                                            <td>{$statusBadge}</td>
+                                            <td>
+                                                <div class='btn-group-action'>
+                                                    <button type='button' class='btn btn-sm btn-primary editStockBTN' data-toggle='modal' data-target='#addInventoryModal' data-id='{$row['id']}'><i class='fas fa-edit'></i> Edit</button>
+                                                    {$actionButton}
+                                                </div>
+                                            </td>
+                                        </tr>";
                                 }
                             } else {
-                                echo "<tr><td colspan='6'>No records found</td></tr>";
+                                echo "<tr><td colspan='4' class='text-center'>No records found</td></tr>";
                             }
                             $mysqli->close();
                             ob_end_flush();
@@ -81,12 +202,8 @@ ob_start();
             </div>
         </div>
     </div>
-    <!-- /.container-fluid -->
-
 </div>
-<!-- End of Main Content -->
 
-<!-- Modal for Add/Edit Inventory -->
 <div class="modal fade" id="addInventoryModal" tabindex="-1" role="dialog" aria-labelledby="editEmployeeModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -105,28 +222,46 @@ ob_start();
     </div>
 </div>
 
-<!-- Modal for Confirm Deletion -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmArchiveModal" tabindex="-1" role="dialog" aria-labelledby="confirmArchiveModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Deletion</h5>
+                <h5 class="modal-title" id="confirmArchiveModalLabel">Confirm Archive</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this inventory item?
+                Are you sure you want to archive this inventory item?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <a id="confirmDeleteBtn" href="#" class="btn btn-danger">Delete</a>
+                <a id="confirmArchiveBtn" href="#" class="btn btn-warning">Archive</a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- JavaScript -->
+<div class="modal fade" id="confirmRestoreModal" tabindex="-1" role="dialog" aria-labelledby="confirmRestoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmRestoreModalLabel">Confirm Restore</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to restore this inventory item?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <a id="confirmRestoreBtn" href="#" class="btn btn-success">Restore</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="vendor/jquery/jquery.min.js"></script>
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
@@ -136,39 +271,50 @@ ob_start();
 <script src="js/demo/datatables-demo.js"></script>
 
 <script>
-$(document).ready(function() {
-    // Open modal for editing stock
-    $(document).on('click', '.editStockBTN', function(e) {
-        e.preventDefault();
+    $('#toggleArchive').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('tbody tr[data-archived="0"]').hide();
+            $('tbody tr[data-archived="1"]').show();
+            $('#viewLabel').text('Archived');
+        } else {
+            $('tbody tr[data-archived="0"]').show();
+            $('tbody tr[data-archived="1"]').hide();
+            $('#viewLabel').text('Active');
+        }
+    });
 
-        var inventoryId = $(this).data('id'); // Get the inventory ID from the data-id attribute
+    $(document).ready(function() {
+        $('tbody tr[data-archived="1"]').hide();
 
-        // Use AJAX to load the form for editing the inventory item
-        $.ajax({
-            url: 'add_inventory.php',  // Path to the PHP script to load content
-            method: 'GET',
-            data: { id: inventoryId }, // Pass the inventory ID to the PHP script
-            success: function(response) {
-                // Load the fetched form into the modal
-                $('#addInventoryModalFormContainer').html(response);
-            },
-            error: function() {
-                $('#addInventoryModalFormContainer').html('<p>Error loading data. Please try again later.</p>');
-            }
+        $(document).on('click', '.editStockBTN', function(e) {
+            e.preventDefault();
+            var inventoryId = $(this).data('id');
+            $.ajax({
+                url: 'add_inventory.php',
+                method: 'GET',
+                data: { id: inventoryId },
+                success: function(response) {
+                    $('#addInventoryModalFormContainer').html(response);
+                },
+                error: function() {
+                    $('#addInventoryModalFormContainer').html('<p>Error loading data. Please try again later.</p>');
+                }
+            });
         });
     });
-});
-</script>
 
-<script>
-    // Handle delete button click
-    $('#confirmDeleteModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Button that triggered the modal
-        var invId = button.data('id'); // Extract info from data-* attributes
+    $('#confirmArchiveModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var invId = button.data('id');
+        var archiveUrl = '/backend/archive.php?inv_id=' + invId;
+        $('#confirmArchiveBtn').attr('href', archiveUrl);
+    });
 
-        // Set the action URL for the confirmation button
-        var deleteUrl = '/backend/delete.php?inv_id=' + invId;
-        $('#confirmDeleteBtn').attr('href', deleteUrl);
+    $('#confirmRestoreModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var invId = button.data('id');
+        var restoreUrl = '/backend/restore.php?inv_id=' + invId;
+        $('#confirmRestoreBtn').attr('href', restoreUrl);
     });
 </script>
 

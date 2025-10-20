@@ -3,7 +3,7 @@
 $host = "localhost";
 $dbname = "milkteashop2";
 $username = "root";
-$password = "";
+$password = "DREAMTEAM";
 
 $mysqli = new mysqli(hostname: $host,
                      username: $username,

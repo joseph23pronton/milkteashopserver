@@ -155,7 +155,7 @@ $mysqli->close();
                                         P<?= number_format($total_earnings, 2) ?></div>
                                 </div>
                                 <div class="col-auto">
-                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                    <i class="fas fa-peso-sign fa-2x text-gray-300"></i>
                                 </div>
                             </div>
                         </div>
