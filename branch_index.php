@@ -1,10 +1,9 @@
 <?php
+
 $screen = 'dashboard';
 ob_start();
 $mysqli = include('database.php');
 
-
-// Close the database connection
 $mysqli->close();
 ?>
 <!DOCTYPE html>
@@ -242,7 +241,7 @@ while ($row = $result->fetch_assoc()) {
                     </div>
                 </div>
                 <?php
-                    // Assuming $branch_id is already set either from GET or SESSION
+                   
                     if (isset($branch_id)) {
                         // Prepare the SQL query to fetch restock orders for the specific branch
                         $query = "SELECT r.id, r.ingredientsName, r.restock_amount, r.requested_by, r.is_accepted, r.branchID, r.ingredientsID,
@@ -367,7 +366,7 @@ while ($row = $result->fetch_assoc()) {
                 <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="backend/signout.php">Logout</a>
+                    <a class="btn btn-primary" href="logout.php">Logout</a>
                 </div>
             </div>
         </div>

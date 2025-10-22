@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('Asia/Manila');
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $mysqli = require __DIR__ . "/database.php";
@@ -27,12 +28,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION["branch_id"] = $user["branch_assignment"];
             $_SESSION["password_changed"] = $user["password_changed"];
 
+            $today = date('Y-m-d');
+            $current_time = date('H:i:s');
+            
+            if ($user["role"] == "cashier" || $user["role"] == "encoder" || $user["role"] == "hr") {
+                $work_start = '08:00:00';
+                $late_minutes = 0;
+                $status = 'present';
+                
+                if ($current_time > $work_start) {
+                    $diff = strtotime($current_time) - strtotime($work_start);
+                    $late_minutes = floor($diff / 60);
+                    $status = 'late';
+                }
+                
+                $check_existing = $mysqli->prepare("SELECT id FROM attendance WHERE employee_id = ? AND attendance_date = ?");
+                $check_existing->bind_param("is", $user["id"], $today);
+                $check_existing->execute();
+                $existing_result = $check_existing->get_result();
+                
+                if ($existing_result->num_rows > 0) {
+                    $update_attendance = $mysqli->prepare("UPDATE attendance SET time_in = ?, status = ?, late_minutes = ?, time_out = NULL WHERE employee_id = ? AND attendance_date = ?");
+                    $update_attendance->bind_param("ssiis", $current_time, $status, $late_minutes, $user["id"], $today);
+                    $update_attendance->execute();
+                } else {
+                    $insert_attendance = $mysqli->prepare("INSERT INTO attendance (employee_id, attendance_date, time_in, status, late_minutes) VALUES (?, ?, ?, ?, ?)");
+                    $insert_attendance->bind_param("isssi", $user["id"], $today, $current_time, $status, $late_minutes);
+                    $insert_attendance->execute();
+                }
+            }
+
             if ($user["password_changed"] == 0) {
                 header("Location: change_password.php");
                 exit;
             }
 
-            if ($_SESSION["role"] == "cashier") {
+            if ($_SESSION["role"] == "hr") {
+                header("Location: HR/dashboard.php");
+            } elseif ($_SESSION["role"] == "cashier") {
                 header("Location: branch_index.php");
             } elseif ($_SESSION["role"] == "encoder") {
                 header("Location: branch_index.php");
