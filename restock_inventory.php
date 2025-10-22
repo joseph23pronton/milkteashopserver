@@ -57,7 +57,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
 
         <div class="container-fluid">
             <h1 class="h3 mb-2 text-gray-800"><?= $branch['name'] ?> Inventory</h1>
-            <p class="mb-4">Branch Inventory in <?= $branch['city'] ?></p>
+            <p class="mb-4">Branch Inventory in <?= $branch['name'] ?></p>
             
 
             <div class="row">
@@ -135,6 +135,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
             i.id AS ingredient_id,
             ih.id AS inv_id,
             ih.name AS ingredient_name,
+            ih.unit AS ingredient_unit,
             COALESCE(i.currentStock, 0) AS current_stock,
             i.lastRestock AS last_restock,
             i.updated_at,
@@ -165,7 +166,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
             ?>
             <tr>
                 <td><?php echo htmlspecialchars($row['ingredient_name']); ?></td>
-                <td><?php echo $row['current_stock']; ?></td>
+                <td><?php echo $row['current_stock']; ?><strong> <?php echo $row['ingredient_unit']; ?></strong></td>
                 <td><?php echo isset($row['last_restock']) ? $row['last_restock'] : 'N/A'; ?></td>
                 <td><?php echo isset($row['updated_at']) ? $row['updated_at'] : 'N/A'; ?></td>
                 <td>

@@ -126,7 +126,8 @@ function getIngredientOptions($mysqli, $selectedId = null) {
                                     <input 
                                         type="file" 
                                         class="form-control" 
-                                        name="image" 
+                                        name="image"
+                                        accept=".jpg, .png" 
                                         <?= empty($productData['id']) ? 'required' : '' ?>
                                     >
                                 </div>
@@ -144,11 +145,11 @@ function getIngredientOptions($mysqli, $selectedId = null) {
                                 </div>
                                 <div class="form-group">
                                     <label for="price">Product Price</label>
-                                    <input type="number" class="form-control" name="price" value="<?= $productData['price'] ?? '' ?>" required>
+                                    <input type="number" class="form-control" name="price" value="<?= $productData['price'] ?? '' ?>"  onkeydown="javascript: return event.keyCode == 69 ? false : true" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="price">Initial Price</label>
-                                    <input type="number" class="form-control" name="initial_price" value="<?= $productData['initial_price'] ?? '' ?>" required>
+                                    <input type="number" class="form-control" name="initial_price" value="<?= $productData['initial_price'] ?? '' ?>" onkeydown="javascript: return event.keyCode == 69 ? false : true" required>
                                 </div>
 
                                 <!-- Ingredients -->
@@ -158,7 +159,7 @@ function getIngredientOptions($mysqli, $selectedId = null) {
                                 <button type="button" class="btn btn-secondary" id="add-ingredient">Add Another Ingredient</button>
                                 <button type="submit" class="btn btn-primary"><?= $productId ? 'Update Product' : 'Save Product' ?></button>
                                 <?php if ($productId): ?>
-                                    <input type="hidden" name="product_id" value="<?= $productId ?>">
+                                    <input type="hidden" name="product_id" value="<?= $productId ?>"  onkeydown="javascript: return event.keyCode == 69 ? false : true">
                                 <?php endif; ob_end_flush();?>
                             </form>
                         </div>
