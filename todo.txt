@@ -1,2 +1,0 @@
-TODO: Backend Check as nagbago ang database natin
-

@@ -1,5 +1,0 @@
-TODO: Backend Check as nagbago ang database natin
-
-TODO: Check process_restock.php kse di pa ayos ung sa pagadjust ng stock
-
-TODO: adjust add_products.php dahil di pa naaadapt ung changes sa database pati sa pos.php
