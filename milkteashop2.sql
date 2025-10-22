@@ -16,6 +16,38 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `attendance`
+--
+
+DROP TABLE IF EXISTS `attendance`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `attendance` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `employee_id` int NOT NULL,
+  `attendance_date` date NOT NULL,
+  `time_in` time DEFAULT NULL,
+  `time_out` time DEFAULT NULL,
+  `status` enum('present','late','absent','on_leave') COLLATE utf8mb4_general_ci DEFAULT 'absent',
+  `late_minutes` int DEFAULT '0',
+  `notes` text COLLATE utf8mb4_general_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_attendance` (`employee_id`,`attendance_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `attendance`
+--
+
+LOCK TABLES `attendance` WRITE;
+/*!40000 ALTER TABLE `attendance` DISABLE KEYS */;
+INSERT INTO `attendance` VALUES (1,15633,'2025-10-22','19:31:55','00:00:00','late',691,'','2025-10-22 16:22:01'),(3,20002,'2025-10-22','19:32:35','19:31:41','late',692,NULL,'2025-10-22 16:43:19'),(8,20002,'2025-10-23','03:31:17',NULL,'present',0,NULL,'2025-10-22 17:00:26'),(12,14939,'2025-10-22','19:32:17',NULL,'late',692,NULL,'2025-10-22 17:32:17'),(14,15633,'2025-10-23','02:21:06','02:25:01','present',0,NULL,'2025-10-22 17:37:50'),(15,14939,'2025-10-23','02:32:36','02:32:39','present',0,NULL,'2025-10-22 17:38:14'),(16,38502,'2025-10-23','03:30:47','03:31:02','present',0,NULL,'2025-10-22 19:30:47');
+/*!40000 ALTER TABLE `attendance` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `branches`
 --
 
@@ -39,6 +71,32 @@ LOCK TABLES `branches` WRITE;
 /*!40000 ALTER TABLE `branches` DISABLE KEYS */;
 INSERT INTO `branches` VALUES (245,'Llano','Caloocan'),(892,'Antipolo Branch','Antipolo City'),(964,'Almar','Caloocan'),(8954,'Congressional','Caloocan');
 /*!40000 ALTER TABLE `branches` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `departments`
+--
+
+DROP TABLE IF EXISTS `departments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `departments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `description` text COLLATE utf8mb4_general_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `departments`
+--
+
+LOCK TABLES `departments` WRITE;
+/*!40000 ALTER TABLE `departments` DISABLE KEYS */;
+INSERT INTO `departments` VALUES (1,'Sales','Handles customer transactions and orders','2025-10-22 15:34:06'),(2,'Inventory','Manages stock and supplies','2025-10-22 15:34:06'),(3,'Management','Oversees operations','2025-10-22 15:34:06');
+/*!40000 ALTER TABLE `departments` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -95,6 +153,41 @@ LOCK TABLES `ingredientsheader` WRITE;
 /*!40000 ALTER TABLE `ingredientsheader` DISABLE KEYS */;
 INSERT INTO `ingredientsheader` VALUES (2,'Malaysian Non-Dairy Creamer',300,'g',0),(3,'Fructose Corn Syrup',300,'g',0),(4,'Loose Tea',300,'g',0),(5,'Wintermelon Flavor',300,'g',0),(6,'Okinawa Flavor',300,'g',0),(7,'Hokkaido Flavor',300,'g',0),(8,'Matcha Flavor',300,'g',0),(9,'Caramel Sugar Flavor',300,'g',0),(10,'Hazelnut Flavor',300,'g',0),(11,'Chocolate Flavor',300,'g',0),(12,'Dark Chocolate Flavor',300,'g',0),(13,'Cookies & Cream Flavor',300,'g',0),(14,'Red Velvet Flavor',300,'g',0),(15,'Mango Cheesecake Flavor',300,'g',0),(16,'Tapioca Pearls',300,'g',0),(17,'Nata',300,'g',0),(18,'Popping Boba',300,'g',0),(19,'Crushed Cookies',300,'g',0),(20,'Ice',300,'g',0),(21,'Plastic Cups - M',100,'pcs',0),(22,'Plastic Cups - L',100,'pcs',0),(23,'Plastic Straw',100,'pcs',0),(24,'Plastic Lids',100,'pcs',0),(25,'Tissue',100,'pcs',0);
 /*!40000 ALTER TABLE `ingredientsheader` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `payroll`
+--
+
+DROP TABLE IF EXISTS `payroll`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `payroll` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `employee_id` int NOT NULL,
+  `pay_period_start` date NOT NULL,
+  `pay_period_end` date NOT NULL,
+  `total_hours` decimal(10,2) DEFAULT '0.00',
+  `gross_pay` decimal(10,2) DEFAULT '0.00',
+  `late_deductions` decimal(10,2) DEFAULT '0.00',
+  `absence_deductions` decimal(10,2) DEFAULT '0.00',
+  `tax_deductions` decimal(10,2) DEFAULT '0.00',
+  `net_pay` decimal(10,2) DEFAULT '0.00',
+  `status` enum('pending','approved','paid') COLLATE utf8mb4_general_ci DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_archived` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `payroll`
+--
+
+LOCK TABLES `payroll` WRITE;
+/*!40000 ALTER TABLE `payroll` DISABLE KEYS */;
+INSERT INTO `payroll` VALUES (1,15633,'2025-10-23','2025-11-23',0.00,0.00,0.00,0.00,0.00,0.00,'pending','2025-10-22 16:26:13',0),(2,20002,'2025-10-23','2025-10-23',0.10,0.00,0.00,0.00,0.00,0.00,'pending','2025-10-22 17:06:28',0),(3,15633,'2025-10-23','2025-10-23',0.26,15.95,0.00,0.00,1.60,14.36,'paid','2025-10-22 17:59:21',1),(4,14939,'2025-10-23','2025-10-23',0.05,3.34,0.00,0.00,0.33,3.01,'pending','2025-10-22 17:59:21',0),(5,14939,'2025-10-23','2025-11-23',0.00,0.05,0.00,0.00,0.01,0.05,'pending','2025-10-22 18:59:58',0),(6,20002,'2025-10-23','2025-11-23',8.00,0.00,0.00,0.00,0.00,0.00,'pending','2025-10-22 18:59:58',1),(7,38502,'2025-10-23','2025-11-23',0.00,0.27,0.00,0.00,0.03,0.24,'pending','2025-10-22 19:39:32',0);
+/*!40000 ALTER TABLE `payroll` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -220,6 +313,40 @@ INSERT INTO `sales` VALUES (46,964,'REC1734408571','Classic Milktea',70,0,1,70,'
 UNLOCK TABLES;
 
 --
+-- Table structure for table `schedules`
+--
+
+DROP TABLE IF EXISTS `schedules`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `schedules` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `employee_id` int NOT NULL,
+  `week_start` date NOT NULL,
+  `monday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `tuesday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `wednesday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `thursday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `friday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `saturday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `sunday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_schedule` (`employee_id`,`week_start`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `schedules`
+--
+
+LOCK TABLES `schedules` WRITE;
+/*!40000 ALTER TABLE `schedules` DISABLE KEYS */;
+INSERT INTO `schedules` VALUES (1,15633,'2025-10-20','6:00 AM - 2:00 PM','7:00 AM - 3:00 PM','8:00 AM - 4:00 PM','9:00 AM - 5:00 PM','10:00 AM - 6:00 PM','11:00 AM - 7:00 PM','1:00 PM - 9:00 PM','2025-10-22 16:31:35');
+/*!40000 ALTER TABLE `schedules` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `transactions`
 --
 
@@ -268,10 +395,16 @@ CREATE TABLE `users` (
   `lname` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `email` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `password_hash` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `role` enum('admin','manager','cashier','encoder') COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `role` enum('admin','manager','cashier','encoder','hr') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `branch_assignment` int DEFAULT NULL,
   `password_changed` tinyint(1) DEFAULT '0',
   `is_archived` tinyint(1) DEFAULT '0',
+  `department_id` int DEFAULT NULL,
+  `hourly_rate` decimal(10,2) DEFAULT '0.00',
+  `phone` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_general_ci,
+  `hire_date` date DEFAULT NULL,
+  `employee_status` enum('active','training','for_interview','applying','terminated') COLLATE utf8mb4_general_ci DEFAULT 'active',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -282,7 +415,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1017,'Jerson','Sagun','jeua.sagun.sjc@phinmaed.com','$2y$10$Nlo/.HaEfuiXEVBTWG3fwOsc1riz4vOMEblMEEGET3QIKhMYANki2','admin',8954,0,0),(1055,'Joseph','Pronton','joseph23pronton@gmail.com','$2y$10$6HgrtWYzBJNLffQ3UQTQTuBoscb5U3AKCRJNk0sI9j8zAqV9awgvK','admin',964,1,0),(10895,'Yheena','Mangabat','yheena@lovetea.com','$2y$10$Gjo4gDmyZzFZwMMwiNmn/u2.8laOxKhVABJVnnrZTlQxhjN4ptZrm','encoder',964,1,0),(12618,'cashier','almar','cashier.almar.branch@lovetea.com','$2y$10$dwSxSuCEPDq7Rlln87EiheI2snM2Y7JGr/NTicUD7z8W6e5gkzK5q','cashier',964,1,0),(12664,'Aubrey','Daraido','aubrey@lovetea.com','$2y$10$C.H7eNafNm5pGhpCileQ6OfGFCEzxhLb.Ni4tHnDS.lyLipatF156','encoder',245,1,0),(13395,'Althea','Estandarte','althea@lovetea.com','$2y$10$.6rFKuAyhm7gQI0DvG5V/ey19zwiHXV0aWuH7SdXQLhnhbNnRozlW','cashier',245,1,1),(14395,'cashier','congress','cashier.congress@lovetea.com','$2y$10$RtIRuvtjNhWh2vZAZfs6QOwUc48cPdD7Ts9FDEZlYMRnEXO3kczzq','cashier',8954,1,0),(14939,'Stock','management','stock@lovetea.com','$2y$10$lyP.CHNao2cDR/wlLMpCt.GBHGYXsQU435RqdahkzxNfKs1m/TEyu','encoder',245,1,0),(15478,'Lebron','James','lebron@lovetea.com','$2y$10$HUjA3ecRhRZ4Z3Db6JwSduIn3uAGqH7TJNyzQceDeWeZBO/KAHSvS','cashier',245,1,0),(15633,'JOSEPH BENEDICT','PRONTON','admin@ganbaruby232.xyz','$2y$10$j6qqIjpX1ERQpVWOUdmO5.AeuuxURbYJ3dR4HnfuobucvseVXM4iS','cashier',245,1,0),(16195,'Jerson','Sagun','jsagun@lovetea.com','$2y$10$cdwqzwfaWSNSYBBpedglH.IxOEUifTeB1pyzkv9cx9cWqI68gYh5m','admin',8954,1,0),(16519,'Beatriz','Piedad','piedad@lovetea.com','$2y$10$6iJpAQLVKhiYfjRcwxjAJusx6GnuEbi9tDhnCGo0qr4pvMco5VEla','cashier',964,1,0),(17509,'encoder','almar','encoder.almar@lovetea.com','$2y$10$4bX0tuyNu8D8ERMrwQT9HeXXJjXOI3kDEzSX37gse0H9MhlSEXsni','encoder',8954,1,0);
+INSERT INTO `users` VALUES (1017,'Jerson','Sagun','jeua.sagun.sjc@phinmaed.com','$2y$10$Nlo/.HaEfuiXEVBTWG3fwOsc1riz4vOMEblMEEGET3QIKhMYANki2','admin',8954,0,0,3,0.00,NULL,NULL,'2024-01-01','active'),(1055,'Joseph','Pronton','joseph23pronton@gmail.com','$2y$10$6HgrtWYzBJNLffQ3UQTQTuBoscb5U3AKCRJNk0sI9j8zAqV9awgvK','admin',964,1,0,3,0.00,NULL,NULL,'2024-01-01','active'),(10025,'Ian Matthew','Payawal Salamannes Maco','Ianmatthewmaco@gmail.com','$2y$10$TmJVJxknyQ33BX6EiCwlpO7mpFplyimuGYveVovDfdd/wSsJMupAG','encoder',245,0,0,2,62.50,'09923139504','hillcrest lang','2025-10-24','applying'),(10895,'Yheena','Mangabat','yheena@lovetea.com','$2y$10$Gjo4gDmyZzFZwMMwiNmn/u2.8laOxKhVABJVnnrZTlQxhjN4ptZrm','encoder',964,1,1,2,65.00,NULL,NULL,'2024-01-01','active'),(12618,'cashier','almar','cashier.almar.branch@lovetea.com','$2y$10$dwSxSuCEPDq7Rlln87EiheI2snM2Y7JGr/NTicUD7z8W6e5gkzK5q','cashier',964,1,0,1,62.50,NULL,NULL,'2024-01-01','active'),(12664,'Aubrey','Daraido','aubrey@lovetea.com','$2y$10$C.H7eNafNm5pGhpCileQ6OfGFCEzxhLb.Ni4tHnDS.lyLipatF156','encoder',245,1,0,2,65.00,NULL,NULL,'2024-01-01','active'),(13395,'Althea','Estandarte','althea@lovetea.com','$2y$10$.6rFKuAyhm7gQI0DvG5V/ey19zwiHXV0aWuH7SdXQLhnhbNnRozlW','cashier',245,1,1,1,62.50,NULL,NULL,'2024-01-01','active'),(14395,'cashier','congress','cashier.congress@lovetea.com','$2y$10$RtIRuvtjNhWh2vZAZfs6QOwUc48cPdD7Ts9FDEZlYMRnEXO3kczzq','cashier',8954,1,0,1,62.50,NULL,NULL,'2024-01-01','active'),(14939,'Stock','management','stock@lovetea.com','$2y$10$lyP.CHNao2cDR/wlLMpCt.GBHGYXsQU435RqdahkzxNfKs1m/TEyu','encoder',245,1,0,2,65.00,NULL,NULL,'2024-01-01','active'),(15478,'Lebron','James','lebron@lovetea.com','$2y$10$HUjA3ecRhRZ4Z3Db6JwSduIn3uAGqH7TJNyzQceDeWeZBO/KAHSvS','cashier',245,1,0,1,62.50,NULL,NULL,'2024-01-01','active'),(15633,'JOSEPH BENEDICT','PRONTON','admin@ganbaruby232.xyz','$2y$10$j6qqIjpX1ERQpVWOUdmO5.AeuuxURbYJ3dR4HnfuobucvseVXM4iS','cashier',245,1,0,1,62.50,NULL,NULL,'2024-01-01','active'),(16195,'Jerson','Sagun','jsagun@lovetea.com','$2y$10$cdwqzwfaWSNSYBBpedglH.IxOEUifTeB1pyzkv9cx9cWqI68gYh5m','admin',8954,1,0,3,0.00,NULL,NULL,'2024-01-01','active'),(16519,'Beatriz','Piedad','piedad@lovetea.com','$2y$10$6iJpAQLVKhiYfjRcwxjAJusx6GnuEbi9tDhnCGo0qr4pvMco5VEla','cashier',964,1,0,1,62.50,NULL,NULL,'2024-01-01','active'),(17509,'encoder','almar','encoder.almar@lovetea.com','$2y$10$4bX0tuyNu8D8ERMrwQT9HeXXJjXOI3kDEzSX37gse0H9MhlSEXsni','encoder',8954,1,0,2,65.00,NULL,NULL,'2024-01-01','active'),(20002,'HR','Manager','hr@lovetea.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','hr',245,1,0,3,0.00,'','','2025-10-23','active'),(38502,'John Noel','Orano','johnnoelorano@gmail.com','$2y$10$BQSN1KD15vHWfkNnTyHweO4ICWyskoWQBOQA.DXp9PoQngzIUAERO','cashier',245,1,0,1,65.00,'099232139504','NPC KANAN','2025-10-23','active');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -303,4 +436,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-22 16:54:56
+-- Dump completed on 2025-10-23  3:45:50
