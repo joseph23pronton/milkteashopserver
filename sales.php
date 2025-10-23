@@ -81,7 +81,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
 
             <!-- Page Heading -->
             <h1 class="h3 mb-2 text-gray-800"><?= $branch_name ?> Sales</h1>
-            <p class="mb-4">Sales in <?= $branch_city ?> <?= $table_name ?></p>
+            <p class="mb-4">Sales in <?= $branch_name ?> </p>
             <div class="row">
                 <!-- Inventory Card -->
                 <div class="col-xl-3 col-md-6 mb-4">

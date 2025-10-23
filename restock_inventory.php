@@ -56,33 +56,35 @@ $current_branch_id = $_GET['id'];
 
         <div class="container-fluid">
             <h1 class="h3 mb-2 text-gray-800"><?= htmlspecialchars($branch['name']) ?> Inventory</h1>
-            <p class="mb-4">Branch Inventory in <?= htmlspecialchars($branch['name']) ?></p>
-            
+            <p class="mb-4">
+                <?php if (isset($branch['city'])): ?>
+                    Branch Inventory in <?= htmlspecialchars($branch['city']) ?>
+                <?php else: ?>
+                    Branch Inventory
+                <?php endif; ?>
+            </p>
 
             <div class="row">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <a href="sales.php?id=<?= $current_branch_id ?>&b_id=<?= $current_branch_id ?>" class="card-link">
-                    <div class="card border-left-primary shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                        Sales
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <a href="sales.php?id=<?= $current_branch_id ?>&b_id=<?= $current_branch_id ?>" class="card-link">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Sales
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?= number_format($total_earnings, 2) ?></div>
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?= number_format($total_earnings, 2) ?></div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                    </div>
                                 </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                                </div>
-                                
                             </div>
                         </div>
-                    </div>
-                    
-                </a>
-
-            </div>
-            <div class="col-xl-4 col-md-6 mb-4">
+                    </a>
+                </div>
+                <div class="col-xl-4 col-md-6 mb-4">
                     <div class="card border-left-success shadow h-100 py-2">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
@@ -108,7 +110,7 @@ $current_branch_id = $_GET['id'];
                 
                 <div class="card-body">
                     <div class="table-responsive">
-                    <?php if (isset($_GET['success'])): ?>
+                        <?php if (isset($_GET['success'])): ?>
                             <div class="alert alert-success mt-3">Restock Successfully</div>
                         <?php endif; ?>
                         <?php if (isset($_GET['failed'])): ?>
@@ -119,79 +121,92 @@ $current_branch_id = $_GET['id'];
                                 <tr>
                                     <th>Ingredient Name</th>
                                     <th>Current Stock</th>
+                                    <th>Price per Unit</th>
                                     <th>Last Restock</th>
                                     <th>Updated At</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-    <?php
+                                <?php
 
-    $sql = "
-        SELECT
-            i.id AS ingredient_id,
-            ih.id AS inv_id,
-            ih.name AS ingredient_name,
-            ih.unit AS ingredient_unit,
-            COALESCE(i.currentStock, 0) AS current_stock,
-            i.lastRestock AS last_restock,
-            i.updated_at,
-            (SELECT COUNT(*) 
-             FROM restockOrder ro 
-             WHERE ro.ingredientsID = ih.id 
-             AND ro.branchID = ? 
-             AND ro.requested_by = ? 
-             AND ro.is_confirmed = 0) AS user_requested
-        FROM ingredientsHeader ih
-        LEFT JOIN ingredients i 
-        ON i.ingredientsID = ih.id 
-        AND i.branchesID = ?
-        ORDER BY i.updated_at DESC, ih.name ASC
-    ";
+                                $sql = "
+                                    SELECT
+                                        i.id AS ingredient_id,
+                                        ih.id AS inv_id,
+                                        ih.name AS ingredient_name,
+                                        ih.unit AS ingredient_unit,
+                                        ih.price_per_unit,
+                                        COALESCE(i.currentStock, 0) AS current_stock,
+                                        i.lastRestock AS last_restock,
+                                        i.updated_at,
+                                        (SELECT COUNT(*) 
+                                         FROM restockOrder ro 
+                                         WHERE ro.ingredientsID = ih.id 
+                                         AND ro.branchID = ? 
+                                         AND ro.requested_by = ? 
+                                         AND ro.is_confirmed = 0) AS user_requested
+                                    FROM ingredientsHeader ih
+                                    LEFT JOIN ingredients i 
+                                    ON i.ingredientsID = ih.id 
+                                    AND i.branchesID = ?
+                                    ORDER BY i.updated_at DESC, ih.name ASC
+                                ";
 
-    $stmt = $mysqli->prepare($sql);
-    if (!$stmt) {
-        die("SQL Error: " . $mysqli->error);
-    }
+                                $stmt = $mysqli->prepare($sql);
+                                if (!$stmt) {
+                                    die("SQL Error: " . $mysqli->error);
+                                }
 
-    $stmt->bind_param('iii', $current_branch_id, $_SESSION['user_id'], $current_branch_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+                                $stmt->bind_param('iii', $current_branch_id, $_SESSION['user_id'], $current_branch_id);
+                                $stmt->execute();
+                                $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            ?>
-            <tr>
-                <td><?php echo htmlspecialchars($row['ingredient_name']); ?></td>
-                <td><?php echo $row['current_stock']; ?><strong> <?php echo htmlspecialchars($row['ingredient_unit']); ?></strong></td>
-                <td><?php echo isset($row['last_restock']) ? htmlspecialchars($row['last_restock']) : 'N/A'; ?></td>
-                <td><?php echo isset($row['updated_at']) ? htmlspecialchars($row['updated_at']) : 'N/A'; ?></td>
-                <td>
-                    <?php if ($row['user_requested'] == 0): ?>
-                        <button class="btn btn-success" data-toggle="modal" data-target="#restockModal"
-                            data-ingredient-id="<?php echo htmlspecialchars($row['inv_id']); ?>"
-                            data-branch-id="<?php echo htmlspecialchars($current_branch_id); ?>"
-                            data-ingredient-name="<?php echo htmlspecialchars($row['ingredient_name']); ?>">
-                            Restock
-                        </button>
-                    <?php else: ?>
-                        <button class="btn btn-secondary" disabled>Already Requested</button>
-                    <?php endif; ?>
-                </td>
-            </tr>
-            <?php
-        }
-    } else {
-        echo "<tr><td colspan='5'>No ingredients found.</td></tr>";
-    }
-    ?>
-</tbody>
+                                if ($result->num_rows > 0) {
+                                    while ($row = $result->fetch_assoc()) {
+                                        ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($row['ingredient_name']); ?></td>
+                                            <td><?php echo $row['current_stock']; ?> <strong><?php echo htmlspecialchars($row['ingredient_unit']); ?></strong></td>
+                                            <td>
+                                                <?php if ($row['price_per_unit'] > 0): ?>
+                                                    ₱<?= number_format($row['price_per_unit'], 2) ?> / <?= htmlspecialchars($row['ingredient_unit']) ?>
+                                                <?php else: ?>
+                                                    <span class="text-muted">Not set</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?php echo isset($row['last_restock']) ? htmlspecialchars($row['last_restock']) : 'N/A'; ?></td>
+                                            <td><?php echo isset($row['updated_at']) ? htmlspecialchars($row['updated_at']) : 'N/A'; ?></td>
+                                            <td>
+                                                <?php if ($row['user_requested'] == 0): ?>
+                                                    <button class="btn btn-success" data-toggle="modal" data-target="#restockModal"
+                                                        data-ingredient-id="<?php echo htmlspecialchars($row['inv_id']); ?>"
+                                                        data-branch-id="<?php echo htmlspecialchars($current_branch_id); ?>"
+                                                        data-ingredient-name="<?php echo htmlspecialchars($row['ingredient_name']); ?>"
+                                                        data-price="<?php echo htmlspecialchars($row['price_per_unit']); ?>"
+                                                        data-unit="<?php echo htmlspecialchars($row['ingredient_unit']); ?>">
+                                                        Restock
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button class="btn btn-secondary" disabled>Already Requested</button>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='6'>No ingredients found.</td></tr>";
+                                }
+                                ?>
+                            </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Restock Modal with Price -->
     <div class="modal fade" id="restockModal" tabindex="-1" role="dialog" aria-labelledby="restockModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -206,19 +221,31 @@ $current_branch_id = $_GET['id'];
                     <div class="modal-body">
                         <input type="hidden" id="branch_id" name="branchID" value="<?php echo htmlspecialchars($current_branch_id); ?>">
                         <input type="hidden" id="ingredient_id" name="ingredientsID">
+                        <input type="hidden" id="price_per_unit" name="price_per_unit">
+                        
                         <div class="form-group">
                             <label for="ingredient_name">Ingredient Name</label>
                             <input type="text" id="ingredient_name" class="form-control" name="ingredientsName" readonly>
                         </div>
+                        
+                        <div class="form-group">
+                            <label for="price_display">Price per Unit</label>
+                            <div id="price_display" class="form-control-plaintext text-muted">Loading...</div>
+                        </div>
+                        
                         <div class="form-group">
                             <label for="restockAmount">Restock Quantity</label>
-                            <input type="number" class="form-control" id="restockAmount" name="restockAmount"
-                                required>
+                            <input type="number" class="form-control" id="restockAmount" name="restockAmount" required min="1">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="estimated_cost">Estimated Total Cost</label>
+                            <div id="estimated_cost" class="form-control-plaintext font-weight-bold text-primary">₱0.00</div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Restock</button>
+                        <button type="submit" class="btn btn-primary">Request Restock</button>
                     </div>
                 </form>
             </div>
@@ -261,35 +288,54 @@ $current_branch_id = $_GET['id'];
             var ingredientId = button.data('ingredient-id');
             var branchId = button.data('branch-id');
             var ingredientName = button.data('ingredient-name');
+            var pricePerUnit = button.data('price');
+            var unit = button.data('unit');
 
             var modal = $(this);
             modal.find('#ingredient_id').val(ingredientId);
             modal.find('#branch_id').val(branchId);
             modal.find('#ingredient_name').val(ingredientName);
+            modal.find('#price_per_unit').val(pricePerUnit);
+            
+            // Display price information
+            if (pricePerUnit > 0) {
+                modal.find('#price_display').text('₱' + parseFloat(pricePerUnit).toFixed(2) + ' per ' + unit);
+            } else {
+                modal.find('#price_display').text('Price not set').addClass('text-warning');
+            }
             
             console.log('Branch ID set to:', branchId);
         });
 
-document.addEventListener("DOMContentLoaded", function () {
-    const branchId = <?php echo $current_branch_id; ?>;
-    fetch('backend/checkStock.php?branchID=' + branchId)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'low_stock') {
-                const lowStockCount = data.notifications.length;
-                const lowStockDiv = document.getElementById("lowStockCount");
-                lowStockDiv.textContent = `⚠️ ${lowStockCount}`;
-                
-                const tooltipContent = data.notifications
-                    .map(item => `${item.productName} (${item.stockQuantity}) - ${item.branchName}`)
-                    .join('\n');
-                lowStockDiv.setAttribute("title", tooltipContent);
-            } else {
-                document.getElementById("lowStockCount").textContent = "✅ All stocks are sufficient";
-            }
-        })
-        .catch(error => console.error('Error fetching low stock data:', error));
-});                              
+        // Calculate estimated cost when quantity changes
+        $(document).on('input', '#restockAmount', function() {
+            var quantity = parseFloat($(this).val()) || 0;
+            var pricePerUnit = parseFloat($('#price_per_unit').val()) || 0;
+            var totalCost = quantity * pricePerUnit;
+            
+            $('#estimated_cost').text('₱' + totalCost.toFixed(2));
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const branchId = <?php echo $current_branch_id; ?>;
+            fetch('backend/checkStock.php?branchID=' + branchId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'low_stock') {
+                        const lowStockCount = data.notifications.length;
+                        const lowStockDiv = document.getElementById("lowStockCount");
+                        lowStockDiv.textContent = `⚠️ ${lowStockCount}`;
+                        
+                        const tooltipContent = data.notifications
+                            .map(item => `${item.productName} (${item.stockQuantity}) - ${item.branchName}`)
+                            .join('\n');
+                        lowStockDiv.setAttribute("title", tooltipContent);
+                    } else {
+                        document.getElementById("lowStockCount").textContent = "✅ All stocks are sufficient";
+                    }
+                })
+                .catch(error => console.error('Error fetching low stock data:', error));
+        });                              
     </script>
 
 </body>
@@ -298,5 +344,4 @@ $stmt->close();
 $mysqli->close();
 ob_end_flush();
 ?>
-
 </html>

@@ -35,28 +35,23 @@ CREATE TABLE `attendance` (
   `time_out` time DEFAULT NULL,
   `status` enum('present','late','absent','on_leave') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'absent',
   `late_minutes` int DEFAULT '0',
-  `scheduled_shift` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `scheduled_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_general_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_attendance` (`employee_id`,`attendance_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `attendance`
 --
 
-INSERT INTO `attendance` (`id`, `employee_id`, `attendance_date`, `time_in`, `time_out`, `status`, `late_minutes`, `scheduled_shift`, `notes`, `created_at`) VALUES
-(1, 15633, '2025-10-22', '19:31:55', '00:00:00', 'late', 691, NULL, '', '2025-10-22 16:22:01'),
-(3, 20002, '2025-10-22', '19:32:35', '19:31:41', 'late', 692, NULL, NULL, '2025-10-22 16:43:19'),
-(8, 20002, '2025-10-23', '22:40:40', '22:57:03', 'late', 880, NULL, NULL, '2025-10-22 17:00:26'),
-(12, 14939, '2025-10-22', '19:32:17', NULL, 'late', 692, NULL, NULL, '2025-10-22 17:32:17'),
-(14, 15633, '2025-10-23', '22:33:16', '22:40:21', 'late', 873, NULL, NULL, '2025-10-22 17:37:50'),
-(15, 14939, '2025-10-23', '22:57:17', NULL, 'late', 897, NULL, NULL, '2025-10-22 17:38:14'),
-(16, 38502, '2025-10-23', '03:30:47', '03:31:02', 'present', 0, NULL, NULL, '2025-10-22 19:30:47'),
-(17, 20002, '2025-10-24', '00:11:29', '00:25:26', 'present', 0, NULL, NULL, '2025-10-23 16:03:46'),
-(18, 31980, '2025-10-24', '00:06:29', '00:07:34', 'present', 0, NULL, NULL, '2025-10-23 16:06:29'),
-(19, 26770, '2025-10-24', '00:09:26', '00:10:04', 'present', 0, NULL, NULL, '2025-10-23 16:09:26');
-
--- --------------------------------------------------------
+LOCK TABLES `attendance` WRITE;
+/*!40000 ALTER TABLE `attendance` DISABLE KEYS */;
+INSERT INTO `attendance` VALUES (1,15633,'2025-10-22','19:31:55','00:00:00','late',691,NULL,'','2025-10-22 16:22:01'),(3,20002,'2025-10-22','19:32:35','19:31:41','late',692,NULL,NULL,'2025-10-22 16:43:19'),(8,20002,'2025-10-23','22:40:40','22:57:03','late',880,NULL,NULL,'2025-10-22 17:00:26'),(12,14939,'2025-10-22','19:32:17',NULL,'late',692,NULL,NULL,'2025-10-22 17:32:17'),(14,15633,'2025-10-23','22:33:16','22:40:21','late',873,NULL,NULL,'2025-10-22 17:37:50'),(15,14939,'2025-10-23','22:57:17',NULL,'late',897,NULL,NULL,'2025-10-22 17:38:14'),(16,38502,'2025-10-23','03:30:47','03:31:02','present',0,NULL,NULL,'2025-10-22 19:30:47'),(17,20002,'2025-10-24','00:11:29','00:25:26','present',0,NULL,NULL,'2025-10-23 16:03:46'),(18,31980,'2025-10-24','00:06:29','00:07:34','present',0,NULL,NULL,'2025-10-23 16:06:29'),(19,26770,'2025-10-24','00:09:26','00:10:04','present',0,NULL,NULL,'2025-10-23 16:09:26'),(20,14939,'2025-10-24','00:39:50',NULL,'present',0,NULL,NULL,'2025-10-23 16:39:50');
+/*!40000 ALTER TABLE `attendance` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `branches`
@@ -202,41 +197,22 @@ CREATE TABLE `ingredientsHeader` (
   `id` int NOT NULL,
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `ingredients_limit` int NOT NULL DEFAULT '300',
-  `unit` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'g',
-  `is_archived` tinyint(1) DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `unit` varchar(5) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'g',
+  `is_archived` tinyint(1) DEFAULT '0',
+  `price_per_unit` decimal(10,2) DEFAULT '0.00',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `ingredientsHeader`
 --
 
-INSERT INTO `ingredientsHeader` (`id`, `name`, `ingredients_limit`, `unit`, `is_archived`) VALUES
-(2, 'Malaysian Non-Dairy Creamer', 300, 'g', 0),
-(3, 'Fructose Corn Syrup', 300, 'g', 0),
-(4, 'Loose Tea', 300, 'g', 0),
-(5, 'Wintermelon Flavor', 300, 'g', 0),
-(6, 'Okinawa Flavor', 300, 'g', 0),
-(7, 'Hokkaido Flavor', 300, 'g', 0),
-(8, 'Matcha Flavor', 300, 'g', 0),
-(9, 'Caramel Sugar Flavor', 300, 'g', 0),
-(10, 'Hazelnut Flavor', 300, 'g', 0),
-(11, 'Chocolate Flavor', 300, 'g', 0),
-(12, 'Dark Chocolate Flavor', 300, 'g', 0),
-(13, 'Cookies & Cream Flavor', 300, 'g', 0),
-(14, 'Red Velvet Flavor', 300, 'g', 0),
-(15, 'Mango Cheesecake Flavor', 300, 'g', 0),
-(16, 'Tapioca Pearls', 300, 'g', 0),
-(17, 'Nata', 300, 'g', 0),
-(18, 'Popping Boba', 300, 'g', 0),
-(19, 'Crushed Cookies', 300, 'g', 0),
-(20, 'Ice', 300, 'g', 0),
-(21, 'Plastic Cups - M', 100, 'pcs', 0),
-(22, 'Plastic Cups - L', 100, 'pcs', 0),
-(23, 'Plastic Straw', 100, 'pcs', 0),
-(24, 'Plastic Lids', 100, 'pcs', 0),
-(25, 'Tissue', 100, 'pcs', 0);
-
--- --------------------------------------------------------
+LOCK TABLES `ingredientsheader` WRITE;
+/*!40000 ALTER TABLE `ingredientsheader` DISABLE KEYS */;
+INSERT INTO `ingredientsheader` VALUES (2,'Malaysian Non-Dairy Creamer',300,'g',0,0.00),(3,'Fructose Corn Syrup',300,'g',0,0.11),(4,'Loose Tea',300,'g',0,0.06),(5,'Wintermelon Flavor',300,'g',0,1.25),(6,'Okinawa Flavor',300,'g',0,0.74),(7,'Hokkaido Flavor',300,'g',0,0.25),(8,'Matcha Flavor',300,'g',0,0.40),(9,'Caramel Sugar Flavor',300,'g',0,0.31),(10,'Hazelnut Flavor',300,'g',0,0.25),(11,'Chocolate Flavor',300,'g',0,0.41),(12,'Dark Chocolate Flavor',300,'g',0,0.26),(13,'Cookies & Cream Flavor',300,'g',0,0.41),(14,'Red Velvet Flavor',300,'g',0,0.20),(15,'Mango Cheesecake Flavor',300,'g',0,0.32),(16,'Tapioca Pearls',300,'g',0,0.20),(17,'Nata',300,'g',0,0.00),(18,'Popping Boba',300,'g',0,0.09),(19,'Crushed Cookies',300,'g',0,0.05),(20,'Ice',300,'g',0,0.19),(21,'Plastic Cups - M',100,'pcs',0,0.34),(22,'Plastic Cups - L',100,'pcs',0,0.00),(23,'Plastic Straw',100,'pcs',0,0.00),(24,'Plastic Lids',100,'pcs',0,1.00),(25,'Tissue',100,'pcs',0,0.00);
+/*!40000 ALTER TABLE `ingredientsheader` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `payroll`
@@ -575,39 +551,24 @@ CREATE TABLE `restockOrder` (
   `requested_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `restock_amount` int NOT NULL,
   `is_accepted` tinyint(1) DEFAULT '0',
-  `is_confirmed` tinyint(1) DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `is_confirmed` tinyint(1) DEFAULT '0',
+  `invoice_number` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `confirmed_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_invoice_number` (`invoice_number`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `restockOrder`
 --
 
-INSERT INTO `restockOrder` (`id`, `name`, `ingredientsName`, `branchID`, `ingredientsID`, `requested_by`, `restock_amount`, `is_accepted`, `is_confirmed`) VALUES
-(1, 'encoder almar', 'Caramel Sugar Flavor', 964, 1120, 'encoder almar', 10, 1, 1),
-(2, 'encoder almar', 'Chocolate Flavor', 964, 11, 'encoder almar', 50, 1, 1),
-(3, 'encoder almar', 'Cookies & Cream Flavor', 964, 13, 'encoder almar', 50, 1, 1),
-(4, 'encoder almar', 'Crushed Cookies', 964, 19, 'encoder almar', 50, 1, 1),
-(5, 'encoder almar', 'Dark Chocolate Flavor', 964, 12, 'encoder almar', 50, 1, 1),
-(6, 'encoder almar', 'Fructose Corn Syrup', 964, 3, 'encoder almar', 50, 1, 1),
-(7, 'encoder almar', 'Hazelnut Flavor', 964, 10, 'encoder almar', 50, 1, 1),
-(8, 'encoder almar', 'Fructose Corn Syrup', 964, 3, 'encoder almar', 50, 1, 1),
-(9, 'encoder almar', 'Hokkaido Flavor', 964, 7, '17509', 50, 1, 1),
-(10, 'encoder almar', 'Loose Tea', 964, 4, '17509', 50, 1, 1),
-(11, 'encoder almar', 'Ice', 964, 20, '17509', 150, 1, 1),
-(12, 'encoder almar', 'Popping Boba', 964, 18, '17509', 50, 1, 1),
-(13, 'encoder almar', 'Caramel Sugar Flavor', 964, 9, '17509', 50, 1, 1),
-(14, 'Yheena Mangabat', 'Chocolate Flavor', 964, 11, '10895', 1000, 1, 1),
-(15, 'Aubrey Daraido', 'Crushed Cookies', 245, 19, '12664', 200, 1, 1),
-(16, 'Aubrey Daraido', 'Loose Tea', 245, 4, '12664', 500, 1, 1),
-(17, 'Aubrey Daraido', 'Loose Tea', 245, 4, '12664', 500, 1, 1),
-(18, 'Stock management', 'Tissue', 964, 25, '14939', 1000, 1, 0),
-(19, 'Stock management', 'Caramel Sugar Flavor', 245, 9, '14939', 1000, 0, 0),
-(20, 'Stock management', 'Caramel Sugar Flavor', 245, 9, '14939', 1000, 0, 0),
-(21, 'Stock management', 'Caramel Sugar Flavor', 245, 9, '14939', 10, 0, 0),
-(22, 'Stock management', 'Chocolate Flavor', 245, 11, '14939', 20, 0, 0),
-(23, 'noe orano', 'Caramel Sugar Flavor', 8954, 9, '31980', 10, 0, 0);
-
--- --------------------------------------------------------
+LOCK TABLES `restockorder` WRITE;
+/*!40000 ALTER TABLE `restockorder` DISABLE KEYS */;
+INSERT INTO `restockorder` VALUES (1,'encoder almar','Caramel Sugar Flavor',964,1120,'encoder almar',10,1,1,'INV-20251024-0001','2025-10-24 02:09:22',NULL),(2,'encoder almar','Chocolate Flavor',964,11,'encoder almar',50,1,1,'INV-20251024-0002','2025-10-24 02:09:22',NULL),(3,'encoder almar','Cookies & Cream Flavor',964,13,'encoder almar',50,1,1,'INV-20251024-0003','2025-10-24 02:09:22',NULL),(4,'encoder almar','Crushed Cookies',964,19,'encoder almar',50,1,1,'INV-20251024-0004','2025-10-24 02:09:22',NULL),(5,'encoder almar','Dark Chocolate Flavor',964,12,'encoder almar',50,1,1,'INV-20251024-0005','2025-10-24 02:09:22',NULL),(6,'encoder almar','Fructose Corn Syrup',964,3,'encoder almar',50,1,1,'INV-20251024-0006','2025-10-24 02:09:22',NULL),(7,'encoder almar','Hazelnut Flavor',964,10,'encoder almar',50,1,1,'INV-20251024-0007','2025-10-24 02:09:22',NULL),(8,'encoder almar','Fructose Corn Syrup',964,3,'encoder almar',50,1,1,'INV-20251024-0008','2025-10-24 02:09:22',NULL),(9,'encoder almar','Hokkaido Flavor',964,7,'17509',50,1,1,'INV-20251024-0009','2025-10-24 02:09:22',NULL),(10,'encoder almar','Loose Tea',964,4,'17509',50,1,1,'INV-20251024-0010','2025-10-24 02:09:22',NULL),(11,'encoder almar','Ice',964,20,'17509',150,1,1,'INV-20251024-0011','2025-10-24 02:09:22',NULL),(12,'encoder almar','Popping Boba',964,18,'17509',50,1,1,'INV-20251024-0012','2025-10-24 02:09:22',NULL),(13,'encoder almar','Caramel Sugar Flavor',964,9,'17509',50,1,1,'INV-20251024-0013','2025-10-24 02:09:22',NULL),(14,'Yheena Mangabat','Chocolate Flavor',964,11,'10895',1000,1,1,'INV-20251024-0014','2025-10-24 02:09:22',NULL),(15,'Aubrey Daraido','Crushed Cookies',245,19,'12664',200,1,1,'INV-20251024-0015','2025-10-24 02:09:22',NULL),(16,'Aubrey Daraido','Loose Tea',245,4,'12664',500,1,1,'INV-20251024-0016','2025-10-24 02:09:22',NULL),(17,'Aubrey Daraido','Loose Tea',245,4,'12664',500,1,1,'INV-20251024-0017','2025-10-24 02:09:22',NULL),(18,'Stock management','Tissue',964,25,'14939',1000,1,0,'INV-20251024-0018','2025-10-24 02:09:22',NULL),(19,'Stock management','Caramel Sugar Flavor',245,9,'14939',1000,0,0,'INV-20251024-0019','2025-10-24 02:09:22',NULL),(20,'Stock management','Caramel Sugar Flavor',245,9,'14939',1000,0,0,'INV-20251024-0020','2025-10-24 02:09:22',NULL),(21,'Stock management','Caramel Sugar Flavor',245,9,'14939',10,0,0,'INV-20251024-0021','2025-10-24 02:09:22',NULL),(22,'Stock management','Chocolate Flavor',245,11,'14939',20,0,0,'INV-20251024-0022','2025-10-24 02:09:22',NULL),(23,'noe orano','Caramel Sugar Flavor',8954,9,'31980',10,0,0,'INV-20251024-0023','2025-10-24 02:09:22',NULL);
+/*!40000 ALTER TABLE `restockorder` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `sales`
@@ -994,3 +955,6 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2025-10-24  2:27:34
