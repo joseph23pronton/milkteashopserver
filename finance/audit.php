@@ -209,7 +209,7 @@ $discrepancies = $mysqli->query($discrepancies_query);
                                             <th>Transaction Total</th>
                                             <th>Difference</th>
                                             <th>Date</th>
-                                            <th>Actions</th>
+                                            
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -220,9 +220,7 @@ $discrepancies = $mysqli->query($discrepancies_query);
                                             <td>₱<?php echo number_format($row['transaction_total'] ?? 0, 2); ?></td>
                                             <td class="text-danger">₱<?php echo number_format(abs($row['sales_total'] - ($row['transaction_total'] ?? 0)), 2); ?></td>
                                             <td><?php echo date('M d, Y', strtotime($row['sales_date'])); ?></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-warning">Investigate</button>
-                                            </td>
+                                            
                                         </tr>
                                         <?php endwhile; ?>
                                     </tbody>
@@ -247,7 +245,6 @@ $discrepancies = $mysqli->query($discrepancies_query);
                                             <th>Reference</th>
                                             <th>Amount</th>
                                             <th>Date</th>
-                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
