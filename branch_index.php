@@ -243,11 +243,16 @@ while ($row = $result->fetch_assoc()) {
                 <?php
                    
                     if (isset($branch_id)) {
-                        // Prepare the SQL query to fetch restock orders for the specific branch
-                        $query = "SELECT r.id, r.ingredientsName, r.restock_amount, r.requested_by, r.is_accepted, r.branchID, r.ingredientsID,
-                                        b.name as branchName 
+                        // Prepare the SQL query to fetch restock orders for the specific branch with price information and invoice numbers
+                        $query = "SELECT r.id, r.ingredientsName, r.restock_amount, r.requested_by, r.is_accepted, r.branchID, r.ingredientsID, r.created_at,
+                                        b.name as branchName,
+                                        ih.price_per_unit,
+                                        ih.unit as ingredient_unit,
+                                        (r.restock_amount * COALESCE(ih.price_per_unit, 0)) AS total_cost,
+                                        COALESCE(r.invoice_number, CONCAT('INV-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', LPAD(r.id, 4, '0'))) AS invoice_number
                                 FROM restockOrder AS r
                                 LEFT JOIN branches AS b ON r.branchID = b.id 
+                                LEFT JOIN ingredientsHeader ih ON r.ingredientsID = ih.id
                                 WHERE r.branchID = ? AND r.is_confirmed = 0";
                         
                         // Prepare the statement
@@ -287,10 +292,13 @@ while ($row = $result->fetch_assoc()) {
                                             <thead>
                                                 <tr>
                                                     <th>Name</th>
+                                                    <th>Invoice No.</th>
                                                     <th>Quantity</th>
+                                                    <th>Price/Unit</th>
+                                                    <th>Total Cost</th>
                                                     <th>Requested By</th>
                                                     <th>Branch Name</th>
-                                                    <th>Action</th>
+                                                    <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -298,33 +306,90 @@ while ($row = $result->fetch_assoc()) {
                                                     <?php while ($row = $result->fetch_assoc()): ?>
                                                         <tr>
                                                             <td><?= htmlspecialchars($row['ingredientsName']) ?></td>
-                                                            <td><?= (int) $row['restock_amount'] ?></td>
+                                                            <td>
+                                                                <code class="text-primary"><?= htmlspecialchars($row['invoice_number']) ?></code>
+                                                            </td>
+                                                            <td><?= (int) $row['restock_amount'] ?> <?= htmlspecialchars($row['ingredient_unit'] ?? '') ?></td>
+                                                            <td>
+                                                                <?php if ($row['price_per_unit'] > 0): ?>
+                                                                    ₱<?= number_format($row['price_per_unit'], 2) ?>
+                                                                <?php else: ?>
+                                                                    <span class="text-muted">Not set</span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <strong>
+                                                                    <?php if ($row['total_cost'] > 0): ?>
+                                                                        ₱<?= number_format($row['total_cost'], 2) ?>
+                                                                    <?php else: ?>
+                                                                        ₱0.00
+                                                                    <?php endif; ?>
+                                                                </strong>
+                                                            </td>
                                                             <td><?= htmlspecialchars($row['requested_by']) ?></td>
                                                             <td><?= htmlspecialchars($row['branchName']) ?></td>
                                                             <td>
-                                                                <?php if ($_SESSION['role'] == 'admin' || $row['is_accepted'] == 1): ?>
-                                                                    <!-- Accept Button -->
-                                                                    <form method="POST" action="<?php echo ($_SESSION['role'] == 'admin') ? 'backend/accept_restock.php' : 'backend/confirm_restock.php'; ?>">
-                                                                        <input type="hidden" name="restockAmount" value="<?= $row['restock_amount'] ?>">
-                                                                        <input type="hidden" name="branchID" value="<?= $row['branchID'] ?>">
-                                                                        <input type="hidden" name="ingredientsID" value="<?= $row['ingredientsID'] ?>">
-                                                                        <input type="hidden" name="restock_id" value="<?= $row['id'] ?>">
-                                                                        <button type="submit" class="btn btn-success btn-sm">Confirm</button>
-                                                                    </form>
-                                                                <?php else: ?>
-                                                                    <!-- Disabled Button -->
-                                                                    <button class="btn btn-secondary btn-sm" disabled>Waiting For Manager</button>
-                                                                <?php endif; ?>
+                                                                <div class="btn-group" role="group">
+                                                                    <!-- Receipt Button -->
+                                                                    <button class="btn btn-info btn-sm" 
+                                                                            onclick="viewReceipt(<?= $row['id'] ?>, '<?= htmlspecialchars($row['invoice_number']) ?>')"
+                                                                            title="View Receipt">
+                                                                        <i class="fas fa-receipt"></i>
+                                                                    </button>
+                                                                    
+                                                                    <?php if ($_SESSION['role'] == 'admin' || $row['is_accepted'] == 1): ?>
+                                                                        <!-- Confirm Button -->
+                                                                        <form method="POST" action="<?php echo ($_SESSION['role'] == 'admin') ? 'backend/accept_restock.php' : 'backend/confirm_restock.php'; ?>" style="display: inline;">
+                                                                            <input type="hidden" name="restockAmount" value="<?= $row['restock_amount'] ?>">
+                                                                            <input type="hidden" name="branchID" value="<?= $row['branchID'] ?>">
+                                                                            <input type="hidden" name="ingredientsID" value="<?= $row['ingredientsID'] ?>">
+                                                                            <input type="hidden" name="restock_id" value="<?= $row['id'] ?>">
+                                                                            <button type="submit" class="btn btn-success btn-sm" title="Confirm Order">
+                                                                                <i class="fas fa-check"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                    <?php else: ?>
+                                                                        <!-- Disabled Button -->
+                                                                        <button class="btn btn-secondary btn-sm" disabled title="Waiting For Manager">
+                                                                            <i class="fas fa-clock"></i>
+                                                                        </button>
+                                                                    <?php endif; ?>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     <?php endwhile; ?>
                                                 <?php else: ?>
                                                     <tr>
-                                                        <td colspan="5" class="text-center">No restock orders found.</td>
+                                                        <td colspan="8" class="text-center">No restock orders found.</td>
                                                     </tr>
                                                 <?php endif; ?>
                                             </tbody>
                                         </table>
+                                        
+                                        <?php
+                                        // Calculate total cost for all pending restock orders
+                                        if (isset($branch_id)) {
+                                            $total_query = "SELECT SUM(r.restock_amount * COALESCE(ih.price_per_unit, 0)) AS total_restock_cost
+                                                            FROM restockOrder r
+                                                            LEFT JOIN ingredientsHeader ih ON r.ingredientsID = ih.id
+                                                            WHERE r.branchID = ? AND r.is_confirmed = 0";
+                                            $total_stmt = $mysqli->prepare($total_query);
+                                            if ($total_stmt) {
+                                                $total_stmt->bind_param("i", $branch_id);
+                                                $total_stmt->execute();
+                                                $total_result = $total_stmt->get_result();
+                                                $total_row = $total_result->fetch_assoc();
+                                                $total_restock_cost = $total_row['total_restock_cost'] ?: 0;
+                                                
+                                                if ($total_restock_cost > 0) {
+                                                    echo '<div class="mt-3 text-right">';
+                                                    echo '<strong>Total Estimated Cost: ₱' . number_format($total_restock_cost, 2) . '</strong>';
+                                                    echo '</div>';
+                                                }
+                                                $total_stmt->close();
+                                            }
+                                        }
+                                        ?>
                                     </div>
                                 </div>
                             <?php endif; ?>
@@ -367,6 +432,35 @@ while ($row = $result->fetch_assoc()) {
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
                     <a class="btn btn-primary" href="logout.php">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div class="modal fade" id="receiptModal" tabindex="-1" role="dialog" aria-labelledby="receiptModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiptModalLabel">
+                        <i class="fas fa-receipt"></i> Restock Receipt
+                    </h5>
+                    <button type="button" class="close" onclick="$('#receiptModal').modal('hide');" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="receiptContent">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="$('#receiptModal').modal('hide');">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printReceipt()">
+                        <i class="fas fa-print"></i> Print Receipt
+                    </button>
                 </div>
             </div>
         </div>
@@ -497,6 +591,86 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 </script>
+
+<script>
+// Receipt viewing functionality
+function viewReceipt(restockId, invoiceNumber) {
+    // Show the modal
+    $('#receiptModal').modal('show');
+    
+    // Load receipt content via AJAX
+    $.ajax({
+        url: 'backend/generate_receipt.php',
+        method: 'POST',
+        data: {
+            restock_id: restockId,
+            invoice_number: invoiceNumber
+        },
+        success: function(response) {
+            $('#receiptContent').html(response);
+        },
+        error: function() {
+            $('#receiptContent').html('<div class="alert alert-danger">Error loading receipt. Please try again.</div>');
+        }
+    });
+}
+
+// Print receipt function
+function printReceipt() {
+    const printContent = document.getElementById('receiptContent').innerHTML;
+    const printWindow = window.open('', '', 'height=600,width=800');
+    
+    printWindow.document.write('<html><head><title>Restock Receipt</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write('body { font-family: Arial, sans-serif; margin: 20px; }');
+    printWindow.document.write('.receipt-header { text-align: center; margin-bottom: 20px; }');
+    printWindow.document.write('.receipt-details { margin-bottom: 20px; }');
+    printWindow.document.write('.receipt-table { width: 100%; border-collapse: collapse; }');
+    printWindow.document.write('.receipt-table th, .receipt-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }');
+    printWindow.document.write('.receipt-table th { background-color: #f2f2f2; }');
+    printWindow.document.write('.receipt-total { text-align: right; font-weight: bold; font-size: 18px; }');
+    printWindow.document.write('@media print { .no-print { display: none; } }');
+    printWindow.document.write('</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    
+    printWindow.document.close();
+    printWindow.print();
+    
+    // Optional: Close modal after printing (ask user first)
+    // Uncomment this if you want to auto-close modal after printing:
+    // setTimeout(function() {
+    //     $('#receiptModal').modal('hide');
+    // }, 2000);
+}
+</script>
+
+<script>
+// Additional modal controls for receipt modal
+$(document).ready(function() {
+    // Close receipt modal when clicking outside
+    $('#receiptModal').on('click', function(e) {
+        if (e.target === this) {
+            $(this).modal('hide');
+        }
+    });
+    
+    // Close modal with Escape key
+    $(document).on('keyup', function(e) {
+        if (e.keyCode === 27) { // Escape key
+            $('#receiptModal').modal('hide');
+        }
+    });
+    
+    // Ensure modal closes properly when hidden
+    $('#receiptModal').on('hidden.bs.modal', function() {
+        // Clear content when modal is closed
+        $('#receiptContent').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
+    });
+});
+</script>
+
 </body>
 
 </html>

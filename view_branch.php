@@ -60,8 +60,14 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
         } ?>
 
         <div class="container-fluid">
-            <h1 class="h3 mb-2 text-gray-800"><?= $branch['name'] ?> Inventory</h1>
-            <p class="mb-4">Branch Inventory in <?= $branch['city'] ?></p>
+          <h1 class="h3 mb-2 text-gray-800"><?= $branch['name'] ?> Inventory</h1>
+<p class="mb-4">
+    <?php if (isset($branch['city'])): ?>
+        Branch Inventory in <?= $branch['city'] ?>
+    <?php else: ?>
+        Branch Inventory 
+    <?php endif; ?>
+</p>
             
             <div class="col-xl-3 col-md-6 mb-4">
                 <a href="sales.php?id=<?= $_GET['id'] ?>&b_id=<?= $_GET['id'] ?>" class="card-link">

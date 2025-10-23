@@ -1,92 +1,101 @@
 <?php
-$mysqli = require $_SERVER['DOCUMENT_ROOT'] . "/database.php";
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../index.php');
+    exit();
+}
 
+// Check if user is manager or admin
+if ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'manager') {
+    header('Location: ../branch_index.php?error=unauthorized');
+    exit();
+}
+
+include_once 'database.php';
+
+// Check if form was submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restock_id'])) {
-    // Get POST parameters
-    $restock_id = (int) $_POST['restock_id'];
-    $branch_id = (int) $_POST['branchID'];
-    $ingredient_id = (int) $_POST['ingredientsID'];
-    $restock_quantity = (int) $_POST['restockAmount'];
-    $current_date = date('Y-m-d H:i:s');
-
+    
+    $restock_id = (int)$_POST['restock_id'];
+    $restock_amount = (int)$_POST['restockAmount'];
+    $branch_id = (int)$_POST['branchID'];
+    $ingredients_id = (int)$_POST['ingredientsID'];
+    
     // Start transaction
     $mysqli->begin_transaction();
-
+    
     try {
-        // Step 1: Check if the ingredient record exists for the given branch
-        $check_sql = "
-            SELECT id 
-            FROM ingredients 
-            WHERE ingredientsID = ? AND branchesID = ?
-        ";
-        $check_stmt = $mysqli->prepare($check_sql);
-        if (!$check_stmt) {
-            throw new Exception("SQL Error: " . $mysqli->error);
+        // Get the current restock order details
+        $order_query = "SELECT * FROM restockOrder WHERE id = ? AND is_confirmed = 0";
+        $order_stmt = $mysqli->prepare($order_query);
+        $order_stmt->bind_param('i', $restock_id);
+        $order_stmt->execute();
+        $order_result = $order_stmt->get_result();
+        
+        if ($order_result->num_rows === 0) {
+            throw new Exception("Order not found or already confirmed");
         }
-        $check_stmt->bind_param('ii', $ingredient_id, $branch_id);
+        
+        $order = $order_result->fetch_assoc();
+        
+        // Generate invoice number if not exists
+        if (empty($order['invoice_number'])) {
+            $invoice_number = 'INV-' . date('Ymd') . '-' . str_pad($restock_id, 4, '0', STR_PAD_LEFT);
+            
+            // Update order with invoice number
+            $update_invoice_query = "UPDATE restockOrder SET invoice_number = ? WHERE id = ?";
+            $update_invoice_stmt = $mysqli->prepare($update_invoice_query);
+            $update_invoice_stmt->bind_param('si', $invoice_number, $restock_id);
+            $update_invoice_stmt->execute();
+        }
+        
+        // Update restock order status
+        $update_query = "UPDATE restockOrder SET is_confirmed = 1, confirmed_at = NOW(), confirmed_by = ? WHERE id = ?";
+        $update_stmt = $mysqli->prepare($update_query);
+        $update_stmt->bind_param('ii', $_SESSION['user_id'], $restock_id);
+        $update_stmt->execute();
+        
+        // Update or insert into ingredients table
+        $check_query = "SELECT currentStock FROM ingredients WHERE ingredientsID = ? AND branchesID = ?";
+        $check_stmt = $mysqli->prepare($check_query);
+        $check_stmt->bind_param('ii', $ingredients_id, $branch_id);
         $check_stmt->execute();
-        $result = $check_stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            // Record exists, update it
-            $row = $result->fetch_assoc();
-            $ingredient_record_id = $row['id'];
-
-            $update_sql = "
-                UPDATE ingredients 
-                SET currentStock = currentStock + ?, lastRestock = ?, updated_at = ? 
-                WHERE id = ?
-            ";
-            $update_stmt = $mysqli->prepare($update_sql);
-            if (!$update_stmt) {
-                throw new Exception("SQL Error: " . $mysqli->error);
-            }
-            $update_stmt->bind_param('issi', $restock_quantity, $current_date, $current_date, $ingredient_record_id);
-            $update_stmt->execute();
+        $check_result = $check_stmt->get_result();
+        
+        if ($check_result->num_rows > 0) {
+            // Update existing record
+            $row = $check_result->fetch_assoc();
+            $new_stock = $row['currentStock'] + $restock_amount;
+            
+            $update_ingredient_query = "UPDATE ingredients SET currentStock = ?, lastRestock = CURDATE(), updated_at = NOW() WHERE ingredientsID = ? AND branchesID = ?";
+            $update_ingredient_stmt = $mysqli->prepare($update_ingredient_query);
+            $update_ingredient_stmt->bind_param('iii', $new_stock, $ingredients_id, $branch_id);
+            $update_ingredient_stmt->execute();
         } else {
-            $new_id = rand(1000, 9999);
-            // Record doesn't exist, create a new one
-            $insert_sql = "
-                INSERT INTO ingredients (id, ingredientsID, branchesID, currentStock, lastRestock, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?)
-            ";
-            $insert_stmt = $mysqli->prepare($insert_sql);
-            if (!$insert_stmt) {
-                throw new Exception("SQL Error: " . $mysqli->error);
-            }
-            $insert_stmt->bind_param('iiiiss', $new_id, $ingredient_id, $branch_id, $restock_quantity, $current_date, $current_date);
-            $insert_stmt->execute();
+            // Insert new record
+            $insert_ingredient_query = "INSERT INTO ingredients (ingredientsID, branchesID, currentStock, lastRestock, created_at, updated_at) VALUES (?, ?, ?, CURDATE(), NOW(), NOW())";
+            $insert_ingredient_stmt = $mysqli->prepare($insert_ingredient_query);
+            $insert_ingredient_stmt->bind_param('iii', $ingredients_id, $branch_id, $restock_amount);
+            $insert_ingredient_stmt->execute();
         }
-
-        // Step 2: Update restocOrder table to mark as confirmed
-        $update_restock_sql = "
-            UPDATE restockOrder 
-            SET is_confirmed = 1 
-            WHERE id = ?
-        ";
-        $update_restock_stmt = $mysqli->prepare($update_restock_sql);
-        if (!$update_restock_stmt) {
-            throw new Exception("SQL Error: " . $mysqli->error);
-        }
-        $update_restock_stmt->bind_param('i', $restock_id);
-        $update_restock_stmt->execute();
-
+        
         // Commit transaction
         $mysqli->commit();
-
-        // Redirect to success page
-        header("Location: /branch_index.php?id=$branch_id&success=true");
-        exit;
-
+        
+        // Redirect with success message
+        header('Location: ../branch_index.php?success=restock_confirmed&id=' . $branch_id);
+        exit();
+        
     } catch (Exception $e) {
-        // Rollback transaction on error
+        // Rollback transaction
         $mysqli->rollback();
-        echo "Error processing restock: " . $e->getMessage();
+        
+        // Redirect with error message
+        header('Location: ../branch_index.php?error=' . urlencode($e->getMessage()) . '&id=' . $branch_id);
+        exit();
     }
-
-    // Close connection
-    $mysqli->close();
 } else {
-    echo "Invalid request.";
+    header('Location: ../branch_index.php?error=invalid_request');
+    exit();
 }
 ?>
