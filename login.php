@@ -1,6 +1,5 @@
 <?php
 session_start();
-
 date_default_timezone_set('Asia/Manila');
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -32,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $today = date('Y-m-d');
             $current_time = date('H:i:s');
             
-            if ($user["role"] == "cashier" || $user["role"] == "encoder" || $user["role"] == "hr") {
+            if ($user["role"] == "cashier" || $user["role"] == "encoder" || $user["role"] == "hr" || $user["role"] == "finance") {
                 $work_start = '08:00:00';
                 $late_minutes = 0;
                 $status = 'present';
@@ -64,15 +63,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 exit;
             }
 
-            // ✅ FINANCE ROLE REDIRECT ADDED HERE
+            
             if ($_SESSION["role"] == "hr") {
                 header("Location: HR/dashboard.php");
-            } elseif ($_SESSION["role"] == "cashier") {
+            } elseif ($_SESSION["role"] == "sales") {
                 header("Location: branch_index.php");
-            } elseif ($_SESSION["role"] == "encoder") {
-                header("Location: branch_index.php");
+            } elseif ($_SESSION["role"] == "inventory") {
+                header("Location: index.php");
             } elseif ($_SESSION["role"] == "finance") {
-                header("Location: finance/dashboard.php");  // 👈 THIS IS THE NEW LINE
+                header("Location: finance/dashboard.php");  
             } else {
                 header("Location: index.php");
             }
@@ -86,8 +85,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 }
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
