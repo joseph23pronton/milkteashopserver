@@ -91,7 +91,7 @@ $user_role = $_SESSION['role'] ?? null;
             </a>
         </li>
 
-        <?php if ($user_role === 'encoder'): ?>
+        <?php if ($user_role === 'inventory'): ?>
             <?php foreach ($branches as $branch): ?>
                 <?php if ($branch['id'] == $assigned_branch): ?>
                     <li class="nav-item">
@@ -100,10 +100,10 @@ $user_role = $_SESSION['role'] ?? null;
                             <span><?php echo htmlspecialchars($branch['name']); ?></span>
                         </a>
                     </li>
-                    <li class="nav-item <?php echo ($screen == 'products') ? 'active' : ''; ?>">
-                        <a class="nav-link" href="products.php">
+                    <li class="nav-item">
+                        <a class="nav-link" href="main_inventory.php">
                             <i class="fas fa-fw fa-mug-hot"></i>
-                            <span>Products</span>
+                            <span>Ingredients</span>
                         </a>
                     </li>
                 <?php endif; ?>
