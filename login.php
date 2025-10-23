@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             if ($_SESSION["role"] == "hr") {
                 header("Location: HR/dashboard.php");
-            } elseif ($_SESSION["role"] == "cashier") {
+            } elseif ($_SESSION["role"] == "production") {
                 header("Location: branch_index.php");
             } elseif ($_SESSION["role"] == "encoder") {
                 header("Location: branch_index.php");
