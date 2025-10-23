@@ -79,12 +79,6 @@ $user_role = $_SESSION['role'] ?? null;
             </a>
         </li>
 
-        <li class="nav-item <?php echo ($screen == 'products') ? 'active' : ''; ?>">
-            <a class="nav-link" href="products.php">
-                <i class="fas fa-fw fa-mug-hot"></i>
-                <span>Products</span>
-            </a>
-        </li>
 
         <hr class="sidebar-divider d-none d-md-block">
 
@@ -106,10 +100,17 @@ $user_role = $_SESSION['role'] ?? null;
                             <span><?php echo htmlspecialchars($branch['name']); ?></span>
                         </a>
                     </li>
+                    <li class="nav-item <?php echo ($screen == 'products') ? 'active' : ''; ?>">
+                        <a class="nav-link" href="products.php">
+                            <i class="fas fa-fw fa-mug-hot"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
                 <?php endif; ?>
             <?php endforeach; ?>
         <?php endif; ?>
 
+        
         <?php if ($user_role === 'cashier'): ?>
             <li class="nav-item">
                 <a class="nav-link" href="pos.php">
@@ -118,6 +119,16 @@ $user_role = $_SESSION['role'] ?? null;
                 </a>
             </li>
         <?php endif; ?>
+
+        <?php if ($user_role === 'production'): ?>
+            <li class="nav-item <?php echo ($screen == 'products') ? 'active' : ''; ?>">
+                <a class="nav-link" href="products.php">
+                    <i class="fas fa-fw fa-cash-register"></i>
+                    <span>Products Management</span>
+                </a>
+            </li>
+        <?php endif; ?>
+
 
     <?php endif; ?>
 

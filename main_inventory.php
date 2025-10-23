@@ -160,6 +160,7 @@ ob_start();
                             <tr>
                                 <th>Inventory Name</th>
                                 <th>Inventory Limit (Unit)</th>
+                                <th>Price Per Unit <strong>₱</strong></th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -181,6 +182,7 @@ ob_start();
                                     echo "<tr class='{$rowClass}' data-archived='{$isArchived}'>
                                             <td>{$row['name']}</td>
                                             <td>" . number_format($row['ingredients_limit'], 2) . " ({$row['unit']})</td>
+                                            <td>{$row['price_per_unit']} <strong>₱</strong></td>
                                             <td>{$statusBadge}</td>
                                             <td>
                                                 <div class='btn-group-action'>

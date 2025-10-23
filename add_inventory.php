@@ -21,11 +21,13 @@ if (isset($_GET['id'])) {
         $name = $row['name'];
         $ingredientsLimit = $row['ingredients_limit'];
         $ingredientsUnit = $row['unit'];
+        $price_per_unit = $row['price_per_unit'];
     } else {
         // Handle the case if no item is found (optional)
         $name = '';
         $ingredientsLimit = '';
         $ingredientsUnit = '';
+        $price_per_unit = '';
     }
 
     // Close the database connection
@@ -35,6 +37,7 @@ if (isset($_GET['id'])) {
     $name = '';
     $ingredientsLimit = '';
     $ingredientsUnit = '';
+    $price_per_unit = '';
 }
 ?>
 
@@ -57,6 +60,10 @@ if (isset($_GET['id'])) {
             <option value="pcs">Pieces</option>
             <option value="ml">MiliLiters</option>
         </select>
+    </div>
+    <div class="form-group">
+        <label for="price_per_unit">Price Per Unit</label>
+        <input type="number" class="form-control" step="0.01" id="price_per_unit" name="price_per_unit" value="<?= htmlspecialchars($price_per_unit) ?>" required>
     </div>
     <button type="submit" class="btn btn-primary">Save</button>
 </form>

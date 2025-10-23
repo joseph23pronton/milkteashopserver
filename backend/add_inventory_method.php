@@ -12,15 +12,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = $conn->real_escape_string($_POST['name']);
         $ingredients_limit = (int)$_POST['ingredients_limit']; // Cast to integer for safety
         $ingredients_unit = $conn->real_escape_string($_POST['ingredients_unit']);
+        $price_per_unit = $conn->real_escape_string($_POST['price_per_unit']);
 
         if ($id) {
             // Update existing inventory
-            $stmt = $conn->prepare("UPDATE ingredientsHeader SET name = ?, ingredients_limit = ?, unit = ? WHERE id = ?");
-            $stmt->bind_param("sisi", $name, $ingredients_limit, $ingredients_unit, $id);
+            $stmt = $conn->prepare("UPDATE ingredientsHeader SET name = ?, ingredients_limit = ?, unit = ?, price_per_unit = ? WHERE id = ?");
+            $stmt->bind_param("sisdi", $name, $ingredients_limit, $ingredients_unit, $price_per_unit, $id);
         } else {
             // Insert new inventory
-            $stmt = $conn->prepare("INSERT INTO ingredientsHeader (name, ingredients_limit, unit) VALUES (?, ?, ?)");
-            $stmt->bind_param("sis", $name, $ingredients_limit, $ingredients_unit);
+            $stmt = $conn->prepare("INSERT INTO ingredientsHeader (name, ingredients_limit, unit, price_per_unit) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("sisd", $name, $ingredients_limit, $ingredients_unit, $price_per_unit);
         }
 
         // Execute the query
