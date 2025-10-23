@@ -12,8 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         header("Location: employees.php?success=added");
         exit;
     } elseif ($_POST['action'] === 'edit') {
-        $stmt = $mysqli->prepare("UPDATE users SET branch_assignment=?, department_id=?, hire_date=? WHERE id=?");
-        $stmt->bind_param("iisi", $_POST['branch_assignment'], $_POST['department_id'], $_POST['hire_date'], $_POST['id']);
+        $stmt = $mysqli->prepare("UPDATE users SET role=?, branch_assignment=?, department_id=?, hire_date=? WHERE id=?");
+        $stmt->bind_param("siisi", $_POST['role'], $_POST['branch_assignment'], $_POST['department_id'], $_POST['hire_date'], $_POST['id']);
         $stmt->execute();
         header("Location: employees.php?success=updated");
         exit;
@@ -50,7 +50,7 @@ $branches = $mysqli->query("SELECT * FROM branches");
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $_SESSION['name']; ?></span>
-                                <i class="fas fa-user-circle fa-2x text-success"></i>
+                                <i class="fas fa-user fa-fw text-success"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
@@ -249,7 +249,7 @@ $branches = $mysqli->query("SELECT * FROM branches");
                     </div>
                     <div class="modal-body">
                         <div class="alert alert-info">
-                            <small><i class="fas fa-info-circle"></i> You can only update Department, Branch, and Hire Date</small>
+                            <small><i class="fas fa-info-circle"></i> You can update Role, Department, Branch, and Hire Date</small>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -265,11 +265,15 @@ $branches = $mysqli->query("SELECT * FROM branches");
                             <label class="text-muted small">Email</label>
                             <p class="font-weight-bold" id="view_email"></p>
                         </div>
-                        <div class="mb-3">
-                            <label class="text-muted small">Role</label>
-                            <p><span class="badge badge-success" id="view_role"></span></p>
-                        </div>
                         <hr>
+                        <div class="form-group">
+                            <label>Role <span class="text-danger">*</span></label>
+                            <select name="role" id="edit_role" class="form-control" required>
+                                <option value="cashier">Cashier</option>
+                                <option value="encoder">Encoder</option>
+                                <option value="hr">HR</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label>Department <span class="text-danger">*</span></label>
                             <select name="department_id" id="edit_dept" class="form-control" required>
@@ -337,7 +341,7 @@ $branches = $mysqli->query("SELECT * FROM branches");
                 $('#view_fname').text($(this).data('fname'));
                 $('#view_lname').text($(this).data('lname'));
                 $('#view_email').text($(this).data('email'));
-                $('#view_role').text($(this).data('role').toUpperCase());
+                $('#edit_role').val($(this).data('role'));
                 $('#edit_branch').val($(this).data('branch'));
                 $('#edit_dept').val($(this).data('dept'));
                 $('#edit_hire').val($(this).data('hire'));

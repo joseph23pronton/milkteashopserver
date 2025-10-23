@@ -7,7 +7,6 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $mysqli = include('database.php');
 
-// Fetch branch details
 $sql = "SELECT name, city FROM branches WHERE id = ?";
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param('i', $_GET['id']);
@@ -16,7 +15,6 @@ $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
     die("No branch found with the provided ID.");
-
 }
 
 $branch = $result->fetch_assoc();
@@ -32,8 +30,9 @@ $stmt_earnings->bind_param('i', $_GET['id']);
 $stmt_earnings->execute();
 $earnings_result = $stmt_earnings->get_result();
 $earnings_row = $earnings_result->fetch_assoc();
-$total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no earnings found
+$total_earnings = $earnings_row['total_earnings'] ?: 0;
 
+$current_branch_id = $_GET['id'];
 ?>
 
 <!DOCTYPE html>
@@ -56,13 +55,13 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
         <?php include "backend/nav.php"; ?>
 
         <div class="container-fluid">
-            <h1 class="h3 mb-2 text-gray-800"><?= $branch['name'] ?> Inventory</h1>
-            <p class="mb-4">Branch Inventory in <?= $branch['name'] ?></p>
+            <h1 class="h3 mb-2 text-gray-800"><?= htmlspecialchars($branch['name']) ?> Inventory</h1>
+            <p class="mb-4">Branch Inventory in <?= htmlspecialchars($branch['name']) ?></p>
             
 
             <div class="row">
             <div class="col-xl-3 col-md-6 mb-4">
-                <a href="sales.php?id=<?= $_GET['id'] ?>&b_id=<?= $_GET['id'] ?>" class="card-link">
+                <a href="sales.php?id=<?= $current_branch_id ?>&b_id=<?= $current_branch_id ?>" class="card-link">
                     <div class="card border-left-primary shadow h-100 py-2">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
@@ -91,7 +90,6 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
                                     <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                         Stocks (Low Stock Notifications)
                                     </div>
-                                    <!-- Total low stocks displayed -->
                                     <div class="h5 mb-0 font-weight-bold text-gray-800" id="lowStockCount">Loading...</div>
                                 </div>
                                 <div class="col-auto">
@@ -114,7 +112,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
                             <div class="alert alert-success mt-3">Restock Successfully</div>
                         <?php endif; ?>
                         <?php if (isset($_GET['failed'])): ?>
-                            <div class="alert alert-success mt-3">Restock Failed: <?php echo $_GET['failed']?></div>
+                            <div class="alert alert-success mt-3">Restock Failed: <?php echo htmlspecialchars($_GET['failed'])?></div>
                         <?php endif; ?>
                         <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                             <thead>
@@ -129,7 +127,6 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
                             <tbody>
     <?php
 
-    // Query to fetch inventory with restock check
     $sql = "
         SELECT
             i.id AS ingredient_id,
@@ -149,6 +146,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
         LEFT JOIN ingredients i 
         ON i.ingredientsID = ih.id 
         AND i.branchesID = ?
+        ORDER BY i.updated_at DESC, ih.name ASC
     ";
 
     $stmt = $mysqli->prepare($sql);
@@ -156,8 +154,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
         die("SQL Error: " . $mysqli->error);
     }
 
-    $branch_id = $_GET['id'];
-    $stmt->bind_param('iii', $_SESSION['branch_id'], $_SESSION['user_id'], $_SESSION['branch_id']); // Bind branch_id and user_id
+    $stmt->bind_param('iii', $current_branch_id, $_SESSION['user_id'], $current_branch_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -166,20 +163,18 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
             ?>
             <tr>
                 <td><?php echo htmlspecialchars($row['ingredient_name']); ?></td>
-                <td><?php echo $row['current_stock']; ?><strong> <?php echo $row['ingredient_unit']; ?></strong></td>
-                <td><?php echo isset($row['last_restock']) ? $row['last_restock'] : 'N/A'; ?></td>
-                <td><?php echo isset($row['updated_at']) ? $row['updated_at'] : 'N/A'; ?></td>
+                <td><?php echo $row['current_stock']; ?><strong> <?php echo htmlspecialchars($row['ingredient_unit']); ?></strong></td>
+                <td><?php echo isset($row['last_restock']) ? htmlspecialchars($row['last_restock']) : 'N/A'; ?></td>
+                <td><?php echo isset($row['updated_at']) ? htmlspecialchars($row['updated_at']) : 'N/A'; ?></td>
                 <td>
                     <?php if ($row['user_requested'] == 0): ?>
-                        <!-- Restock Button -->
                         <button class="btn btn-success" data-toggle="modal" data-target="#restockModal"
                             data-ingredient-id="<?php echo htmlspecialchars($row['inv_id']); ?>"
-                            data-branch-id="<?php echo htmlspecialchars($branch_id); ?>"
+                            data-branch-id="<?php echo htmlspecialchars($current_branch_id); ?>"
                             data-ingredient-name="<?php echo htmlspecialchars($row['ingredient_name']); ?>">
                             Restock
                         </button>
                     <?php else: ?>
-                        <!-- Disabled Button -->
                         <button class="btn btn-secondary" disabled>Already Requested</button>
                     <?php endif; ?>
                 </td>
@@ -187,7 +182,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
             <?php
         }
     } else {
-        echo "<tr><td colspan='6'>No ingredients found.</td></tr>";
+        echo "<tr><td colspan='5'>No ingredients found.</td></tr>";
     }
     ?>
 </tbody>
@@ -197,7 +192,6 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
             </div>
         </div>
     </div>
-    <!-- Restock Modal -->
     <div class="modal fade" id="restockModal" tabindex="-1" role="dialog" aria-labelledby="restockModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -210,7 +204,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
                 </div>
                 <form action="backend/request_restock.php" method="post">
                     <div class="modal-body">
-                        <input type="hidden" id="branch_id" name="branchID" value="">
+                        <input type="hidden" id="branch_id" name="branchID" value="<?php echo htmlspecialchars($current_branch_id); ?>">
                         <input type="hidden" id="ingredient_id" name="ingredientsID">
                         <div class="form-group">
                             <label for="ingredient_name">Ingredient Name</label>
@@ -272,25 +266,25 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
             modal.find('#ingredient_id').val(ingredientId);
             modal.find('#branch_id').val(branchId);
             modal.find('#ingredient_name').val(ingredientName);
+            
+            console.log('Branch ID set to:', branchId);
         });
-        // For Low Stock Alert
+
 document.addEventListener("DOMContentLoaded", function () {
-    fetch('backend/checkStock.php')
+    const branchId = <?php echo $current_branch_id; ?>;
+    fetch('backend/checkStock.php?branchID=' + branchId)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'low_stock') {
-                // Update the card with the total number of low-stock items
                 const lowStockCount = data.notifications.length;
                 const lowStockDiv = document.getElementById("lowStockCount");
                 lowStockDiv.textContent = `⚠️ ${lowStockCount}`;
                 
-                // Add a tooltip to display low-stock items
                 const tooltipContent = data.notifications
                     .map(item => `${item.productName} (${item.stockQuantity}) - ${item.branchName}`)
                     .join('\n');
                 lowStockDiv.setAttribute("title", tooltipContent);
             } else {
-                // No low-stock items
                 document.getElementById("lowStockCount").textContent = "✅ All stocks are sufficient";
             }
         })
