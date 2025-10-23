@@ -63,12 +63,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 exit;
             }
 
+            // ✅ FINANCE ROLE REDIRECT ADDED HERE
             if ($_SESSION["role"] == "hr") {
                 header("Location: HR/dashboard.php");
             } elseif ($_SESSION["role"] == "cashier") {
                 header("Location: branch_index.php");
             } elseif ($_SESSION["role"] == "encoder") {
                 header("Location: branch_index.php");
+            } elseif ($_SESSION["role"] == "finance") {
+                header("Location: finance/dashboard.php");  // 👈 THIS IS THE NEW LINE
             } else {
                 header("Location: index.php");
             }
