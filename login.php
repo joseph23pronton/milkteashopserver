@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 date_default_timezone_set('Asia/Manila');
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -85,6 +86,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 }
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
