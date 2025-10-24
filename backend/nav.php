@@ -42,35 +42,7 @@ $user_role = $_SESSION['role'] ?? null;
 
     <hr class="sidebar-divider my-0">
 
-    <?php if ($_SESSION["role"] == "admin"): ?>
-
-        <li class="nav-item <?php echo ($screen == 'dashboard') ? 'active' : ''; ?>">
-            <a class="nav-link" href="index.php">
-                <i class="fas fa-fw fa-tachometer-alt"></i>
-                <span>Dashboard</span>
-            </a>
-        </li>
-
-        <li class="nav-item <?php echo ($screen == 'branches') ? 'active' : ''; ?>">
-            <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapseBranches" aria-expanded="true" aria-controls="collapseBranches">
-                <i class="fas fa-fw fa-store"></i>
-                <span>Branches</span>
-            </a>
-            <div id="collapseBranches" class="collapse show" aria-labelledby="headingBranches" data-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
-                    <?php if (count($branches) > 0): ?>
-                        <?php foreach ($branches as $branch): ?>
-                            <a class="collapse-item" href="branch_index.php?id=<?php echo htmlspecialchars($branch['id']); ?>&b_id=<?php echo htmlspecialchars($branch['id']); ?>">
-                                <?php echo htmlspecialchars($branch['name']); ?>
-                            </a>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <span class="collapse-item">No branches available</span>
-                    <?php endif; ?>
-                    <a class="collapse-item" href="branches.php">+ Add New Branch</a>
-                </div>
-            </div>
-        </li>
+    <?php if ($_SESSION["role"] == "admin"): ?>    
 
         <li class="nav-item <?php echo ($screen == 'employee') ? 'active' : ''; ?>">
             <a class="nav-link" href="employee.php">

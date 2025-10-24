@@ -31,6 +31,11 @@
                         <select name="role" class="form-control" id="role" required>
                             <option value="cashier">Cashier</option>
                             <option value="encoder">Encoder</option>
+                            <option value="hr">HR</option>
+                            <option value="inventory">Inventory</option>
+                            <option value="sales">Sales</option>
+                            <option value="production">Production</option>
+                            <option value="finance">Finance</option>
                         </select>
                     </div>
                     <div class="form-group">

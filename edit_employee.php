@@ -34,6 +34,11 @@ if (isset($_GET['id'])) {
                         <select name="role" class="form-control" id="role" required>
                             <option value="cashier" <?php echo $employee['role'] == 'cashier' ? 'selected' : ''; ?>>Cashier</option>
                             <option value="encoder" <?php echo $employee['role'] == 'encoder' ? 'selected' : ''; ?>>Encoder</option>
+                            <option value="hr" <?php echo $employee['role'] == 'hr' ? 'selected' : ''; ?>>HR</option>
+                            <option value="inventory" <?php echo $employee['role'] == 'inventory' ? 'selected' : ''; ?>>Inventory</option>
+                            <option value="sales" <?php echo $employee['role'] == 'sales' ? 'selected' : ''; ?>>Sales</option>
+                            <option value="production" <?php echo $employee['role'] == 'production' ? 'selected' : ''; ?>>Production</option>
+                            <option value="finance" <?php echo $employee['role'] == 'finance' ? 'selected' : ''; ?>>Finance</option>
                         </select>
             </div>
             <div class="form-group">

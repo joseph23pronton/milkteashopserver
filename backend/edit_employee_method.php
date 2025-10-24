@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password_change = 0;
 
     // Validate role
-    $allowed_roles = ['admin', 'cashier', 'encoder'];
+    $allowed_roles = ['admin', 'manager', 'cashier', 'encoder', 'hr', 'production', 'inventory', 'sales', 'finance'];
     if (!in_array($role, $allowed_roles)) {
         header("Location: /employee.php?failed=Invalid role");
         exit();

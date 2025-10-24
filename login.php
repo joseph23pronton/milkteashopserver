@@ -70,6 +70,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: branch_index.php");
             } elseif ($_SESSION["role"] == "encoder") {
                 header("Location: branch_index.php");
+            } elseif ($_SESSION["role"] == "admin") {
+                header("Location: employee.php");
             } else {
                 header("Location: index.php");
             }
