@@ -61,18 +61,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($user["password_changed"] == 0) {
                 header("Location: change_password.php");
                 exit;
-            }
+            }   
 
             
             if ($_SESSION["role"] == "hr") {
                 header("Location: HR/dashboard.php");
-<<<<<<< HEAD
             } elseif ($_SESSION["role"] == "sales") {
-=======
-            } elseif ($_SESSION["role"] == "production") {
-                header("Location: branch_index.php");
-            } elseif ($_SESSION["role"] == "encoder") {
->>>>>>> a9d8d82887a3e2da706310707f81e80f746a7f7a
                 header("Location: branch_index.php");
             } elseif ($_SESSION["role"] == "inventory") {
                 header("Location: index.php");

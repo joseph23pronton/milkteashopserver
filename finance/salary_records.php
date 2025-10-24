@@ -160,6 +160,20 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <i class="fas fa-user-circle fa-2x"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="../logout.php">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
                 </nav>
 
                 <div class="container-fluid">
@@ -201,13 +215,8 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
                     </div>
 
                     <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">Payroll History</h6>
-                            <div>
-                                <button class="btn btn-sm btn-info" onclick="exportPayroll()">
-                                    <i class="fas fa-file-excel"></i> Export
-                                </button>
-                            </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -287,10 +296,6 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
             if(confirm('Mark this payroll as paid?')) {
                 window.location.href = 'mark_paid.php?id=' + id;
             }
-        }
-
-        function exportPayroll() {
-            window.location.href = 'export_payroll.php';
         }
     </script>
 </body>

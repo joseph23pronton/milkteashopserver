@@ -1,5 +1,6 @@
 <?php
 require_once 'db_connection.php';
+date_default_timezone_set('Asia/Manila');
 
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_return'])) {
     $purchase_order_id = $_POST['purchase_order_id'];
@@ -16,18 +17,69 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_return'])) {
     $sql = "INSERT INTO product_returns (invoice_number, purchase_order_id, ingredient_id, quantity_returned, reason, return_date, refund_amount, supplier_name, branch_id, status, created_at) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
     $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param("siiisdsi", $invoice, $purchase_order_id, $ingredient_id, $quantity_returned, $reason, $return_date, $refund_amount, $supplier_name, $branch_id);
-    $stmt->execute();
+    
+    if (!$stmt) {
+        die("Prepare failed: " . $mysqli->error);
+    }
+    
+    $stmt->bind_param("siiissdsi", $invoice, $purchase_order_id, $ingredient_id, $quantity_returned, $reason, $return_date, $refund_amount, $supplier_name, $branch_id);
+    
+    if (!$stmt->execute()) {
+        die("Execute failed: " . $stmt->error);
+    }
+    
     header("Location: returns.php?success=1");
     exit();
 }
 
-$returns_query = "SELECT pr.*, b.name as branch_name, ih.name as ingredient_name 
+if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['approve_return'])) {
+    $return_id = $_POST['return_id'];
+    
+    $return_query = "SELECT * FROM product_returns WHERE id = ?";
+    $stmt = $mysqli->prepare($return_query);
+    $stmt->bind_param("i", $return_id);
+    $stmt->execute();
+    $return_data = $stmt->get_result()->fetch_assoc();
+    
+    if($return_data && $return_data['status'] == 'pending') {
+        $mysqli->begin_transaction();
+        
+        try {
+            $update_status = "UPDATE product_returns SET status = 'approved' WHERE id = ?";
+            $stmt = $mysqli->prepare($update_status);
+            $stmt->bind_param("i", $return_id);
+            $stmt->execute();
+            
+            $insert_sales = "INSERT INTO sales (receiptID, price, quantity, totalPrice, sales_date) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $mysqli->prepare($insert_sales);
+            
+            $price = floatval($return_data['refund_amount']);
+            $quantity = -1;
+            $totalPrice = floatval($return_data['refund_amount']) * -1;
+            
+            $stmt->bind_param("sdids", $return_data['invoice_number'], $price, $quantity, $totalPrice, $return_data['return_date']);
+            $stmt->execute();
+            
+            $mysqli->commit();
+            header("Location: returns.php?approved=1");
+            exit();
+        } catch (Exception $e) {
+            $mysqli->rollback();
+            die("Transaction failed: " . $e->getMessage());
+        }
+    }
+}
+
+$returns_query = "SELECT pr.*, b.name as branch_name, ih.name as ingredient_name, ih.unit as ingredient_unit
                   FROM product_returns pr
                   LEFT JOIN branches b ON pr.branch_id = b.id
                   LEFT JOIN ingredientsheader ih ON pr.ingredient_id = ih.id
                   ORDER BY pr.created_at DESC";
 $returns = $mysqli->query($returns_query);
+
+if (!$returns) {
+    die("Query failed: " . $mysqli->error);
+}
 
 $ingredients_query = "SELECT * FROM ingredientsheader WHERE is_archived = 0";
 $ingredients = $mysqli->query($ingredients_query);
@@ -41,9 +93,10 @@ $branches = $mysqli->query($branches_query);
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Finance Dashboard</title>
+    <title>Finance Dashboard - Returns</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
     <style>
         body {
             overflow-x: hidden;
@@ -157,6 +210,9 @@ $branches = $mysqli->query($branches_query);
         .border-left-warning {
             border-left: 0.25rem solid #f6c23e !important;
         }
+        .border-left-danger {
+            border-left: 0.25rem solid #e74a3b !important;
+        }
         .text-primary {
             color: #4e73df !important;
         }
@@ -169,6 +225,9 @@ $branches = $mysqli->query($branches_query);
         .text-warning {
             color: #f6c23e !important;
         }
+        .text-danger {
+            color: #e74a3b !important;
+        }
     </style>
 </head> 
 <body id="page-top">
@@ -180,19 +239,37 @@ $branches = $mysqli->query($branches_query);
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <i class="fas fa-user-circle fa-2x"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="../logout.php">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
                 </nav>
 
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Product Returns</h1>
-                        <button class="btn btn-primary" data-toggle="modal" data-target="#addReturnModal">
-                            <i class="fas fa-plus"></i> New Return
-                        </button>
                     </div>
 
                     <?php if(isset($_GET['success'])): ?>
                     <div class="alert alert-success alert-dismissible fade show">
                         Return request created successfully!
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if(isset($_GET['approved'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show">
+                        Return approved successfully! Refund amount has been added to sales.
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
                     </div>
                     <?php endif; ?>
@@ -207,7 +284,6 @@ $branches = $mysqli->query($branches_query);
                                     <thead>
                                         <tr>
                                             <th>Invoice</th>
-                                            <th>Supplier</th>
                                             <th>Ingredient</th>
                                             <th>Quantity</th>
                                             <th>Reason</th>
@@ -221,31 +297,32 @@ $branches = $mysqli->query($branches_query);
                                     <tbody>
                                         <?php while($row = $returns->fetch_assoc()): ?>
                                         <tr>
-                                            <td><?php echo $row['invoice_number']; ?></td>
-                                            <td><?php echo $row['supplier_name']; ?></td>
-                                            <td><?php echo $row['ingredient_name']; ?></td>
-                                            <td><?php echo $row['quantity_returned']; ?></td>
-                                            <td><?php echo $row['reason']; ?></td>
-                                            <td>₱<?php echo number_format($row['refund_amount'], 2); ?></td>
-                                            <td><?php echo $row['branch_name']; ?></td>
+                                            <td><code class="text-danger"><?php echo htmlspecialchars($row['invoice_number']); ?></code></td>
+                                            <td><?php echo htmlspecialchars($row['ingredient_name']); ?></td>
+                                            <td><?php echo (int)$row['quantity_returned']; ?></td>
+                                            <td><?php echo htmlspecialchars($row['reason']); ?></td>
+                                            <td><strong>₱<?php echo number_format($row['refund_amount'], 2); ?></strong></td>
+                                            <td><?php echo htmlspecialchars($row['branch_name']); ?></td>
                                             <td><?php echo date('M d, Y', strtotime($row['return_date'])); ?></td>
                                             <td>
                                                 <?php if($row['status'] == 'approved'): ?>
                                                     <span class="badge badge-success">Approved</span>
-                                                <?php elseif($row['status'] == 'rejected'): ?>
-                                                    <span class="badge badge-danger">Rejected</span>
                                                 <?php else: ?>
                                                     <span class="badge badge-warning">Pending</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <button class="btn btn-sm btn-info" onclick="viewReturn(<?php echo $row['id']; ?>)">
-                                                    <i class="fas fa-eye"></i>
+                                                <button class="btn btn-sm btn-info" 
+                                                        onclick="viewReturnReceipt(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['invoice_number']); ?>', '<?php echo htmlspecialchars($row['ingredient_name']); ?>', <?php echo $row['quantity_returned']; ?>, '<?php echo htmlspecialchars($row['ingredient_unit'] ?? ''); ?>', <?php echo $row['refund_amount']; ?>, '<?php echo htmlspecialchars($row['reason']); ?>', '<?php echo date('M d, Y', strtotime($row['return_date'])); ?>', '<?php echo htmlspecialchars($row['branch_name']); ?>', '<?php echo htmlspecialchars($row['supplier_name']); ?>')">
+                                                    <i class="fas fa-receipt"></i>
                                                 </button>
                                                 <?php if($row['status'] == 'pending'): ?>
-                                                <button class="btn btn-sm btn-success" onclick="approveReturn(<?php echo $row['id']; ?>)">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
+                                                <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to approve this return? The refund amount will be added to sales.');">
+                                                    <input type="hidden" name="return_id" value="<?php echo $row['id']; ?>">
+                                                    <button type="submit" name="approve_return" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-check"></i> Approve
+                                                    </button>
+                                                </form>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>
@@ -260,92 +337,25 @@ $branches = $mysqli->query($branches_query);
         </div>
     </div>
 
-    <div class="modal fade" id="addReturnModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="returnReceiptModal" tabindex="-1">
+        <div class="modal-dialog modal-md">
             <div class="modal-content">
-                <form method="POST">
-                    <div class="modal-header">
-                        <h5 class="modal-title">New Product Return</h5>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Supplier Name</label>
-                                    <input type="text" name="supplier_name" class="form-control" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Branch</label>
-                                    <select name="branch_id" class="form-control" required>
-                                        <?php 
-                                        $branches->data_seek(0);
-                                        while($branch = $branches->fetch_assoc()): 
-                                        ?>
-                                        <option value="<?php echo $branch['id']; ?>"><?php echo $branch['name']; ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Purchase Order ID (Optional)</label>
-                                    <input type="number" name="purchase_order_id" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Ingredient</label>
-                                    <select name="ingredient_id" class="form-control" required>
-                                        <?php 
-                                        $ingredients->data_seek(0);
-                                        while($ing = $ingredients->fetch_assoc()): 
-                                        ?>
-                                        <option value="<?php echo $ing['id']; ?>"><?php echo $ing['name']; ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Quantity Returned</label>
-                                    <input type="number" name="quantity_returned" class="form-control" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Refund Amount</label>
-                                    <input type="number" step="0.01" name="refund_amount" class="form-control" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Reason for Return</label>
-                            <select name="reason" class="form-control" required>
-                                <option value="Damaged">Damaged Products</option>
-                                <option value="Expired">Expired</option>
-                                <option value="Wrong Item">Wrong Item Delivered</option>
-                                <option value="Quality Issue">Quality Issue</option>
-                                <option value="Overstocked">Overstocked</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Return Date</label>
-                            <input type="date" name="return_date" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" name="add_return" class="btn btn-primary">Submit Return</button>
-                    </div>
-                </form>
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-receipt"></i> Return Receipt
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="returnReceiptContent">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printReturnReceipt()">
+                        <i class="fas fa-print"></i> Print Receipt
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -356,18 +366,93 @@ $branches = $mysqli->query($branches_query);
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#returnsTable').DataTable();
+            $('#returnsTable').DataTable({
+                order: [[7, 'desc']],
+                pageLength: 25
+            });
         });
 
-        function viewReturn(id) {
-            window.location.href = 'view_return.php?id=' + id;
+        function viewReturnReceipt(returnId, invoiceNumber, ingredientName, quantity, unit, refundAmount, reason, returnDate, branchName, supplierName) {
+            const receiptHTML = `
+                <div class="receipt-header text-center mb-4">
+                    <h4 class="font-weight-bold text-danger">PRODUCT RETURN RECEIPT</h4>
+                    <p class="mb-0"><strong>Invoice Number:</strong> ${invoiceNumber}</p>
+                    <p class="mb-0"><strong>Date:</strong> ${returnDate}</p>
+                </div>
+                
+                <div class="receipt-details mb-3">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Branch:</strong></td>
+                            <td>${branchName}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Supplier:</strong></td>
+                            <td>${supplierName}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <table class="receipt-table table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Ingredient</th>
+                            <th>Quantity</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${ingredientName}</td>
+                            <td>${quantity} ${unit}</td>
+                            <td>${reason}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="receipt-total mt-4">
+                    <h5 class="text-right">
+                        <strong>Total Refund Amount: ₱${parseFloat(refundAmount).toFixed(2)}</strong>
+                    </h5>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p class="mb-0"><em>This is a system-generated return receipt.</em></p>
+                    <p class="mb-0 text-muted small">Generated on <?php echo date('F d, Y h:i A'); ?></p>
+                </div>
+            `;
+            
+            $('#returnReceiptContent').html(receiptHTML);
+            $('#returnReceiptModal').modal('show');
         }
 
-        function approveReturn(id) {
-            if(confirm('Are you sure you want to approve this return?')) {
-                window.location.href = 'approve_return.php?id=' + id;
-            }
+        function printReturnReceipt() {
+            const printContent = document.getElementById('returnReceiptContent').innerHTML;
+            const printWindow = window.open('', '', 'height=600,width=800');
+            
+            printWindow.document.write('<html><head><title>Return Receipt</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { font-family: Arial, sans-serif; margin: 20px; }');
+            printWindow.document.write('.receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #e74a3b; padding-bottom: 10px; }');
+            printWindow.document.write('.receipt-details { margin-bottom: 20px; }');
+            printWindow.document.write('.receipt-table { width: 100%; border-collapse: collapse; margin: 20px 0; }');
+            printWindow.document.write('.receipt-table th, .receipt-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }');
+            printWindow.document.write('.receipt-table th { background-color: #f8f9fa; font-weight: bold; }');
+            printWindow.document.write('.receipt-total { text-align: right; font-weight: bold; font-size: 18px; margin-top: 20px; padding-top: 10px; border-top: 2px solid #333; }');
+            printWindow.document.write('table.table-borderless td { padding: 5px; border: none; }');
+            printWindow.document.write('@media print { .no-print { display: none; } }');
+            printWindow.document.write('</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(printContent);
+            printWindow.document.write('</body></html>');
+            
+            printWindow.document.close();
+            printWindow.print();
         }
+
+        $('#returnReceiptModal').on('hidden.bs.modal', function() {
+            $('#returnReceiptContent').html('');
+        });
     </script>
 </body>
 </html>

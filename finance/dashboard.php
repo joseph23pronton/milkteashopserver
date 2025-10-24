@@ -11,30 +11,56 @@ $total_expenses = $total_expenses_result ? $total_expenses_result->fetch_assoc()
 $total_payroll_query = "SELECT SUM(net_pay) as total FROM payroll WHERE status = 'paid'";
 $total_payroll = $mysqli->query($total_payroll_query)->fetch_assoc()['total'] ?? 0;
 
-$ingredient_costs_query = "SELECT SUM(ih.price_per_unit * i.currentStock) as total 
-                           FROM ingredients i 
-                           JOIN ingredientsheader ih ON i.ingredientsID = ih.id";
-$ingredient_costs = $mysqli->query($ingredient_costs_query)->fetch_assoc()['total'] ?? 0;
+$purchase_orders_costs_query = "SELECT SUM(r.restock_amount * COALESCE(ih.price_per_unit, 0)) as total 
+                                 FROM restockorder r 
+                                 LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id 
+                                 WHERE r.is_confirmed = 1";
+$purchase_orders_costs = $mysqli->query($purchase_orders_costs_query)->fetch_assoc()['total'] ?? 0;
 
-$net_profit = $total_sales - ($total_expenses + $total_payroll + $ingredient_costs);
-$roi = $total_sales > 0 ? (($net_profit / $total_sales) * 100) : 0;
+$net_profit = $total_sales - ($total_expenses + $total_payroll + $purchase_orders_costs);
 
 $monthly_sales_query = "SELECT DATE_FORMAT(sales_date, '%Y-%m') as month, SUM(totalPrice) as total 
                         FROM sales 
                         GROUP BY month 
                         ORDER BY month DESC 
                         LIMIT 6";
-$monthly_sales = $conn->query($monthly_sales_query);
+$monthly_sales = $mysqli->query($monthly_sales_query);
 
 $pending_orders_query = "SELECT COUNT(*) as count FROM restockorder WHERE is_confirmed = 0";
-$pending_orders = $conn->query($pending_orders_query)->fetch_assoc()['count'] ?? 0;
+$pending_orders = $mysqli->query($pending_orders_query)->fetch_assoc()['count'] ?? 0;
 
-$recent_transactions_query = "SELECT t.*, b.name as branch_name 
-                              FROM transactions t 
-                              LEFT JOIN branches b ON t.branchID = b.id 
-                              ORDER BY t.salesDate DESC 
-                              LIMIT 10";
-$recent_transactions = $conn->query($recent_transactions_query);
+$recent_transactions_query = "SELECT 
+    'Sales' as type, 
+    receiptID as reference, 
+    totalPrice as amount, 
+    sales_date as date
+FROM sales
+UNION ALL
+SELECT 
+    'Expense' as type,
+    CONCAT('EXP-', id) as reference,
+    amount,
+    expense_date as date
+FROM expenses
+UNION ALL
+SELECT 
+    'Payroll' as type,
+    CONCAT('PAY-', id) as reference,
+    net_pay as amount,
+    pay_period_start as date
+FROM payroll WHERE status = 'paid'
+UNION ALL
+SELECT 
+    'Purchase Order' as type,
+    COALESCE(r.invoice_number, CONCAT('INV-', DATE_FORMAT(r.created_at, '%Y%m%d'), '-', LPAD(r.id, 4, '0'))) as reference,
+    (r.restock_amount * COALESCE(ih.price_per_unit, 0)) as amount,
+    r.created_at as date
+FROM restockorder r
+LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id
+WHERE r.is_confirmed = 1
+ORDER BY date DESC
+LIMIT 5";
+$recent_transactions = $mysqli->query($recent_transactions_query);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -203,7 +229,7 @@ $recent_transactions = $conn->query($recent_transactions_query);
                     </div>
 
                     <div class="row">
-                        <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="col-xl-4 col-md-6 mb-4">
                             <div class="card border-left-primary shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
@@ -211,20 +237,19 @@ $recent_transactions = $conn->query($recent_transactions_query);
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Sales</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($total_sales, 2); ?></div>
                                         </div>
-                                        <div class="col-auto">
-                                            <i class="fa fa-peso-sign fa-2x text-gray-300"></i>
-                                        </div>
+                                        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+                                            <i class="fas fa-peso-sign fa-2x text-gray-300"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="col-xl-4 col-md-6 mb-4">
                             <div class="card border-left-success shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Net Profit</div>
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Profit</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($net_profit, 2); ?></div>
                                         </div>
                                         <div class="col-auto">
@@ -235,29 +260,13 @@ $recent_transactions = $conn->query($recent_transactions_query);
                             </div>
                         </div>
 
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">ROI</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($roi, 2); ?>%</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="col-xl-4 col-md-6 mb-4">
                             <div class="card border-left-warning shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Expenses</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($total_expenses + $total_payroll, 2); ?></div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($total_expenses + $total_payroll + $purchase_orders_costs, 2); ?></div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-receipt fa-2x text-gray-300"></i>
@@ -288,7 +297,7 @@ $recent_transactions = $conn->query($recent_transactions_query);
                                 <div class="card-body">
                                     <h4 class="small font-weight-bold">Pending Orders <span class="float-right"><?php echo $pending_orders; ?></span></h4>
                                     <hr>
-                                    <h4 class="small font-weight-bold">Inventory Value <span class="float-right">₱<?php echo number_format($ingredient_costs, 2); ?></span></h4>
+                                    <h4 class="small font-weight-bold">Purchase Orders Cost <span class="float-right">₱<?php echo number_format($purchase_orders_costs, 2); ?></span></h4>
                                     <hr>
                                     <h4 class="small font-weight-bold">Payroll Paid <span class="float-right">₱<?php echo number_format($total_payroll, 2); ?></span></h4>
                                 </div>
@@ -299,31 +308,52 @@ $recent_transactions = $conn->query($recent_transactions_query);
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Recent Transactions (Latest 5)</h6>
+                                    <a href="sales_history.php" class="btn btn-sm btn-primary">View All</a>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
                                         <table class="table table-bordered">
                                             <thead>
                                                 <tr>
-                                                    <th>Invoice</th>
-                                                    <th>Branch</th>
-                                                    <th>Customer</th>
+                                                    <th>Type</th>
+                                                    <th>Reference</th>
                                                     <th>Amount</th>
                                                     <th>Date</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php while($row = $recent_transactions->fetch_assoc()): ?>
-                                                <tr>
-                                                    <td><?php echo $row['invoiceNumber']; ?></td>
-                                                    <td><?php echo $row['branch_name']; ?></td>
-                                                    <td><?php echo $row['customerName']; ?></td>
-                                                    <td>₱<?php echo number_format($row['totalAmount'], 2); ?></td>
-                                                    <td><?php echo date('M d, Y', strtotime($row['salesDate'])); ?></td>
-                                                </tr>
-                                                <?php endwhile; ?>
+                                                <?php if($recent_transactions && $recent_transactions->num_rows > 0): ?>
+                                                    <?php while($row = $recent_transactions->fetch_assoc()): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <?php if($row['type'] == 'Sales'): ?>
+                                                                <span class="badge badge-success">Sales</span>
+                                                            <?php elseif($row['type'] == 'Expense'): ?>
+                                                                <span class="badge badge-danger">Expense</span>
+                                                            <?php elseif($row['type'] == 'Payroll'): ?>
+                                                                <span class="badge badge-info">Payroll</span>
+                                                            <?php else: ?>
+                                                                <span class="badge badge-warning">Purchase Order</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td><?php echo htmlspecialchars($row['reference']); ?></td>
+                                                        <td>
+                                                            <?php if($row['type'] == 'Sales'): ?>
+                                                                <span class="text-success">+₱<?php echo number_format($row['amount'], 2); ?></span>
+                                                            <?php else: ?>
+                                                                <span class="text-danger">-₱<?php echo number_format($row['amount'], 2); ?></span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td><?php echo date('M d, Y', strtotime($row['date'])); ?></td>
+                                                    </tr>
+                                                    <?php endwhile; ?>
+                                                <?php else: ?>
+                                                    <tr>
+                                                        <td colspan="4" class="text-center">No transactions found</td>
+                                                    </tr>
+                                                <?php endif; ?>
                                             </tbody>
                                         </table>
                                     </div>
@@ -346,25 +376,33 @@ $recent_transactions = $conn->query($recent_transactions_query);
             data: {
                 labels: [
                     <?php 
-                    $monthly_sales->data_seek(0);
-                    while($row = $monthly_sales->fetch_assoc()): 
-                        echo "'" . date('M Y', strtotime($row['month'] . '-01')) . "',";
-                    endwhile;
+                    if($monthly_sales && $monthly_sales->num_rows > 0):
+                        $monthly_sales->data_seek(0);
+                        while($row = $monthly_sales->fetch_assoc()): 
+                            echo "'" . date('M Y', strtotime($row['month'] . '-01')) . "',";
+                        endwhile;
+                    endif;
                     ?>
                 ],
                 datasets: [{
                     label: 'Sales',
                     data: [
                         <?php 
-                        $monthly_sales->data_seek(0);
-                        while($row = $monthly_sales->fetch_assoc()): 
-                            echo $row['total'] . ",";
-                        endwhile;
+                        if($monthly_sales && $monthly_sales->num_rows > 0):
+                            $monthly_sales->data_seek(0);
+                            while($row = $monthly_sales->fetch_assoc()): 
+                                echo $row['total'] . ",";
+                            endwhile;
+                        endif;
                         ?>
                     ],
                     borderColor: 'rgb(75, 192, 192)',
                     tension: 0.1
                 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true
             }
         });
     </script>

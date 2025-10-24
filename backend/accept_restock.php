@@ -7,6 +7,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $branch_id = (int)$_POST['branchID'];
     $ingredients_id = (int)$_POST['ingredientsID'];
     $restock_id = (int)$_POST['restock_id'];
+    $ingredient_name = $_POST['ingredient_name'] ?? '';
+    $total_cost = (float)$_POST['total_cost'] ?? 0;
+    $invoice_number = $_POST['invoice_number'] ?? '';
     
     if (!isset($_SESSION['user_id'])) {
         header("Location: ../index.php?error=unauthorized");
@@ -16,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mysqli->begin_transaction();
     
     try {
-        // Check if order exists
         $order_query = "SELECT * FROM restockorder WHERE id = ? AND is_confirmed = 0";
         $order_stmt = $mysqli->prepare($order_query);
         
@@ -34,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $order = $order_result->fetch_assoc();
         
-        // Generate invoice number if needed
         if (empty($order['invoice_number'])) {
             $invoice_number = 'INV-' . date('Ymd') . '-' . str_pad($restock_id, 4, '0', STR_PAD_LEFT);
             
@@ -47,15 +48,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $update_invoice_stmt->bind_param('si', $invoice_number, $restock_id);
             $update_invoice_stmt->execute();
+        } else {
+            $invoice_number = $order['invoice_number'];
         }
         
-        // Determine redirect location
         $redirect_to = '../index.php';
         if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'finance/supplies.php') !== false) {
             $redirect_to = '../finance/supplies.php';
         }
         
-        // Update restock order status (without confirmed_by since it's not in your table)
         $update_sql = "UPDATE restockorder SET is_accepted = 1, is_confirmed = 1, confirmed_at = NOW() WHERE id = ?";
         $update_stmt = $mysqli->prepare($update_sql);
         
@@ -66,7 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update_stmt->bind_param('i', $restock_id);
         $update_stmt->execute();
         
-        // Check if ingredient exists for this branch
         $check_query = "SELECT currentStock FROM ingredients WHERE ingredientsID = ? AND branchesID = ?";
         $check_stmt = $mysqli->prepare($check_query);
         
@@ -79,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check_result = $check_stmt->get_result();
         
         if ($check_result->num_rows > 0) {
-            // Update existing ingredient stock
             $row = $check_result->fetch_assoc();
             $new_stock = $row['currentStock'] + $restock_amount;
             
@@ -93,7 +92,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update_ingredient_stmt->bind_param('iii', $new_stock, $ingredients_id, $branch_id);
             $update_ingredient_stmt->execute();
         } else {
-            // Insert new ingredient record
             $insert_ingredient_query = "INSERT INTO ingredients (ingredientsID, branchesID, currentStock, lastRestock, created_at, updated_at) VALUES (?, ?, ?, CURDATE(), NOW(), NOW())";
             $insert_ingredient_stmt = $mysqli->prepare($insert_ingredient_query);
             
@@ -103,6 +101,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $insert_ingredient_stmt->bind_param('iii', $ingredients_id, $branch_id, $restock_amount);
             $insert_ingredient_stmt->execute();
+        }
+        
+        if ($total_cost > 0 && !empty($ingredient_name)) {
+            $category = "Raw Materials";
+            $description = "Restock of " . $ingredient_name . " (Invoice: " . $invoice_number . ") - " . $restock_amount . " units";
+            $expense_date = date('Y-m-d');
+            $payment_method = "Bank Transfer";
+            
+            $insert_expense = "INSERT INTO expenses (category, description, amount, branch_id, expense_date, payment_method, created_at) 
+                              VALUES (?, ?, ?, ?, ?, ?, NOW())";
+            $expense_stmt = $mysqli->prepare($insert_expense);
+            
+            if (!$expense_stmt) {
+                throw new Exception("Prepare failed (insert_expense): " . $mysqli->error);
+            }
+            
+            $expense_stmt->bind_param("ssdiss", $category, $description, $total_cost, $branch_id, $expense_date, $payment_method);
+            $expense_stmt->execute();
         }
         
         $mysqli->commit();

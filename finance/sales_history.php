@@ -8,16 +8,16 @@ $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
 
 $where_conditions = [];
 if($filter_type != 'all') {
-    $where_conditions[] = "type = '$filter_type'";
+    $where_conditions[] = "type = '" . $mysqli->real_escape_string($filter_type) . "'";
 }
 if($filter_branch != 'all') {
-    $where_conditions[] = "branch_id = $filter_branch";
+    $where_conditions[] = "branch_id = " . intval($filter_branch);
 }
 if($date_from) {
-    $where_conditions[] = "date >= '$date_from'";
+    $where_conditions[] = "date >= '" . $mysqli->real_escape_string($date_from) . "'";
 }
 if($date_to) {
-    $where_conditions[] = "date <= '$date_to'";
+    $where_conditions[] = "date <= '" . $mysqli->real_escape_string($date_to) . "'";
 }
 
 $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
@@ -29,7 +29,7 @@ $transactions_query = "SELECT * FROM (
         totalPrice as amount,
         sales_date as date,
         branchID as branch_id,
-        customerName as description
+        CONCAT(productName, ' - ', customerName) as description
     FROM sales
     UNION ALL
     SELECT 
@@ -52,21 +52,14 @@ $transactions_query = "SELECT * FROM (
     UNION ALL
     SELECT 
         'Purchase Order' as type,
-        invoice_number as reference,
-        total_amount as amount,
-        purchase_date as date,
-        branch_id,
-        supplier_name as description
-    FROM purchase_orders
-    UNION ALL
-    SELECT 
-        'Return' as type,
-        invoice_number as reference,
-        refund_amount as amount,
-        return_date as date,
-        branch_id,
-        reason as description
-    FROM product_returns
+        COALESCE(r.invoice_number, CONCAT('INV-', DATE_FORMAT(r.created_at, '%Y%m%d'), '-', LPAD(r.id, 4, '0'))) as reference,
+        (r.restock_amount * COALESCE(ih.price_per_unit, 0)) as amount,
+        r.created_at as date,
+        r.branchID as branch_id,
+        CONCAT(ih.name, ' (', r.restock_amount, ' ', ih.unit, ')') as description
+    FROM restockorder r
+    LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id
+    WHERE r.is_confirmed = 1
 ) as all_transactions
 $where_clause
 ORDER BY date DESC";
@@ -82,9 +75,10 @@ $branches = $mysqli->query($branches_query);
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Finance Dashboard</title>
+    <title>Finance Dashboard - Sales History</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
     <style>
         body {
             overflow-x: hidden;
@@ -221,14 +215,26 @@ $branches = $mysqli->query($branches_query);
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <i class="fas fa-user-circle fa-2x"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="../logout.php">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
                 </nav>
 
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Transaction History</h1>
-                        <button class="btn btn-primary" onclick="exportTransactions()">
-                            <i class="fas fa-download"></i> Export
-                        </button>
+                        <h1 class="h3 mb-0 text-gray-800">Sales History</h1>
+                       
                     </div>
 
                     <div class="card shadow mb-4">
@@ -245,32 +251,34 @@ $branches = $mysqli->query($branches_query);
                                         <option value="Expense" <?php echo $filter_type == 'Expense' ? 'selected' : ''; ?>>Expenses</option>
                                         <option value="Payroll" <?php echo $filter_type == 'Payroll' ? 'selected' : ''; ?>>Payroll</option>
                                         <option value="Purchase Order" <?php echo $filter_type == 'Purchase Order' ? 'selected' : ''; ?>>Purchase Orders</option>
-                                        <option value="Return" <?php echo $filter_type == 'Return' ? 'selected' : ''; ?>>Returns</option>
                                     </select>
                                 </div>
                                 <div class="form-group mr-3 mb-2">
                                     <label class="mr-2">Branch:</label>
                                     <select name="branch" class="form-control">
                                         <option value="all">All</option>
-                                        <?php while($branch = $branches->fetch_assoc()): ?>
+                                        <?php 
+                                        if($branches && $branches->num_rows > 0) {
+                                            while($branch = $branches->fetch_assoc()): ?>
                                         <option value="<?php echo $branch['id']; ?>" <?php echo $filter_branch == $branch['id'] ? 'selected' : ''; ?>>
-                                            <?php echo $branch['name']; ?>
+                                            <?php echo htmlspecialchars($branch['name']); ?>
                                         </option>
-                                        <?php endwhile; ?>
+                                        <?php endwhile; 
+                                        } ?>
                                     </select>
                                 </div>
                                 <div class="form-group mr-3 mb-2">
                                     <label class="mr-2">From:</label>
-                                    <input type="date" name="date_from" class="form-control" value="<?php echo $date_from; ?>">
+                                    <input type="date" name="date_from" class="form-control" value="<?php echo htmlspecialchars($date_from); ?>">
                                 </div>
                                 <div class="form-group mr-3 mb-2">
                                     <label class="mr-2">To:</label>
-                                    <input type="date" name="date_to" class="form-control" value="<?php echo $date_to; ?>">
+                                    <input type="date" name="date_to" class="form-control" value="<?php echo htmlspecialchars($date_to); ?>">
                                 </div>
                                 <button type="submit" class="btn btn-primary mb-2">
                                     <i class="fas fa-filter"></i> Filter
                                 </button>
-                                <a href="transaction_history.php" class="btn btn-secondary mb-2 ml-2">
+                                <a href="sales_history.php" class="btn btn-secondary mb-2 ml-2">
                                     <i class="fas fa-redo"></i> Reset
                                 </a>
                             </form>
@@ -294,7 +302,8 @@ $branches = $mysqli->query($branches_query);
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php while($row = $transactions->fetch_assoc()): ?>
+                                        <?php if($transactions && $transactions->num_rows > 0):
+                                            while($row = $transactions->fetch_assoc()): ?>
                                         <tr>
                                             <td>
                                                 <?php if($row['type'] == 'Sale'): ?>
@@ -303,14 +312,12 @@ $branches = $mysqli->query($branches_query);
                                                     <span class="badge badge-danger">Expense</span>
                                                 <?php elseif($row['type'] == 'Payroll'): ?>
                                                     <span class="badge badge-info">Payroll</span>
-                                                <?php elseif($row['type'] == 'Purchase Order'): ?>
-                                                    <span class="badge badge-warning">Purchase</span>
                                                 <?php else: ?>
-                                                    <span class="badge badge-secondary">Return</span>
+                                                    <span class="badge badge-warning">Purchase</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><?php echo $row['reference']; ?></td>
-                                            <td><?php echo $row['description']; ?></td>
+                                            <td><?php echo htmlspecialchars($row['reference']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['description']); ?></td>
                                             <td>
                                                 <?php if($row['type'] == 'Sale'): ?>
                                                     <span class="text-success">+₱<?php echo number_format($row['amount'], 2); ?></span>
@@ -320,7 +327,12 @@ $branches = $mysqli->query($branches_query);
                                             </td>
                                             <td><?php echo date('M d, Y H:i', strtotime($row['date'])); ?></td>
                                         </tr>
-                                        <?php endwhile; ?>
+                                        <?php endwhile; 
+                                        else: ?>
+                                        <tr>
+                                            <td colspan="5" class="text-center">No transactions found</td>
+                                        </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -338,13 +350,12 @@ $branches = $mysqli->query($branches_query);
     <script>
         $(document).ready(function() {
             $('#transactionsTable').DataTable({
-                order: [[4, 'desc']]
+                order: [[4, 'desc']],
+                pageLength: 25
             });
         });
 
-        function exportTransactions() {
-            window.location.href = 'export_transactions.php' + window.location.search;
-        }
+       
     </script>
 </body>
 </html>

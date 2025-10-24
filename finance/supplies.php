@@ -1,7 +1,7 @@
 <?php
 require_once 'db_connection.php';
 
-$restockorders_query = "SELECT r.*, b.name as branch_name, ih.name as ingredient_name, ih.price_per_unit, ih.unit as ingredient_unit,
+$restockorders_query = "SELECT r.*, b.name as branch_name, r.ingredientsName as ingredient_name, ih.price_per_unit, ih.unit as ingredient_unit,
                         (r.restock_amount * COALESCE(ih.price_per_unit, 0)) AS total_cost,
                         COALESCE(r.invoice_number, CONCAT('INV-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', LPAD(r.id, 4, '0'))) AS invoice_number
                         FROM restockorder r
@@ -173,6 +173,20 @@ $total_pending_cost = $total_pending_row['total_pending_cost'] ?: 0;
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <i class="fas fa-user-circle fa-2x"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="../logout.php">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
                 </nav>
 
                 <div class="container-fluid">
@@ -182,7 +196,7 @@ $total_pending_cost = $total_pending_row['total_pending_cost'] ?: 0;
 
                     <?php if(isset($_GET['success'])): ?>
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            Order approved successfully!
+                            Order approved successfully and expense recorded!
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -237,9 +251,8 @@ $total_pending_cost = $total_pending_row['total_pending_cost'] ?: 0;
                                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Pending Cost</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($total_pending_cost, 2); ?></div>
                                         </div>
-                                        <div class="col-auto">
+                                        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
                                             <i class="fas fa-peso-sign fa-2x text-gray-300"></i>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -271,7 +284,7 @@ $total_pending_cost = $total_pending_row['total_pending_cost'] ?: 0;
                                         <?php while($row = $restockorders->fetch_assoc()): ?>
                                         <tr>
                                             <td><code class="text-primary"><?php echo htmlspecialchars($row['invoice_number']); ?></code></td>
-                                            <td><?php echo htmlspecialchars($row['ingredient_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['ingredient_name'] ?? 'N/A'); ?></td>
                                             <td><?php echo $row['branch_name'] ? htmlspecialchars($row['branch_name']) : '<span class="text-muted">N/A</span>'; ?></td>
                                             <td><?php echo (int)$row['restock_amount']; ?> <?php echo htmlspecialchars($row['ingredient_unit'] ?? ''); ?></td>
                                             <td>
@@ -315,6 +328,9 @@ $total_pending_cost = $total_pending_row['total_pending_cost'] ?: 0;
                                                             <input type="hidden" name="branchID" value="<?php echo $row['branchID']; ?>">
                                                             <input type="hidden" name="ingredientsID" value="<?php echo $row['ingredientsID']; ?>">
                                                             <input type="hidden" name="restock_id" value="<?php echo $row['id']; ?>">
+                                                            <input type="hidden" name="ingredient_name" value="<?php echo htmlspecialchars($row['ingredient_name']); ?>">
+                                                            <input type="hidden" name="total_cost" value="<?php echo $row['total_cost']; ?>">
+                                                            <input type="hidden" name="invoice_number" value="<?php echo htmlspecialchars($row['invoice_number']); ?>">
                                                             <button type="submit" class="btn btn-success btn-sm" title="Approve Order" 
                                                                     onclick="return confirm('Approve this restock order for ₱<?php echo number_format($row['total_cost'], 2); ?>?')">
                                                                 <i class="fas fa-check"></i>

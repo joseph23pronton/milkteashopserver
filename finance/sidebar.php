@@ -21,12 +21,6 @@
         Financial Management
     </div>
 
-    <li class="nav-item <?php echo basename($_SERVER['PHP_SELF']) == 'budget.php' ? 'active' : ''; ?>">
-        <a class="nav-link" href="budget.php">
-            <i class="fas fa-fw fa-wallet"></i>
-            <span>Budget Management</span>
-        </a>
-    </li>
 
     <li class="nav-item <?php echo basename($_SERVER['PHP_SELF']) == 'expenses.php' ? 'active' : ''; ?>">
         <a class="nav-link" href="expenses.php">
@@ -35,12 +29,6 @@
         </a>
     </li>
 
-    <li class="nav-item <?php echo basename($_SERVER['PHP_SELF']) == 'roi.php' ? 'active' : ''; ?>">
-        <a class="nav-link" href="roi.php">
-            <i class="fas fa-fw fa-chart-pie"></i>
-            <span>ROI Analysis</span>
-        </a>
-    </li>
 
     <hr class="sidebar-divider">
 
@@ -95,17 +83,11 @@
         </a>
     </li>
 
-    <li class="nav-item <?php echo basename($_SERVER['PHP_SELF']) == 'tax_management.php' ? 'active' : ''; ?>">
-        <a class="nav-link" href="tax_management.php">
-            <i class="fas fa-fw fa-calculator"></i>
-            <span>Tax Management</span>
-        </a>
-    </li>
 
     <li class="nav-item <?php echo basename($_SERVER['PHP_SELF']) == 'transaction_history.php' ? 'active' : ''; ?>">
-        <a class="nav-link" href="transaction_history.php">
+        <a class="nav-link" href="sales_history.php">
             <i class="fas fa-fw fa-history"></i>
-            <span>Transaction History</span>
+            <span>Sales History</span>
         </a>
     </li>
 

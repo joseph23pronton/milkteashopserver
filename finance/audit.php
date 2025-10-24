@@ -184,53 +184,29 @@ $discrepancies = $mysqli->query($discrepancies_query);
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <i class="fas fa-user-circle fa-2x"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="../logout.php">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
                 </nav>
+
 
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Financial Audit</h1>
-                        <button class="btn btn-primary" onclick="generateReport()">
-                            <i class="fas fa-file-pdf"></i> Generate Report
-                        </button>
+                        
                     </div>
 
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 bg-danger text-white">
-                            <h6 class="m-0 font-weight-bold">Discrepancies Found</h6>
-                        </div>
-                        <div class="card-body">
-                            <?php if($discrepancies->num_rows > 0): ?>
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Receipt ID</th>
-                                            <th>Sales Total</th>
-                                            <th>Transaction Total</th>
-                                            <th>Difference</th>
-                                            <th>Date</th>
-                                            
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php while($row = $discrepancies->fetch_assoc()): ?>
-                                        <tr>
-                                            <td><?php echo $row['receiptID']; ?></td>
-                                            <td>₱<?php echo number_format($row['sales_total'], 2); ?></td>
-                                            <td>₱<?php echo number_format($row['transaction_total'] ?? 0, 2); ?></td>
-                                            <td class="text-danger">₱<?php echo number_format(abs($row['sales_total'] - ($row['transaction_total'] ?? 0)), 2); ?></td>
-                                            <td><?php echo date('M d, Y', strtotime($row['sales_date'])); ?></td>
-                                            
-                                        </tr>
-                                        <?php endwhile; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <?php else: ?>
-                            <div class="alert alert-success">No discrepancies found. All records match!</div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
 
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
@@ -265,11 +241,7 @@ $discrepancies = $mysqli->query($discrepancies_query);
                                             <td><?php echo $row['reference']; ?></td>
                                             <td>₱<?php echo number_format($row['amount'], 2); ?></td>
                                             <td><?php echo date('M d, Y H:i', strtotime($row['date'])); ?></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-info">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </td>
+                                            
                                         </tr>
                                         <?php endwhile; ?>
                                     </tbody>
