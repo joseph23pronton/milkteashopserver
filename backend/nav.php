@@ -29,6 +29,16 @@ $user_role = $_SESSION['role'] ?? null;
     .logo {
         width: 70px;
     }
+    
+    #accordionSidebar {
+        width: 14rem !important;
+    }
+    
+    @media (max-width: 768px) {
+        #accordionSidebar {
+            width: 14rem !important;
+        }
+    }
 </style>
 
 <ul class="navbar-nav bg-gradient-success sidebar sidebar-dark accordion" id="accordionSidebar">
@@ -42,74 +52,87 @@ $user_role = $_SESSION['role'] ?? null;
 
     <hr class="sidebar-divider my-0">
 
-    <?php if ($_SESSION["role"] == "admin"): ?>    
+    <?php if ($user_role == "admin"): ?>    
 
-        <li class="nav-item <?php echo ($screen == 'employee') ? 'active' : ''; ?>">
+        <li class="nav-item <?php echo (isset($screen) && $screen == 'employee') ? 'active' : ''; ?>">
             <a class="nav-link" href="employee.php">
                 <i class="fas fa-fw fa-user"></i>
                 <span>Role Assignment</span>
             </a>
         </li>
 
-
         <hr class="sidebar-divider d-none d-md-block">
 
-    <?php else: ?>
-
-        
-
-        <?php if ($user_role === 'inventory'): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="branch_index.php">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Inventory Dashboard</span>
-                </a>
-            </li>
-            <?php foreach ($branches as $branch): ?>
-                <?php if ($branch['id'] == $assigned_branch): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="restock_inventory.php?id=<?php echo htmlspecialchars($branch['id']); ?>&b_id=<?php echo htmlspecialchars($branch['id']); ?>">
-                            <i class="fas fa-fw fa-table"></i>
-                            <span><?php echo htmlspecialchars($branch['name']); ?></span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="main_inventory.php">
-                            <i class="fas fa-fw fa-mug-hot"></i>
-                            <span>Ingredients</span>
-                        </a>
-                    </li>
-                <?php endif; ?>
-            <?php endforeach; ?>
-        <?php endif; ?>
-
-        
-        <?php if ($user_role === 'sales'): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="sales_index.php">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Sales Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="pos.php">
-                    <i class="fas fa-fw fa-cash-register"></i>
-                    <span>Point Of Sales</span>
-                </a>
-            </li>
-        <?php endif; ?>
-
-        <?php if ($user_role === 'production'): ?>
-            <li class="nav-item <?php echo ($screen == 'products') ? 'active' : ''; ?>">
-                <a class="nav-link" href="products.php">
-                    <i class="fas fa-fw fa-cash-register"></i>
-                    <span>Products Management</span>
-                </a>
-            </li>
-        <?php endif; ?>
-
-
     <?php endif; ?>
+
+    <?php if ($user_role === 'inventory'): ?>
+        <li class="nav-item">
+            <a class="nav-link" href="branch_index.php">
+                <i class="fas fa-fw fa-tachometer-alt"></i>
+                <span>Inventory Dashboard</span>
+            </a>
+        </li>
+        <?php foreach ($branches as $branch): ?>
+            <?php if ($branch['id'] == $assigned_branch): ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="restock_inventory.php?id=<?php echo htmlspecialchars($branch['id']); ?>&b_id=<?php echo htmlspecialchars($branch['id']); ?>">
+                        <i class="fas fa-fw fa-table"></i>
+                        <span><?php echo htmlspecialchars($branch['name']); ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view_branch.php?id=<?php echo htmlspecialchars($branch['id']); ?>">
+                        <i class="fas fa-fw fa-chart-line"></i>
+                        <span>Branch Sales</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="main_inventory.php">
+                        <i class="fas fa-fw fa-mug-hot"></i>
+                        <span>Ingredients</span>
+                    </a>
+                </li>
+            <?php endif; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
+
+    <?php if ($user_role === 'sales'): ?>
+        <li class="nav-item">
+            <a class="nav-link" href="sales_index.php">
+                <i class="fas fa-fw fa-tachometer-alt"></i>
+                <span>Sales Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="pos.php">
+                <i class="fas fa-fw fa-cash-register"></i>
+                <span>Point Of Sales</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="sales.php?id=<?php echo htmlspecialchars($assigned_branch); ?>">
+                <i class="fas fa-fw fa-receipt"></i>
+                <span>Sales History</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="view_branch.php?id=<?php echo htmlspecialchars($assigned_branch); ?>">
+                <i class="fas fa-fw fa-chart-line"></i>
+                <span>Branch Sales</span>
+            </a>
+        </li>
+    <?php endif; ?>
+
+    <?php if ($user_role === 'production'): ?>
+        <li class="nav-item <?php echo (isset($screen) && $screen == 'products') ? 'active' : ''; ?>">
+            <a class="nav-link" href="products.php">
+                <i class="fas fa-fw fa-cash-register"></i>
+                <span>Products Management</span>
+            </a>
+        </li>
+    <?php endif; ?>
+
+    <hr class="sidebar-divider d-none d-md-block">
 
     <div class="text-center d-none d-md-inline">
         <button class="rounded-circle border-0" id="sidebarToggle"></button>

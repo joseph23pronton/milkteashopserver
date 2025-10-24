@@ -110,6 +110,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/login.css">
+    
+    <style>
+        .password-toggle {
+            position: relative;
+        }
+        .password-toggle .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #858796;
+        }
+        .password-toggle .toggle-password:hover {
+            color: #4e73df;
+        }
+    </style>
 
 </head>
 
@@ -144,9 +161,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                             id="exampleInputEmail" aria-describedby="emailHelp"
                                             placeholder="Enter Email Address..." name="email" required>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group password-toggle">
                                         <input type="password" class="form-control form-control-user"
                                             id="exampleInputPassword" placeholder="Password" name="password" required>
+                                        <i class="fas fa-eye toggle-password" id="togglePassword"></i>
                                     </div>
                                     <button type="submit" class="btn btn-success btn-user btn-block">
                                         Login
@@ -164,10 +182,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
-
     <script src="js/sb-admin-2.min.js"></script>
+    
+    <script>
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#exampleInputPassword');
+
+        togglePassword.addEventListener('click', function (e) {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
 
 </body>
 

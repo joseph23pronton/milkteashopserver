@@ -2,7 +2,7 @@
 session_start();
 $mysqli = require $_SERVER['DOCUMENT_ROOT'] . "/database.php";
 header('Content-Type: application/json');
-
+date_default_timezone_set('Asia/Manila');
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => 'error', 'message' => 'User not logged in.']);
     exit();

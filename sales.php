@@ -1,6 +1,7 @@
 <?php
 $screen = 'branch';
 ob_start();
+date_default_timezone_set('Asia/Manila');
 // Check if branch ID is provided in the URL
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("Branch ID is required.");

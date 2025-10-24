@@ -1,6 +1,7 @@
 <?php
 // Assuming session and database connection are already set up
 session_start();
+date_default_timezone_set('Asia/Manila');
 $mysqli = require $_SERVER['DOCUMENT_ROOT'] . "/database.php";
 header('Content-Type: application/json');
 

@@ -97,10 +97,10 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0;
                 <div class="card-body">
                     <div class="table-responsive">
                     <?php if (isset($_GET['success'])): ?>
-                            <div class="alert alert-success mt-3">Restock Successfully</div>
+                            <div class="alert alert-success mt-3">Request Restock Successfully</div>
                         <?php endif; ?>
                         <?php if (isset($_GET['failed'])): ?>
-                            <div class="alert alert-success mt-3">Restock Failed: <?php echo htmlspecialchars($_GET['failed'])?></div>
+                            <div class="alert alert-success mt-3">Request Restock Failed: <?php echo htmlspecialchars($_GET['failed'])?></div>
                         <?php endif; ?>
                         <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                             <thead>
@@ -181,7 +181,7 @@ ORDER BY i.updated_at DESC, ih.name ASC
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="restockModalLabel">Restock Ingredient</h5>
+                    <h5 class="modal-title" id="restockModalLabel">Request to Restock Ingredient</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -203,7 +203,7 @@ ORDER BY i.updated_at DESC, ih.name ASC
                         </div>
                         
                         <div class="form-group">
-                            <label for="restockAmount">Restock Quantity</label>
+                            <label for="restockAmount">Requesting Restock Quantity</label>
                             <input type="number" class="form-control" id="restockAmount" name="restockAmount" required min="1">
                         </div>
                         

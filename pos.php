@@ -1,11 +1,12 @@
 <?php
 ob_start();
 session_start();
-
+date_default_timezone_set('Asia/Manila');
 if (!isset($_SESSION['user_id'])){
     header("Location: login.php");
     exit();
 }
+
 $conn = include('database.php');
 ?>
 <!DOCTYPE html>
@@ -26,12 +27,25 @@ $conn = include('database.php');
         .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .gradient-text { background: linear-gradient(135deg, 59AC77 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-down { animation: slideDown 0.3s ease-out; }
     </style>
 </head>
 <body class="p-2 md:p-3">
+    <div id="successNotification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-[60] animate-slide-down">
+        <div class="bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+                <p class="font-bold text-sm">Order Successful!</p>
+                <p class="text-xs">Payment processed successfully</p>
+            </div>
+        </div>
+    </div>
+
     <div class="max-w-[1400px] mx-auto mb-2 flex justify-start">
     <?php
-    // check if the session role exists and is "sales"
     if (isset($_SESSION['role']) && $_SESSION['role'] === 'sales') {
         $link = "sales_index.php";
         $text = "Go Back to Sales";
@@ -170,7 +184,7 @@ $conn = include('database.php');
             <h3 class="text-lg font-bold gradient-text mb-3">Receive Payment</h3>
             <div class="mb-3">
                 <label class="block text-gray-700 font-semibold mb-1.5 text-xs">Amount Received:</label>
-                <input type="number" id="amountReceived" placeholder="Enter amount" class="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-500 focus:outline-none text-sm" />
+                <input type="number" id="amountReceived" placeholder="Enter amount" maxlength="5" oninput="if(this.value.length > 5) this.value = this.value.slice(0, 5);" class="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-500 focus:outline-none text-sm" />
             </div>
             <div class="bg-purple-50 p-2.5 rounded-lg mb-3"></div>
             <div class="flex gap-2">
@@ -247,6 +261,14 @@ let totalPrice = 0;
 let productName = '';
 let productPrice = 0;
 let selectedProduct = {}; 
+
+function showSuccessNotification() {
+    const notification = document.getElementById('successNotification');
+    notification.classList.remove('hidden');
+    setTimeout(() => {
+        notification.classList.add('hidden');
+    }, 3000);
+}
 
 function closeErrorModal() {
     document.getElementById('errorModal').classList.add('hidden');
@@ -335,17 +357,42 @@ function updateOrderList() {
             groupedOrder[key + addonsKey].quantity += item.quantity;
             groupedOrder[key + addonsKey].price += item.price;
             groupedOrder[key + addonsKey].index.push(index);
+            groupedOrder[key + addonsKey].addons = item.addons;
+            groupedOrder[key + addonsKey].size = item.size;
         } else {
-            groupedOrder[key + addonsKey] = { quantity: item.quantity, price: item.price, index: [index] };
+            groupedOrder[key + addonsKey] = { 
+                quantity: item.quantity, 
+                price: item.price, 
+                index: [index], 
+                addons: item.addons,
+                size: item.size
+            };
         }
     });
     for (const [key, value] of Object.entries(groupedOrder)) {
         let itemDiv = document.createElement('div');
         itemDiv.className = 'bg-white rounded-lg p-2 shadow-sm';
+        
+        const basePrice = value.size === 'medium' ? 70 : 80;
+        const productNameOnly = key.split(' (Add-ons:')[0];
+        
+        let addonsDisplay = '';
+        if (value.addons && value.addons.length > 0) {
+            const addonsText = value.addons.map(addon => {
+                if (addon === 'Crushed Oreos') return 'Crushed Oreos (+₱10)';
+                if (addon === 'Extra Pearl') return 'Extra Pearl (+₱10)';
+                return addon;
+            }).join(', ');
+            addonsDisplay = `<div class="text-[10px] text-gray-600 mt-0.5">${addonsText}</div>`;
+        }
+        
         itemDiv.innerHTML = `
             <div class="flex justify-between items-center mb-1">
-                <span class="font-medium text-gray-800 text-[11px] leading-tight">${key}</span>
-                <span class="font-bold text-purple-600 text-xs">₱${value.price}</span>
+                <div class="flex-1">
+                    <span class="font-medium text-gray-800 text-[11px] leading-tight">${productNameOnly} - ₱${basePrice}</span>
+                    ${addonsDisplay}
+                </div>
+                <span class="font-bold text-purple-600 text-xs ml-2">₱${value.price}</span>
             </div>
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-1.5">
@@ -476,6 +523,8 @@ function processPayment() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
+            showSuccessNotification();
+            
             const orderID = data.receiptID; 
             const orderDate = data.salesDate;
             const transactionNumber = data.transactionNumber;
