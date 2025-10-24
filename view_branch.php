@@ -7,7 +7,6 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $mysqli = include('database.php');
 
-// Fetch branch details
 $sql = "SELECT name, city FROM branches WHERE id = ?";
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param('i', $_GET['id']);
@@ -32,7 +31,7 @@ $stmt_earnings->bind_param('i', $_GET['id']);
 $stmt_earnings->execute();
 $earnings_result = $stmt_earnings->get_result();
 $earnings_row = $earnings_result->fetch_assoc();
-$total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no earnings found
+$total_earnings = $earnings_row['total_earnings'] ?: 0;
 
 ?>
 
@@ -60,10 +59,10 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
         } ?>
 
         <div class="container-fluid">
-          <h1 class="h3 mb-2 text-gray-800"><?= $branch['name'] ?> Inventory</h1>
+          <h1 class="h3 mb-2 text-gray-800"><?= htmlspecialchars($branch['name']) ?> Inventory</h1>
 <p class="mb-4">
     <?php if (isset($branch['city'])): ?>
-        Branch Inventory in <?= $branch['city'] ?>
+        Branch Inventory in <?= htmlspecialchars($branch['city']) ?>
     <?php else: ?>
         Branch Inventory 
     <?php endif; ?>
@@ -101,13 +100,14 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
                             <div class="alert alert-success mt-3">Restock Successfully</div>
                         <?php endif; ?>
                         <?php if (isset($_GET['failed'])): ?>
-                            <div class="alert alert-success mt-3">Restock Failed: <?php echo $_GET['failed']?></div>
+                            <div class="alert alert-success mt-3">Restock Failed: <?php echo htmlspecialchars($_GET['failed'])?></div>
                         <?php endif; ?>
                         <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                             <thead>
                                 <tr>
                                     <th>Ingredient Name</th>
                                     <th>Current Stock</th>
+                                    <th>Price per Unit</th>
                                     <th>Last Restock</th>
                                     <th>Updated At</th>
                                     <th>Action</th>
@@ -120,15 +120,18 @@ SELECT
     i.id AS ingredient_id,
     ih.id AS inv_id,
     ih.name AS ingredient_name,
+    ih.unit AS ingredient_unit,
+    ih.price_per_unit,
     COALESCE(i.currentStock, 0) AS current_stock,
     i.lastRestock AS last_restock,
     i.updated_at
 FROM ingredientsHeader ih
 LEFT JOIN ingredients i ON i.ingredientsID = ih.id AND i.branchesID = ?
+ORDER BY i.updated_at DESC, ih.name ASC
 ";
 
                                 $stmt = $mysqli->prepare($sql);
-                                $stmt->bind_param('i', $_GET['id']); // Bind branch_id to the query
+                                $stmt->bind_param('i', $_GET['id']);
                                 $stmt->execute();
                                 $result = $stmt->get_result();
                                 $formAction = ($_SESSION['role'] === 'admin') ? 'backend/process_restock.php' : 'backend/request_restock.php';
@@ -137,15 +140,24 @@ LEFT JOIN ingredients i ON i.ingredientsID = ih.id AND i.branchesID = ?
                                     while ($row = $result->fetch_assoc()) {
                                         ?>
                                         <tr>
-                                            <td><?php echo $row['ingredient_name']; ?></td>
-                                            <td><?php echo $row['current_stock']; ?></td>
-                                            <td><?php echo isset($row['last_restock']) ? $row['last_restock'] : 'N/A'; ?></td>
-                                            <td><?php echo isset($row['updated_at']) ? $row['updated_at'] : 'N/A'; ?></td>
+                                            <td><?php echo htmlspecialchars($row['ingredient_name']); ?></td>
+                                            <td><?php echo $row['current_stock']; ?> <strong><?php echo htmlspecialchars($row['ingredient_unit']); ?></strong></td>
+                                            <td>
+                                                <?php if ($row['price_per_unit'] > 0): ?>
+                                                    ₱<?= number_format($row['price_per_unit'], 2) ?> / <?= htmlspecialchars($row['ingredient_unit']) ?>
+                                                <?php else: ?>
+                                                    <span class="text-muted">Not set</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?php echo isset($row['last_restock']) ? htmlspecialchars($row['last_restock']) : 'N/A'; ?></td>
+                                            <td><?php echo isset($row['updated_at']) ? htmlspecialchars($row['updated_at']) : 'N/A'; ?></td>
                                             <td>
                                             <button class="btn btn-success" data-toggle="modal" data-target="#restockModal"
-                                                data-ingredient-id="<?php echo $row['inv_id']; ?>"
-                                                data-branch-id="<?php echo $_GET['id']; ?>"
-                                                data-ingredient-name="<?php echo htmlspecialchars($row['ingredient_name']); ?>">
+                                                data-ingredient-id="<?php echo htmlspecialchars($row['inv_id']); ?>"
+                                                data-branch-id="<?php echo htmlspecialchars($_GET['id']); ?>"
+                                                data-ingredient-name="<?php echo htmlspecialchars($row['ingredient_name']); ?>"
+                                                data-price="<?php echo htmlspecialchars($row['price_per_unit']); ?>"
+                                                data-unit="<?php echo htmlspecialchars($row['ingredient_unit']); ?>">
                                                 Restock
                                             </button>
                                             </td>
@@ -163,7 +175,7 @@ LEFT JOIN ingredients i ON i.ingredientsID = ih.id AND i.branchesID = ?
             </div>
         </div>
     </div>
-    <!-- Restock Modal -->
+
     <div class="modal fade" id="restockModal" tabindex="-1" role="dialog" aria-labelledby="restockModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -178,14 +190,26 @@ LEFT JOIN ingredients i ON i.ingredientsID = ih.id AND i.branchesID = ?
                     <div class="modal-body">
                         <input type="hidden" id="branch_id" name="branchID" value="">
                         <input type="hidden" id="ingredient_id" name="ingredientsID">
+                        <input type="hidden" id="price_per_unit" name="price_per_unit">
+                        
                         <div class="form-group">
                             <label for="ingredient_name">Ingredient Name</label>
                             <input type="text" id="ingredient_name" class="form-control" name="ingredientsName" readonly>
                         </div>
+                        
+                        <div class="form-group">
+                            <label for="price_display">Price per Unit</label>
+                            <div id="price_display" class="form-control-plaintext text-muted">Loading...</div>
+                        </div>
+                        
                         <div class="form-group">
                             <label for="restockAmount">Restock Quantity</label>
-                            <input type="number" class="form-control" id="restockAmount" name="restockAmount"
-                                required>
+                            <input type="number" class="form-control" id="restockAmount" name="restockAmount" required min="1">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="estimated_cost">Estimated Total Cost</label>
+                            <div id="estimated_cost" class="form-control-plaintext font-weight-bold text-primary">₱0.00</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -229,16 +253,35 @@ LEFT JOIN ingredients i ON i.ingredientsID = ih.id AND i.branchesID = ?
     <script src="js/demo/datatables-demo.js"></script>
     <script>
         $('#restockModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget); // Button that triggered the modal
+            var button = $(event.relatedTarget);
             var ingredientId = button.data('ingredient-id');
             var branchId = button.data('branch-id');
             var ingredientName = button.data('ingredient-name');
+            var pricePerUnit = button.data('price');
+            var unit = button.data('unit');
 
-            // Update the modal fields
             var modal = $(this);
             modal.find('#ingredient_id').val(ingredientId);
             modal.find('#branch_id').val(branchId);
             modal.find('#ingredient_name').val(ingredientName);
+            modal.find('#price_per_unit').val(pricePerUnit);
+            
+            if (pricePerUnit > 0) {
+                modal.find('#price_display').text('₱' + parseFloat(pricePerUnit).toFixed(2) + ' per ' + unit);
+            } else {
+                modal.find('#price_display').text('Price not set').addClass('text-warning');
+            }
+            
+            modal.find('#restockAmount').val('');
+            modal.find('#estimated_cost').text('₱0.00');
+        });
+
+        $(document).on('input', '#restockAmount', function() {
+            var quantity = parseFloat($(this).val()) || 0;
+            var pricePerUnit = parseFloat($('#price_per_unit').val()) || 0;
+            var totalCost = quantity * pricePerUnit;
+            
+            $('#estimated_cost').text('₱' + totalCost.toFixed(2));
         });
     </script>
 

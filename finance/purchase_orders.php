@@ -1,0 +1,462 @@
+<?php
+require_once 'db_connection.php';
+
+$confirmed_restocks_query = "SELECT r.*, b.name as branch_name, ih.name as ingredient_name, ih.price_per_unit, ih.unit as ingredient_unit,
+                              (r.restock_amount * COALESCE(ih.price_per_unit, 0)) AS total_cost,
+                              COALESCE(r.invoice_number, CONCAT('INV-', DATE_FORMAT(r.created_at, '%Y%m%d'), '-', LPAD(r.id, 4, '0'))) AS invoice_number
+                              FROM restockorder r
+                              LEFT JOIN branches b ON r.branchID = b.id
+                              LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id
+                              WHERE r.is_confirmed = 1
+                              ORDER BY r.created_at DESC";
+$confirmed_restocks = $mysqli->query($confirmed_restocks_query);
+
+$total_confirmed_cost_query = "SELECT SUM(r.restock_amount * COALESCE(ih.price_per_unit, 0)) AS total_confirmed_cost
+                                FROM restockorder r
+                                LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id
+                                WHERE r.is_confirmed = 1";
+$total_confirmed_result = $mysqli->query($total_confirmed_cost_query);
+$total_confirmed_row = $total_confirmed_result->fetch_assoc();
+$total_confirmed_cost = $total_confirmed_row['total_confirmed_cost'] ?: 0;
+
+$confirmed_count_query = "SELECT COUNT(*) as count FROM restockorder WHERE is_confirmed = 1";
+$confirmed_count = $mysqli->query($confirmed_count_query)->fetch_assoc()['count'];
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Finance Dashboard - Purchase Orders</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+    <style>
+        body {
+            overflow-x: hidden;
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        #wrapper {
+            display: flex;
+        }
+        #wrapper #content-wrapper {
+            overflow-x: hidden;
+            width: 100%;
+            background-color: #f8f9fc;
+        }
+        .sidebar {
+            width: 14rem !important;
+            min-height: 100vh;
+        }
+        .sidebar .nav-item .nav-link {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .sidebar .nav-item .nav-link span {
+            font-size: 0.85rem;
+            display: inline;
+        }
+        .sidebar .nav-item .nav-link i {
+            font-size: 0.85rem;
+            margin-right: 0.25rem;
+        }
+        .sidebar .nav-item .nav-link:hover {
+            color: #fff;
+        }
+        .sidebar .nav-item.active .nav-link {
+            color: #fff;
+            font-weight: 700;
+        }
+        .sidebar-dark {
+            background-color: #1cc88a;
+        }
+        .bg-gradient-success {
+            background-color: #1cc88a;
+            background-image: linear-gradient(180deg, #1cc88a 10%, #13855c 100%);
+            background-size: cover;
+        }
+        .sidebar .sidebar-brand {
+            height: 4.375rem;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 800;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
+            z-index: 1;
+            color: #fff;
+        }
+        .sidebar .sidebar-brand-icon {
+            font-size: 2rem;
+        }
+        .sidebar .sidebar-brand-text {
+            display: block;
+        }
+        .sidebar .sidebar-heading {
+            text-align: center;
+            padding: 0 1rem;
+            font-weight: 800;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+        }
+        .sidebar-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin: 0 1rem 1rem;
+        }
+        .sidebar #sidebarToggle {
+            width: 2.5rem;
+            height: 2.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .sidebar #sidebarToggle::after {
+            font-weight: 900;
+            content: '\f104';
+            font-family: 'Font Awesome 5 Free';
+            margin-right: 0.1rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .sidebar #sidebarToggle:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+        .topbar {
+            height: 4.375rem;
+        }
+        .card {
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .border-left-primary {
+            border-left: 0.25rem solid #4e73df !important;
+        }
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
+        }
+        .border-left-info {
+            border-left: 0.25rem solid #36b9cc !important;
+        }
+        .border-left-warning {
+            border-left: 0.25rem solid #f6c23e !important;
+        }
+        .text-primary {
+            color: #4e73df !important;
+        }
+        .text-success {
+            color: #1cc88a !important;
+        }
+        .text-info {
+            color: #36b9cc !important;
+        }
+        .text-warning {
+            color: #f6c23e !important;
+        }
+    </style>
+</head> 
+<body id="page-top">
+    <div id="wrapper">
+        <?php include 'sidebar.php'; ?>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <i class="fas fa-user-circle fa-2x"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="../logout.php">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Purchase Orders</h1>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Confirmed Orders</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $confirmed_count; ?></div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Confirmed Cost</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($total_confirmed_cost, 2); ?></div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+                                            <i class="fas fa-peso-sign fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Confirmed Purchase Orders</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="confirmedRestocksTable" width="100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice</th>
+                                            <th>Ingredient</th>
+                                            <th>Branch</th>
+                                            <th>Amount</th>
+                                            <th>Price/Unit</th>
+                                            <th>Total Cost</th>
+                                            <th>Requested By</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php while($row = $confirmed_restocks->fetch_assoc()): ?>
+                                        <tr>
+                                            <td><code class="text-success"><?php echo htmlspecialchars($row['invoice_number']); ?></code></td>
+                                            <td><?php echo htmlspecialchars($row['ingredient_name']); ?></td>
+                                            <td><?php echo $row['branch_name'] ? htmlspecialchars($row['branch_name']) : '<span class="text-muted">N/A</span>'; ?></td>
+                                            <td><?php echo (int)$row['restock_amount']; ?> <?php echo htmlspecialchars($row['ingredient_unit'] ?? ''); ?></td>
+                                            <td>₱<?php echo number_format($row['price_per_unit'], 2); ?></td>
+                                            <td><strong>₱<?php echo number_format($row['total_cost'], 2); ?></strong></td>
+                                            <td><?php echo htmlspecialchars($row['requested_by']); ?></td>
+                                            <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
+                                            <td>
+                                                <button class="btn btn-info btn-sm" 
+                                                        onclick="viewRestockReceipt(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['invoice_number']); ?>')"
+                                                        title="View Receipt">
+                                                    <i class="fas fa-receipt"></i>
+                                                </button>
+                                                <button class="btn btn-warning btn-sm" 
+                                                        onclick="returnProduct(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['invoice_number']); ?>', '<?php echo htmlspecialchars($row['ingredient_name']); ?>', <?php echo $row['ingredientsID']; ?>, <?php echo $row['restock_amount']; ?>, <?php echo $row['total_cost']; ?>, <?php echo $row['branchID']; ?>)"
+                                                        title="Return Product">
+                                                    <i class="fas fa-undo"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="receiptModal" tabindex="-1" role="dialog" aria-labelledby="receiptModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiptModalLabel">
+                        <i class="fas fa-receipt"></i> Purchase Order Receipt
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="receiptContent">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printReceipt()">
+                        <i class="fas fa-print"></i> Print Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="returnModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form id="returnForm" method="POST" action="returns.php">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-undo"></i> Product Return
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="add_return" value="1">
+                        <input type="hidden" name="purchase_order_id" id="return_po_id">
+                        <input type="hidden" name="ingredient_id" id="return_ingredient_id">
+                        <input type="hidden" name="branch_id" id="return_branch_id">
+                        
+                        <div class="alert alert-info">
+                            <strong>Invoice:</strong> <span id="return_invoice"></span><br>
+                            <strong>Ingredient:</strong> <span id="return_ingredient"></span><br>
+                            <strong>Original Quantity:</strong> <span id="return_original_qty"></span><br>
+                            <strong>Original Amount:</strong> ₱<span id="return_original_amount"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Return Date</label>
+                            <input type="date" name="return_date" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
+                        </div>
+                        <input type="hidden" name="supplier_name" value="N/A">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Quantity to Return</label>
+                                    <input type="number" name="quantity_returned" id="return_quantity" class="form-control" required min="1">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Refund Amount</label>
+                                    <input type="number" step="0.01" name="refund_amount" id="return_refund_amount" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Reason for Return</label>
+                            <select name="reason" class="form-control" required>
+                                <option value="Damaged">Damaged Products</option>
+                                <option value="Expired">Expired</option>
+                                <option value="Wrong Item">Wrong Item Delivered</option>
+                                <option value="Quality Issue">Quality Issue</option>
+                                <option value="Overstocked">Overstocked</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-undo"></i> Submit Return
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#confirmedRestocksTable').DataTable({
+                "order": [[7, "desc"]],
+                "pageLength": 25
+            });
+        });
+
+        function viewRestockReceipt(restockId, invoiceNumber) {
+            $('#receiptModal').modal('show');
+            
+            $.ajax({
+                url: '../backend/generate_receipt.php',
+                method: 'POST',
+                data: {
+                    restock_id: restockId,
+                    invoice_number: invoiceNumber
+                },
+                success: function(response) {
+                    $('#receiptContent').html(response);
+                },
+                error: function() {
+                    $('#receiptContent').html('<div class="alert alert-danger">Error loading receipt. Please try again.</div>');
+                }
+            });
+        }
+
+        function returnProduct(poId, invoice, ingredient, ingredientId, quantity, totalCost, branchId) {
+            $('#return_po_id').val(poId);
+            $('#return_ingredient_id').val(ingredientId);
+            $('#return_branch_id').val(branchId);
+            $('#return_invoice').text(invoice);
+            $('#return_ingredient').text(ingredient);
+            $('#return_original_qty').text(quantity);
+            $('#return_original_amount').text(parseFloat(totalCost).toFixed(2));
+            $('#return_quantity').attr('max', quantity);
+            $('#return_quantity').val(quantity);
+            $('#return_refund_amount').val(parseFloat(totalCost).toFixed(2));
+            $('#returnModal').modal('show');
+        }
+
+        $('#return_quantity').on('input', function() {
+            var originalAmount = parseFloat($('#return_original_amount').text());
+            var originalQty = parseFloat($('#return_original_qty').text());
+            var returnQty = parseFloat($(this).val());
+            
+            if(returnQty && originalQty) {
+                var refundAmount = (originalAmount / originalQty) * returnQty;
+                $('#return_refund_amount').val(refundAmount.toFixed(2));
+            }
+        });
+
+        function printReceipt() {
+            const printContent = document.getElementById('receiptContent').innerHTML;
+            const printWindow = window.open('', '', 'height=600,width=800');
+            
+            printWindow.document.write('<html><head><title>Purchase Order Receipt</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { font-family: Arial, sans-serif; margin: 20px; }');
+            printWindow.document.write('.receipt-header { text-align: center; margin-bottom: 20px; }');
+            printWindow.document.write('.receipt-details { margin-bottom: 20px; }');
+            printWindow.document.write('.receipt-table { width: 100%; border-collapse: collapse; }');
+            printWindow.document.write('.receipt-table th, .receipt-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }');
+            printWindow.document.write('.receipt-table th { background-color: #f2f2f2; }');
+            printWindow.document.write('.receipt-total { text-align: right; font-weight: bold; font-size: 18px; }');
+            printWindow.document.write('@media print { .no-print { display: none; } }');
+            printWindow.document.write('</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(printContent);
+            printWindow.document.write('</body></html>');
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        $('#receiptModal').on('hidden.bs.modal', function() {
+            $('#receiptContent').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
+        });
+    </script>
+</body>
+</html>

@@ -28,14 +28,14 @@ CREATE TABLE `attendance` (
   `attendance_date` date NOT NULL,
   `time_in` time DEFAULT NULL,
   `time_out` time DEFAULT NULL,
-  `status` enum('present','late','absent','on_leave') COLLATE utf8mb4_general_ci DEFAULT 'absent',
+  `status` enum('present','late','absent','on_leave') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'absent',
   `late_minutes` int DEFAULT '0',
-  `scheduled_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_general_ci,
+  `scheduled_shift` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_attendance` (`employee_id`,`attendance_date`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -44,7 +44,7 @@ CREATE TABLE `attendance` (
 
 LOCK TABLES `attendance` WRITE;
 /*!40000 ALTER TABLE `attendance` DISABLE KEYS */;
-INSERT INTO `attendance` VALUES (1,15633,'2025-10-22','19:31:55','00:00:00','late',691,NULL,'','2025-10-22 16:22:01'),(3,20002,'2025-10-22','19:32:35','19:31:41','late',692,NULL,NULL,'2025-10-22 16:43:19'),(8,20002,'2025-10-23','22:40:40','22:57:03','late',880,NULL,NULL,'2025-10-22 17:00:26'),(12,14939,'2025-10-22','19:32:17',NULL,'late',692,NULL,NULL,'2025-10-22 17:32:17'),(14,15633,'2025-10-23','22:33:16','22:40:21','late',873,NULL,NULL,'2025-10-22 17:37:50'),(15,14939,'2025-10-23','22:57:17',NULL,'late',897,NULL,NULL,'2025-10-22 17:38:14'),(16,38502,'2025-10-23','03:30:47','03:31:02','present',0,NULL,NULL,'2025-10-22 19:30:47'),(17,20002,'2025-10-24','00:11:29','00:25:26','present',0,NULL,NULL,'2025-10-23 16:03:46'),(18,31980,'2025-10-24','00:06:29','00:07:34','present',0,NULL,NULL,'2025-10-23 16:06:29'),(19,26770,'2025-10-24','00:09:26','00:10:04','present',0,NULL,NULL,'2025-10-23 16:09:26'),(20,14939,'2025-10-24','00:39:50',NULL,'present',0,NULL,NULL,'2025-10-23 16:39:50');
+INSERT INTO `attendance` VALUES (1,15633,'2025-10-22','19:31:55','00:00:00','late',691,NULL,'','2025-10-22 16:22:01'),(3,20002,'2025-10-22','19:32:35','19:31:41','late',692,NULL,NULL,'2025-10-22 16:43:19'),(8,20002,'2025-10-23','22:40:40','22:57:03','late',880,NULL,NULL,'2025-10-22 17:00:26'),(12,14939,'2025-10-22','19:32:17',NULL,'late',692,NULL,NULL,'2025-10-22 17:32:17'),(14,15633,'2025-10-23','22:33:16','22:40:21','late',873,NULL,NULL,'2025-10-22 17:37:50'),(15,14939,'2025-10-23','22:57:17',NULL,'late',897,NULL,NULL,'2025-10-22 17:38:14'),(16,38502,'2025-10-23','03:30:47','03:31:02','present',0,NULL,NULL,'2025-10-22 19:30:47'),(17,20002,'2025-10-24','00:11:29','00:25:26','present',0,NULL,NULL,'2025-10-23 16:03:46'),(18,31980,'2025-10-24','00:06:29','00:07:34','present',0,NULL,NULL,'2025-10-23 16:06:29'),(19,26770,'2025-10-24','00:09:26','00:10:04','present',0,NULL,NULL,'2025-10-23 16:09:26'),(20,14939,'2025-10-24','00:39:50',NULL,'present',0,NULL,NULL,'2025-10-23 16:39:50'),(21,12194,'2025-10-24','04:33:06',NULL,'present',0,NULL,NULL,'2025-10-23 20:27:33'),(22,99999,'2025-10-24','16:46:33',NULL,'late',526,NULL,NULL,'2025-10-23 20:36:09'),(23,16114,'2025-10-24','05:21:27','05:21:53','present',0,NULL,NULL,'2025-10-23 21:12:58'),(24,18044,'2025-10-24','05:33:29','05:33:35','present',0,NULL,NULL,'2025-10-23 21:33:29');
 /*!40000 ALTER TABLE `attendance` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -57,8 +57,8 @@ DROP TABLE IF EXISTS `branches`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `branches` (
   `id` int NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `city` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `city` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -75,6 +75,37 @@ INSERT INTO `branches` VALUES (245,'Llano','Caloocan'),(8954,'Congressional','Ca
 UNLOCK TABLES;
 
 --
+-- Table structure for table `budgets`
+--
+
+DROP TABLE IF EXISTS `budgets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `budgets` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `allocated_amount` decimal(10,2) NOT NULL,
+  `period_start` date NOT NULL,
+  `period_end` date NOT NULL,
+  `branch_id` int DEFAULT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_period` (`period_start`,`period_end`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `budgets`
+--
+
+LOCK TABLES `budgets` WRITE;
+/*!40000 ALTER TABLE `budgets` DISABLE KEYS */;
+/*!40000 ALTER TABLE `budgets` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `departments`
 --
 
@@ -83,8 +114,8 @@ DROP TABLE IF EXISTS `departments`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `departments` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `description` text COLLATE utf8mb4_general_ci,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -101,6 +132,40 @@ INSERT INTO `departments` VALUES (1,'Sales','Handles customer transactions and o
 UNLOCK TABLES;
 
 --
+-- Table structure for table `expenses`
+--
+
+DROP TABLE IF EXISTS `expenses`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `expenses` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `amount` decimal(10,2) NOT NULL,
+  `branch_id` int DEFAULT NULL,
+  `expense_date` date NOT NULL,
+  `payment_method` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'Cash',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_archived` tinyint(1) DEFAULT '0',
+  `archived_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_expense_date` (`expense_date`),
+  KEY `idx_branch` (`branch_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `expenses`
+--
+
+LOCK TABLES `expenses` WRITE;
+/*!40000 ALTER TABLE `expenses` DISABLE KEYS */;
+INSERT INTO `expenses` VALUES (1,'Electricity','MERALCO BILL',2000.00,245,'2025-10-24','Cash','2025-10-24 07:52:19',0,NULL),(2,'Water','MAYNILAD BILL',570.00,245,'2025-11-24','Cash','2025-10-24 07:56:43',0,NULL),(3,'Raw Materials','Restock of Caramel Sugar Flavor (Invoice: INV-20251024-0021) - 10 units',3.10,245,'2025-10-24','Bank Transfer','2025-10-24 08:05:22',0,NULL),(4,'Raw Materials','Restock of Chocolate Flavor (Invoice: INV-20251024-0002) - 50 units',20.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(5,'Raw Materials','Restock of Cookies & Cream Flavor (Invoice: INV-20251024-0003) - 50 units',20.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(6,'Raw Materials','Restock of Crushed Cookies (Invoice: INV-20251024-0004) - 50 units',2.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(7,'Raw Materials','Restock of Dark Chocolate Flavor (Invoice: INV-20251024-0005) - 50 units',13.00,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(8,'Raw Materials','Restock of Fructose Corn Syrup (Invoice: INV-20251024-0006) - 50 units',5.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(9,'Raw Materials','Restock of Hazelnut Flavor (Invoice: INV-20251024-0007) - 50 units',12.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(10,'Raw Materials','Restock of Fructose Corn Syrup (Invoice: INV-20251024-0008) - 50 units',5.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(11,'Raw Materials','Restock of Hokkaido Flavor (Invoice: INV-20251024-0009) - 50 units',12.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(12,'Raw Materials','Restock of Loose Tea (Invoice: INV-20251024-0010) - 50 units',3.00,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(13,'Raw Materials','Restock of Ice (Invoice: INV-20251024-0011) - 150 units',28.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(14,'Raw Materials','Restock of Popping Boba (Invoice: INV-20251024-0012) - 50 units',4.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(15,'Raw Materials','Restock of Caramel Sugar Flavor (Invoice: INV-20251024-0013) - 50 units',15.50,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(16,'Raw Materials','Restock of Chocolate Flavor (Invoice: INV-20251024-0014) - 1000 units',410.00,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(17,'Raw Materials','Restock of Crushed Cookies (Invoice: INV-20251024-0015) - 200 units',10.00,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(18,'Raw Materials','Restock of Loose Tea (Invoice: INV-20251024-0016) - 500 units',30.00,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(19,'Raw Materials','Restock of Loose Tea (Invoice: INV-20251024-0017) - 500 units',30.00,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL),(20,'Raw Materials','Restock of Caramel Sugar Flavor (Invoice: INV-20251024-0019) - 1000 units',310.00,245,'2025-10-24','Bank Transfer','2025-10-24 08:21:41',0,NULL);
+/*!40000 ALTER TABLE `expenses` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `ingredients`
 --
 
@@ -110,7 +175,7 @@ DROP TABLE IF EXISTS `ingredients`;
 CREATE TABLE `ingredients` (
   `id` int NOT NULL,
   `ingredientsID` int DEFAULT NULL,
-  `ingredientsName` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `ingredientsName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `branchesID` int DEFAULT NULL,
   `currentStock` int DEFAULT NULL,
   `lastRestock` date DEFAULT NULL,
@@ -125,7 +190,7 @@ CREATE TABLE `ingredients` (
 
 LOCK TABLES `ingredients` WRITE;
 /*!40000 ALTER TABLE `ingredients` DISABLE KEYS */;
-INSERT INTO `ingredients` VALUES (1095,13,NULL,245,990,'2024-12-21','2024-12-20 16:00:00'),(1130,8,NULL,964,980,'2024-12-21','2024-12-20 16:00:00'),(1303,20,NULL,964,490,'2024-12-21','2024-12-20 16:00:00'),(1337,9,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(1515,3,NULL,964,1090,'2024-12-21','2024-12-20 16:00:00'),(1689,14,NULL,964,1000,'2024-12-21','2024-12-20 16:00:00'),(2013,11,NULL,964,2020,'2024-12-21','2024-12-20 18:33:11'),(2030,18,NULL,245,500,'2024-12-21','2024-12-20 16:00:00'),(2107,16,NULL,245,680,'2024-12-21','2024-12-20 16:00:00'),(2156,21,NULL,964,53,'2024-12-21','2024-12-20 16:00:00'),(2225,23,NULL,964,63,'2024-12-21','2024-12-20 16:00:00'),(2256,15,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(2289,10,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(2568,7,NULL,964,950,'2024-12-21','2024-12-20 16:00:00'),(2599,24,NULL,245,477,'2024-12-21','2024-12-20 16:00:00'),(2777,22,NULL,964,50,'2024-12-21','2024-12-20 16:00:00'),(2936,9,NULL,964,1220,'2025-10-20','2025-10-19 16:00:00'),(2989,25,NULL,245,185,'2024-12-21','2024-12-20 16:00:00'),(3381,12,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(4108,17,NULL,964,500,'2024-12-21','2024-12-20 16:00:00'),(4216,4,NULL,964,1655,'2025-10-20','2025-10-19 16:00:00'),(4594,21,NULL,245,477,'2024-12-21','2024-12-20 16:00:00'),(4938,7,NULL,245,770,'2024-12-21','2024-12-20 16:00:00'),(5032,17,NULL,245,500,'2024-12-21','2024-12-20 16:00:00'),(5173,15,NULL,964,1000,'2024-12-21','2024-12-20 16:00:00'),(5177,12,NULL,964,550,'2024-12-21','2024-12-20 16:00:00'),(5411,24,NULL,964,63,'2024-12-21','2024-12-20 16:00:00'),(5743,19,NULL,245,500,'2024-12-21','2024-12-20 19:27:09'),(5944,23,NULL,245,477,'2024-12-21','2024-12-20 16:00:00'),(6143,10,NULL,964,1050,'2024-12-21','2024-12-20 16:00:00'),(6291,13,NULL,964,1050,'2024-12-21','2024-12-20 16:00:00'),(6422,8,NULL,245,980,'2024-12-21','2024-12-20 16:00:00'),(6843,14,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(6952,16,NULL,964,20,'2024-12-21','2024-12-20 16:00:00'),(7037,22,NULL,245,500,'2024-12-21','2024-12-20 16:00:00'),(7249,20,NULL,245,510,'2024-12-21','2024-12-20 16:00:00'),(7430,6,NULL,245,970,'2024-12-21','2024-12-20 16:00:00'),(7450,18,NULL,964,50,'2024-12-20','2024-12-20 13:17:13'),(8104,19,NULL,964,550,'2024-12-21','2024-12-20 16:00:00'),(8156,2,NULL,245,1040,'2024-12-21','2024-12-20 16:00:00'),(8262,5,NULL,964,1000,'2024-12-21','2024-12-20 16:00:00'),(8320,11,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(8543,5,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(8572,6,NULL,964,1000,'2024-12-21','2024-12-20 16:00:00'),(8972,2,NULL,964,950,'2024-12-21','2024-12-20 16:00:00'),(9503,3,NULL,245,510,'2024-12-21','2024-12-20 16:00:00'),(9855,25,NULL,964,15,'2024-12-21','2024-12-20 16:00:00'),(9951,4,NULL,245,845,'2025-10-20','2025-10-19 16:00:00'),(100000,13,NULL,8954,990,'2024-12-21','2025-10-23 15:38:38'),(100001,9,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100002,18,NULL,8954,500,'2024-12-21','2025-10-23 15:38:38'),(100003,16,NULL,8954,680,'2024-12-21','2025-10-23 15:38:38'),(100004,15,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100005,10,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100006,24,NULL,8954,477,'2024-12-21','2025-10-23 15:38:38'),(100007,25,NULL,8954,185,'2024-12-21','2025-10-23 15:38:38'),(100008,12,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100009,21,NULL,8954,477,'2024-12-21','2025-10-23 15:38:38'),(100010,7,NULL,8954,770,'2024-12-21','2025-10-23 15:38:38'),(100011,17,NULL,8954,500,'2024-12-21','2025-10-23 15:38:38'),(100012,19,NULL,8954,500,'2024-12-21','2025-10-23 15:38:38'),(100013,23,NULL,8954,477,'2024-12-21','2025-10-23 15:38:38'),(100014,8,NULL,8954,980,'2024-12-21','2025-10-23 15:38:38'),(100015,14,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100016,22,NULL,8954,500,'2024-12-21','2025-10-23 15:38:38'),(100017,20,NULL,8954,510,'2024-12-21','2025-10-23 15:38:38'),(100018,6,NULL,8954,970,'2024-12-21','2025-10-23 15:38:38'),(100019,2,NULL,8954,1040,'2024-12-21','2025-10-23 15:38:38'),(100020,11,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100021,5,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100022,3,NULL,8954,510,'2024-12-21','2025-10-23 15:38:38'),(100023,4,NULL,8954,845,'2025-10-20','2025-10-23 15:38:38');
+INSERT INTO `ingredients` VALUES (1095,13,NULL,245,990,'2024-12-21','2024-12-20 16:00:00'),(1130,8,NULL,964,980,'2024-12-21','2024-12-20 16:00:00'),(1303,20,NULL,964,490,'2024-12-21','2024-12-20 16:00:00'),(1337,9,NULL,245,2010,'2025-10-24','2025-10-24 08:05:22'),(1515,3,NULL,964,1090,'2024-12-21','2024-12-20 16:00:00'),(1689,14,NULL,964,1000,'2024-12-21','2024-12-20 16:00:00'),(2013,11,NULL,964,2020,'2024-12-21','2024-12-20 18:33:11'),(2030,18,NULL,245,500,'2024-12-21','2024-12-20 16:00:00'),(2107,16,NULL,245,680,'2024-12-21','2024-12-20 16:00:00'),(2156,21,NULL,964,53,'2024-12-21','2024-12-20 16:00:00'),(2225,23,NULL,964,63,'2024-12-21','2024-12-20 16:00:00'),(2256,15,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(2289,10,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(2568,7,NULL,964,950,'2024-12-21','2024-12-20 16:00:00'),(2599,24,NULL,245,477,'2024-12-21','2024-12-20 16:00:00'),(2777,22,NULL,964,50,'2024-12-21','2024-12-20 16:00:00'),(2936,9,NULL,964,1220,'2025-10-20','2025-10-19 16:00:00'),(2989,25,NULL,245,185,'2024-12-21','2024-12-20 16:00:00'),(3381,12,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(4108,17,NULL,964,500,'2024-12-21','2024-12-20 16:00:00'),(4216,4,NULL,964,1655,'2025-10-20','2025-10-19 16:00:00'),(4594,21,NULL,245,477,'2024-12-21','2024-12-20 16:00:00'),(4938,7,NULL,245,770,'2024-12-21','2024-12-20 16:00:00'),(5032,17,NULL,245,500,'2024-12-21','2024-12-20 16:00:00'),(5173,15,NULL,964,1000,'2024-12-21','2024-12-20 16:00:00'),(5177,12,NULL,964,550,'2024-12-21','2024-12-20 16:00:00'),(5411,24,NULL,964,63,'2024-12-21','2024-12-20 16:00:00'),(5743,19,NULL,245,500,'2024-12-21','2024-12-20 19:27:09'),(5944,23,NULL,245,477,'2024-12-21','2024-12-20 16:00:00'),(6143,10,NULL,964,1050,'2024-12-21','2024-12-20 16:00:00'),(6291,13,NULL,964,1050,'2024-12-21','2024-12-20 16:00:00'),(6422,8,NULL,245,980,'2024-12-21','2024-12-20 16:00:00'),(6843,14,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(6952,16,NULL,964,20,'2024-12-21','2024-12-20 16:00:00'),(7037,22,NULL,245,500,'2024-12-21','2024-12-20 16:00:00'),(7249,20,NULL,245,510,'2024-12-21','2024-12-20 16:00:00'),(7430,6,NULL,245,970,'2024-12-21','2024-12-20 16:00:00'),(7450,18,NULL,964,50,'2024-12-20','2024-12-20 13:17:13'),(8104,19,NULL,964,550,'2024-12-21','2024-12-20 16:00:00'),(8156,2,NULL,245,1040,'2024-12-21','2024-12-20 16:00:00'),(8262,5,NULL,964,1000,'2024-12-21','2024-12-20 16:00:00'),(8320,11,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(8543,5,NULL,245,1000,'2024-12-21','2024-12-20 16:00:00'),(8572,6,NULL,964,1000,'2024-12-21','2024-12-20 16:00:00'),(8972,2,NULL,964,950,'2024-12-21','2024-12-20 16:00:00'),(9503,3,NULL,245,510,'2024-12-21','2024-12-20 16:00:00'),(9855,25,NULL,964,15,'2024-12-21','2024-12-20 16:00:00'),(9951,4,NULL,245,845,'2025-10-20','2025-10-19 16:00:00'),(100000,13,NULL,8954,990,'2024-12-21','2025-10-23 15:38:38'),(100001,9,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100002,18,NULL,8954,500,'2024-12-21','2025-10-23 15:38:38'),(100003,16,NULL,8954,680,'2024-12-21','2025-10-23 15:38:38'),(100004,15,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100005,10,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100006,24,NULL,8954,477,'2024-12-21','2025-10-23 15:38:38'),(100007,25,NULL,8954,185,'2024-12-21','2025-10-23 15:38:38'),(100008,12,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100009,21,NULL,8954,477,'2024-12-21','2025-10-23 15:38:38'),(100010,7,NULL,8954,770,'2024-12-21','2025-10-23 15:38:38'),(100011,17,NULL,8954,500,'2024-12-21','2025-10-23 15:38:38'),(100012,19,NULL,8954,500,'2024-12-21','2025-10-23 15:38:38'),(100013,23,NULL,8954,477,'2024-12-21','2025-10-23 15:38:38'),(100014,8,NULL,8954,980,'2024-12-21','2025-10-23 15:38:38'),(100015,14,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100016,22,NULL,8954,500,'2024-12-21','2025-10-23 15:38:38'),(100017,20,NULL,8954,510,'2024-12-21','2025-10-23 15:38:38'),(100018,6,NULL,8954,970,'2024-12-21','2025-10-23 15:38:38'),(100019,2,NULL,8954,1040,'2024-12-21','2025-10-23 15:38:38'),(100020,11,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100021,5,NULL,8954,1000,'2024-12-21','2025-10-23 15:38:38'),(100022,3,NULL,8954,510,'2024-12-21','2025-10-23 15:38:38'),(100023,4,NULL,8954,845,'2025-10-20','2025-10-23 15:38:38');
 /*!40000 ALTER TABLE `ingredients` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -138,9 +203,9 @@ DROP TABLE IF EXISTS `ingredientsheader`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ingredientsheader` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `ingredients_limit` int NOT NULL DEFAULT '300',
-  `unit` varchar(5) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'g',
+  `unit` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'g',
   `is_archived` tinyint(1) DEFAULT '0',
   `price_per_unit` decimal(10,2) DEFAULT '0.00',
   PRIMARY KEY (`id`)
@@ -153,7 +218,7 @@ CREATE TABLE `ingredientsheader` (
 
 LOCK TABLES `ingredientsheader` WRITE;
 /*!40000 ALTER TABLE `ingredientsheader` DISABLE KEYS */;
-INSERT INTO `ingredientsheader` VALUES (2,'Malaysian Non-Dairy Creamer',300,'g',0,0.00),(3,'Fructose Corn Syrup',300,'g',0,0.11),(4,'Loose Tea',300,'g',0,0.06),(5,'Wintermelon Flavor',300,'g',0,1.25),(6,'Okinawa Flavor',300,'g',0,0.74),(7,'Hokkaido Flavor',300,'g',0,0.25),(8,'Matcha Flavor',300,'g',0,0.40),(9,'Caramel Sugar Flavor',300,'g',0,0.31),(10,'Hazelnut Flavor',300,'g',0,0.25),(11,'Chocolate Flavor',300,'g',0,0.41),(12,'Dark Chocolate Flavor',300,'g',0,0.26),(13,'Cookies & Cream Flavor',300,'g',0,0.41),(14,'Red Velvet Flavor',300,'g',0,0.20),(15,'Mango Cheesecake Flavor',300,'g',0,0.32),(16,'Tapioca Pearls',300,'g',0,0.20),(17,'Nata',300,'g',0,0.00),(18,'Popping Boba',300,'g',0,0.09),(19,'Crushed Cookies',300,'g',0,0.05),(20,'Ice',300,'g',0,0.19),(21,'Plastic Cups - M',100,'pcs',0,0.34),(22,'Plastic Cups - L',100,'pcs',0,0.00),(23,'Plastic Straw',100,'pcs',0,0.00),(24,'Plastic Lids',100,'pcs',0,1.00),(25,'Tissue',100,'pcs',0,0.00);
+INSERT INTO `ingredientsheader` VALUES (2,'Malaysian Non-Dairy Creamer',300,'g',0,0.19),(3,'Fructose Corn Syrup',300,'g',0,0.11),(4,'Loose Tea',300,'g',0,0.06),(5,'Wintermelon Flavor',300,'g',0,1.25),(6,'Okinawa Flavor',300,'g',0,0.74),(7,'Hokkaido Flavor',300,'g',0,0.25),(8,'Matcha Flavor',300,'g',0,0.40),(9,'Caramel Sugar Flavor',300,'g',0,0.31),(10,'Hazelnut Flavor',300,'g',0,0.25),(11,'Chocolate Flavor',300,'g',0,0.41),(12,'Dark Chocolate Flavor',300,'g',0,0.26),(13,'Cookies & Cream Flavor',300,'g',0,0.41),(14,'Red Velvet Flavor',300,'g',0,0.20),(15,'Mango Cheesecake Flavor',300,'g',0,0.32),(16,'Tapioca Pearls',300,'g',0,0.20),(17,'Nata',300,'g',0,1.00),(18,'Popping Boba',300,'g',0,0.09),(19,'Crushed Cookies',300,'g',0,0.05),(20,'Ice',300,'g',0,0.19),(21,'Plastic Cups - M',100,'pcs',0,0.34),(22,'Plastic Cups - L',100,'pcs',0,1.26),(23,'Plastic Straw',100,'pcs',0,0.50),(24,'Plastic Lids',100,'pcs',0,1.00),(25,'Tissue',100,'pcs',0,40.00);
 /*!40000 ALTER TABLE `ingredientsheader` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -175,7 +240,7 @@ CREATE TABLE `payroll` (
   `absence_deductions` decimal(10,2) DEFAULT '0.00',
   `tax_deductions` decimal(10,2) DEFAULT '0.00',
   `net_pay` decimal(10,2) DEFAULT '0.00',
-  `status` enum('pending','approved','paid') COLLATE utf8mb4_general_ci DEFAULT 'pending',
+  `status` enum('pending','approved','paid') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'pending',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `is_archived` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`)
@@ -188,8 +253,44 @@ CREATE TABLE `payroll` (
 
 LOCK TABLES `payroll` WRITE;
 /*!40000 ALTER TABLE `payroll` DISABLE KEYS */;
-INSERT INTO `payroll` VALUES (1,15633,'2025-10-23','2025-11-23',0.00,0.00,0.00,0.00,0.00,0.00,'pending','2025-10-22 16:26:13',0),(2,20002,'2025-10-23','2025-10-23',0.10,0.00,0.00,0.00,0.00,0.00,'pending','2025-10-22 17:06:28',0),(3,15633,'2025-10-23','2025-10-23',0.26,15.95,0.00,0.00,1.60,14.36,'paid','2025-10-22 17:59:21',1),(4,14939,'2025-10-23','2025-10-23',0.05,3.34,0.00,0.00,0.33,3.01,'pending','2025-10-22 17:59:21',0),(5,14939,'2025-10-23','2025-11-23',0.00,0.05,0.00,0.00,0.01,0.05,'pending','2025-10-22 18:59:58',0),(6,20002,'2025-10-23','2025-11-23',8.00,0.00,0.00,0.00,0.00,0.00,'pending','2025-10-22 18:59:58',1),(7,38502,'2025-10-23','2025-11-23',0.00,0.27,0.00,0.00,0.03,0.24,'pending','2025-10-22 19:39:32',0),(8,26770,'2025-10-24','2025-11-24',0.01,0.69,0.00,0.00,0.07,0.62,'pending','2025-10-23 16:14:31',0);
+INSERT INTO `payroll` VALUES (2,20002,'2025-10-23','2025-10-23',0.10,0.00,0.00,0.00,0.00,0.00,'pending','2025-10-22 17:06:28',0),(3,15633,'2025-10-23','2025-10-23',0.26,15.95,0.00,0.00,1.60,14.36,'paid','2025-10-22 17:59:21',1);
 /*!40000 ALTER TABLE `payroll` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `product_returns`
+--
+
+DROP TABLE IF EXISTS `product_returns`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `product_returns` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `invoice_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `purchase_order_id` int DEFAULT NULL,
+  `ingredient_id` int NOT NULL,
+  `quantity_returned` int NOT NULL,
+  `reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `return_date` date NOT NULL,
+  `refund_amount` decimal(10,2) NOT NULL,
+  `supplier_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `branch_id` int DEFAULT NULL,
+  `status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `invoice_number` (`invoice_number`),
+  KEY `idx_return_date` (`return_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `product_returns`
+--
+
+LOCK TABLES `product_returns` WRITE;
+/*!40000 ALTER TABLE `product_returns` DISABLE KEYS */;
+INSERT INTO `product_returns` VALUES (1,'RET-20251024-9827',2,11,50,'Damaged','2025-10-24',20.50,'N/A',245,'pending','2025-10-24 06:39:52'),(2,'RET-20251024-1060',21,9,10,'Damaged','2025-10-24',3.10,'N/A',245,'approved','2025-10-24 08:48:00'),(3,'RET-20251024-0737',4,19,50,'Damaged','2025-10-24',2.50,'N/A',245,'approved','2025-10-24 08:48:38'),(4,'RET-20251024-3235',21,9,10,'Damaged','2025-10-24',3.10,'N/A',245,'approved','2025-10-24 08:49:44'),(5,'RET-20251024-7131',4,19,50,'Damaged','2025-10-24',2.50,'N/A',245,'approved','2025-10-24 09:17:26');
+/*!40000 ALTER TABLE `product_returns` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -201,12 +302,12 @@ DROP TABLE IF EXISTS `products`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `products` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `size` enum('Medium','Large') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Medium',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `size` enum('Medium','Large') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Medium',
   `price` decimal(10,0) DEFAULT NULL,
   `initial_price` decimal(10,0) NOT NULL,
   `is_active` tinyint(1) DEFAULT NULL,
-  `image` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `is_archived` tinyint(1) DEFAULT '0',
@@ -259,20 +360,20 @@ DROP TABLE IF EXISTS `restockorder`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `restockorder` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `ingredientsName` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `ingredientsName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `branchID` int NOT NULL,
   `ingredientsID` int NOT NULL,
-  `requested_by` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `requested_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `restock_amount` int NOT NULL,
   `is_accepted` tinyint(1) DEFAULT '0',
   `is_confirmed` tinyint(1) DEFAULT '0',
-  `invoice_number` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `invoice_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `confirmed_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_invoice_number` (`invoice_number`)
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -281,7 +382,7 @@ CREATE TABLE `restockorder` (
 
 LOCK TABLES `restockorder` WRITE;
 /*!40000 ALTER TABLE `restockorder` DISABLE KEYS */;
-INSERT INTO `restockorder` VALUES (1,'encoder almar','Caramel Sugar Flavor',964,1120,'encoder almar',10,1,1,'INV-20251024-0001','2025-10-24 02:09:22',NULL),(2,'encoder almar','Chocolate Flavor',964,11,'encoder almar',50,1,1,'INV-20251024-0002','2025-10-24 02:09:22',NULL),(3,'encoder almar','Cookies & Cream Flavor',964,13,'encoder almar',50,1,1,'INV-20251024-0003','2025-10-24 02:09:22',NULL),(4,'encoder almar','Crushed Cookies',964,19,'encoder almar',50,1,1,'INV-20251024-0004','2025-10-24 02:09:22',NULL),(5,'encoder almar','Dark Chocolate Flavor',964,12,'encoder almar',50,1,1,'INV-20251024-0005','2025-10-24 02:09:22',NULL),(6,'encoder almar','Fructose Corn Syrup',964,3,'encoder almar',50,1,1,'INV-20251024-0006','2025-10-24 02:09:22',NULL),(7,'encoder almar','Hazelnut Flavor',964,10,'encoder almar',50,1,1,'INV-20251024-0007','2025-10-24 02:09:22',NULL),(8,'encoder almar','Fructose Corn Syrup',964,3,'encoder almar',50,1,1,'INV-20251024-0008','2025-10-24 02:09:22',NULL),(9,'encoder almar','Hokkaido Flavor',964,7,'17509',50,1,1,'INV-20251024-0009','2025-10-24 02:09:22',NULL),(10,'encoder almar','Loose Tea',964,4,'17509',50,1,1,'INV-20251024-0010','2025-10-24 02:09:22',NULL),(11,'encoder almar','Ice',964,20,'17509',150,1,1,'INV-20251024-0011','2025-10-24 02:09:22',NULL),(12,'encoder almar','Popping Boba',964,18,'17509',50,1,1,'INV-20251024-0012','2025-10-24 02:09:22',NULL),(13,'encoder almar','Caramel Sugar Flavor',964,9,'17509',50,1,1,'INV-20251024-0013','2025-10-24 02:09:22',NULL),(14,'Yheena Mangabat','Chocolate Flavor',964,11,'10895',1000,1,1,'INV-20251024-0014','2025-10-24 02:09:22',NULL),(15,'Aubrey Daraido','Crushed Cookies',245,19,'12664',200,1,1,'INV-20251024-0015','2025-10-24 02:09:22',NULL),(16,'Aubrey Daraido','Loose Tea',245,4,'12664',500,1,1,'INV-20251024-0016','2025-10-24 02:09:22',NULL),(17,'Aubrey Daraido','Loose Tea',245,4,'12664',500,1,1,'INV-20251024-0017','2025-10-24 02:09:22',NULL),(18,'Stock management','Tissue',964,25,'14939',1000,1,0,'INV-20251024-0018','2025-10-24 02:09:22',NULL),(19,'Stock management','Caramel Sugar Flavor',245,9,'14939',1000,0,0,'INV-20251024-0019','2025-10-24 02:09:22',NULL),(20,'Stock management','Caramel Sugar Flavor',245,9,'14939',1000,0,0,'INV-20251024-0020','2025-10-24 02:09:22',NULL),(21,'Stock management','Caramel Sugar Flavor',245,9,'14939',10,0,0,'INV-20251024-0021','2025-10-24 02:09:22',NULL),(22,'Stock management','Chocolate Flavor',245,11,'14939',20,0,0,'INV-20251024-0022','2025-10-24 02:09:22',NULL),(23,'noe orano','Caramel Sugar Flavor',8954,9,'31980',10,0,0,'INV-20251024-0023','2025-10-24 02:09:22',NULL);
+INSERT INTO `restockorder` VALUES (2,'encoder almar','Chocolate Flavor',245,11,'encoder almar',50,1,1,'INV-20251024-0002','2025-10-24 02:09:22',NULL),(3,'encoder almar','Cookies & Cream Flavor',245,13,'encoder almar',50,1,1,'INV-20251024-0003','2025-10-24 02:09:22',NULL),(4,'encoder almar','Crushed Cookies',245,19,'encoder almar',50,1,1,'INV-20251024-0004','2025-10-24 02:09:22',NULL),(5,'encoder almar','Dark Chocolate Flavor',245,12,'encoder almar',50,1,1,'INV-20251024-0005','2025-10-24 02:09:22',NULL),(6,'encoder almar','Fructose Corn Syrup',245,3,'encoder almar',50,1,1,'INV-20251024-0006','2025-10-24 02:09:22',NULL),(7,'encoder almar','Hazelnut Flavor',245,10,'encoder almar',50,1,1,'INV-20251024-0007','2025-10-24 02:09:22',NULL),(8,'encoder almar','Fructose Corn Syrup',245,3,'encoder almar',50,1,1,'INV-20251024-0008','2025-10-24 02:09:22',NULL),(9,'encoder almar','Hokkaido Flavor',245,7,'17509',50,1,1,'INV-20251024-0009','2025-10-24 02:09:22',NULL),(10,'encoder almar','Loose Tea',245,4,'17509',50,1,1,'INV-20251024-0010','2025-10-24 02:09:22',NULL),(11,'encoder almar','Ice',245,20,'17509',150,1,1,'INV-20251024-0011','2025-10-24 02:09:22',NULL),(12,'encoder almar','Popping Boba',245,18,'17509',50,1,1,'INV-20251024-0012','2025-10-24 02:09:22',NULL),(13,'encoder almar','Caramel Sugar Flavor',245,9,'17509',50,1,1,'INV-20251024-0013','2025-10-24 02:09:22',NULL),(14,'Yheena Mangabat','Chocolate Flavor',245,11,'10895',1000,1,1,'INV-20251024-0014','2025-10-24 02:09:22',NULL),(15,'Aubrey Daraido','Crushed Cookies',245,19,'12664',200,1,1,'INV-20251024-0015','2025-10-24 02:09:22',NULL),(16,'Aubrey Daraido','Loose Tea',245,4,'12664',500,1,1,'INV-20251024-0016','2025-10-24 02:09:22',NULL),(17,'Aubrey Daraido','Loose Tea',245,4,'12664',500,1,1,'INV-20251024-0017','2025-10-24 02:09:22',NULL),(19,'Stock management','Caramel Sugar Flavor',245,9,'14939',1000,1,1,'INV-20251024-0019','2025-10-24 02:09:22','2025-10-24 06:14:57'),(20,'Stock management','Caramel Sugar Flavor',245,9,'14939',1000,0,0,'INV-20251024-0020','2025-10-24 02:09:22',NULL),(21,'Stock management','Caramel Sugar Flavor',245,9,'14939',10,1,1,'INV-20251024-0021','2025-10-24 02:09:22','2025-10-24 16:05:22'),(22,'Stock management','Chocolate Flavor',245,11,'14939',20,0,0,'INV-20251024-0022','2025-10-24 02:09:22',NULL),(23,'noe orano','Caramel Sugar Flavor',8954,9,'31980',10,0,0,'INV-20251024-0023','2025-10-24 02:09:22',NULL),(24,'Vaughn Maco','Cookies & Cream Flavor',245,13,'12194',10,0,0,NULL,'2025-10-24 15:17:46',NULL);
 /*!40000 ALTER TABLE `restockorder` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -295,17 +396,17 @@ DROP TABLE IF EXISTS `sales`;
 CREATE TABLE `sales` (
   `id` int NOT NULL AUTO_INCREMENT,
   `branchID` int DEFAULT NULL,
-  `receiptID` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `productName` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `receiptID` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `productName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `price` int DEFAULT NULL,
   `initial_price` int DEFAULT NULL,
   `quantity` int DEFAULT NULL,
-  `totalPrice` int DEFAULT NULL,
+  `totalPrice` decimal(10,2) DEFAULT NULL,
   `sales_date` timestamp NULL DEFAULT NULL,
-  `customerName` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `customerName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `cashierID` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=191 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=195 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -314,7 +415,7 @@ CREATE TABLE `sales` (
 
 LOCK TABLES `sales` WRITE;
 /*!40000 ALTER TABLE `sales` DISABLE KEYS */;
-INSERT INTO `sales` VALUES (46,964,'REC1734408571','Classic Milktea',70,0,1,70,'2024-12-16 20:09:31','Walk-in',1055),(47,964,'REC1734408626','Classic Milktea',70,0,1,70,'2024-12-16 20:10:26','Walk-in',1055),(48,964,'REC1734408677','Classic Milktea',70,0,1,70,'2024-12-16 20:11:17','Walk-in',1055),(50,964,'REC1734408782','Classic Milktea',70,40,6,420,'2024-12-16 20:13:02','Walk-in',1055),(51,964,'REC1734414627','Chocolate',70,70,1,70,'2024-12-16 21:50:27','Walk-in',1055),(52,964,'REC1734414655','Cookies and Cream',70,70,1,70,'2024-12-16 21:50:55','Walk-in',1055),(53,964,'REC1734414673','Cookies and Cream',70,70,1,70,'2024-12-16 21:51:13','Walk-in',1055),(54,964,'REC1734414882','Cookies and Cream',70,70,1,70,'2024-12-16 21:54:42','Walk-in',1055),(55,964,'REC1734415001','Cookies and Cream',70,70,1,70,'2024-12-16 21:56:41','Walk-in',1055),(56,964,'REC1734415038','Chocolate',70,70,1,70,'2024-12-16 21:57:18','Walk-in',1055),(57,964,'REC1734415054','Cookies and Cream',70,70,1,70,'2024-12-16 21:57:34','Walk-in',1055),(58,964,'REC1734415127','Cookies and Cream',70,70,1,70,'2024-12-16 21:58:47','Walk-in',1055),(59,964,'REC1734415171','Cookies and Cream',70,70,1,70,'2024-12-16 21:59:31','Walk-in',1055),(60,964,'REC1734417572','Chocolate',70,35,1,70,'2024-12-16 22:39:32','Walk-in',1055),(61,964,'REC1734418347','Classic Milktea',70,70,1,70,'2024-12-16 22:52:27','Walk-in',16519),(62,964,'REC1734418347','Cookies and Cream',80,80,1,80,'2024-12-16 22:52:27','Walk-in',16519),(63,964,'REC1734418469','Okinawa',70,70,1,70,'2024-12-16 22:54:29','Walk-in',1055),(64,964,'REC1734420933','Hazelnut',70,70,1,70,'2024-12-16 23:35:33','Walk-in',1055),(65,964,'REC1734421017','Cookies and Cream',70,70,1,70,'2024-12-16 23:36:57','Walk-in',1055),(66,964,'REC1734421102','Cookies and Cream',70,70,1,70,'2024-12-16 23:38:22','Walk-in',1055),(67,964,'REC1734422348','Hokkaido',70,70,1,70,'2024-12-16 23:59:08','Walk-in',1055),(68,964,'REC1734422423','Hokkaido',70,70,1,70,'2024-12-17 00:00:23','Walk-in',1055),(69,964,'REC1734422533','Wintermelon',70,70,1,70,'2024-12-17 00:02:13','Walk-in',1055),(70,964,'REC1734422655','Classic Milktea',70,70,1,70,'2024-12-17 00:04:15','Walk-in',1055),(71,964,'REC1734424280','Hokkaido',70,70,1,70,'2024-12-17 00:31:20','Walk-in',16519),(72,964,'REC1734424693','Okinawa',70,70,1,70,'2024-12-17 00:38:13','Walk-in',16519),(73,8954,'REC1734424835','Wintermelon',70,70,1,70,'2024-12-17 00:40:35','Walk-in',16519),(74,964,'REC1734424912','Wintermelon',70,70,1,70,'2024-12-17 00:41:52','Walk-in',16519),(75,964,'REC1734425145','Classic Milktea',70,70,1,70,'2024-12-17 00:45:45','Walk-in',16519),(76,964,'REC1734426550','Okinawa',80,80,1,80,'2024-12-17 01:09:10','Walk-in',16519),(77,964,'REC1734426550','Okinawa',80,80,1,80,'2024-12-17 01:09:10','Walk-in',16519),(78,964,'REC1734426564','Okinawa',80,80,1,80,'2024-12-17 01:09:24','Walk-in',16519),(79,964,'REC1734426587','Hokkaido',70,70,1,70,'2024-12-17 01:09:47','Walk-in',1055),(80,964,'REC1734426587','Cookies and Cream',70,70,1,70,'2024-12-17 01:09:47','Walk-in',1055),(81,964,'REC1734426686','Chocolate',90,90,1,90,'2024-12-17 01:11:26','Walk-in',16519),(82,964,'REC1734426686','Cookies and Cream',90,90,1,90,'2024-12-17 01:11:26','Walk-in',16519),(83,964,'REC1734426686','Hokkaido',70,70,1,70,'2024-12-17 01:11:26','Walk-in',16519),(84,964,'REC1734426686','Hokkaido',90,90,1,90,'2024-12-17 01:11:26','Walk-in',16519),(85,964,'REC1734426686','Okinawa',90,4,1,90,'2024-12-17 01:11:26','Walk-in',16519),(86,964,'REC1734426686','Wintermelon',100,5,1,100,'2024-12-17 01:11:26','Walk-in',16519),(87,964,'REC1734426686','Chocolate',100,6,1,100,'2024-12-17 01:11:26','Walk-in',16519),(88,964,'REC1734426686','Hazelnut',100,5,1,100,'2024-12-17 01:11:26','Walk-in',16519),(89,964,'REC1734426686','Hazelnut',80,4,1,80,'2024-12-17 01:11:26','Walk-in',16519),(90,964,'REC1734426686','Matcha',100,5,1,100,'2024-12-17 01:11:26','Walk-in',16519),(91,964,'REC1734426686','Hokkaido',100,6,1,100,'2024-12-17 01:11:26','Walk-in',16519),(92,964,'REC1734426686','Chocolate',100,100,1,100,'2024-12-17 01:11:26','Walk-in',16519),(93,964,'REC1734426686','Classic Milktea',100,6,1,100,'2024-12-17 01:11:26','Walk-in',16519),(94,964,'REC1734426686','Classic Milktea',80,8,1,80,'2024-12-17 01:11:26','Walk-in',16519),(95,964,'REC1734427469','Hokkaido',90,10,1,90,'2024-12-17 01:24:29','Walk-in',16519),(96,964,'REC1734427491','Okinawa',90,13,1,90,'2024-12-17 01:24:51','Walk-in',16519),(97,964,'REC1734427531','Cookies and Cream',100,14,1,100,'2024-12-17 01:25:31','Walk-in',16519),(98,964,'REC1734427538','Cookies and Cream',100,14,1,100,'2024-12-17 01:25:38','Walk-in',16519),(99,964,'REC1734427571','Cookies and Cream',100,14,1,100,'2024-12-17 01:26:11','Walk-in',16519),(100,964,'REC1734427851','Cookies and Cream',70,70,1,70,'2024-12-17 01:30:51','Walk-in',1055),(101,964,'REC1734427851','Cookies and Cream',80,10,1,80,'2024-12-17 01:30:51','Walk-in',1055),(102,964,'REC1734427901','Cookies and Cream',80,13,1,80,'2024-12-17 01:31:41','Walk-in',1055),(103,964,'REC1734428011','Chocolate',80,11,1,80,'2024-12-17 01:33:31','Walk-in',1055),(104,964,'REC1734428038','Hokkaido',70,18,1,70,'2024-12-17 01:33:58','Walk-in',1055),(105,964,'REC1734428103','Hokkaido',70,18,4,280,'2024-12-17 01:35:03','Walk-in',1055),(106,964,'REC1734431759','Matcha',80,80,1,80,'2024-12-17 02:35:59','Walk-in',16519),(107,964,'REC1734613231','Okinawa',70,70,1,70,'2024-12-19 05:00:31','Walk-in',1055),(108,964,'REC1734613326','Hokkaido',70,70,1,70,'2024-12-19 05:02:06','Walk-in',1055),(109,964,'REC1734613373','Hokkaido',70,70,1,70,'2024-12-19 05:02:53','Walk-in',1055),(110,964,'REC1734620058','Hokkaido',70,70,1,70,'2024-12-19 06:54:18','Walk-in',1055),(111,964,'REC1734620121','Hokkaido',70,23,3,210,'2024-12-19 06:55:21','Walk-in',1055),(112,964,'REC1734620150','Hokkaido',70,18,4,280,'2024-12-19 06:55:50','Walk-in',1055),(113,964,'REC1734620150','Cookies and Cream',70,12,6,420,'2024-12-19 06:55:50','Walk-in',1055),(114,964,'REC1734622067','Hokkaido',70,70,1,70,'2024-12-19 07:27:47','Walk-in',1055),(115,964,'REC1734622112','Chocolate',70,70,1,70,'2024-12-19 07:28:32','Walk-in',1055),(116,964,'REC1734622112','Wintermelon',70,18,4,280,'2024-12-19 07:28:32','Walk-in',1055),(117,964,'REC1734622144','Wintermelon',70,70,1,70,'2024-12-19 07:29:04','Walk-in',1055),(121,964,'REC1734623351','Wintermelon',70,70,1,70,'2024-12-19 07:49:11','Walk-in',1055),(122,964,'REC1734714739','Wintermelon',70,70,1,70,'2024-12-20 09:12:19','Walk-in',1055),(123,964,'REC1734714776','Wintermelon',70,70,1,70,'2024-12-20 09:12:56','Walk-in',1055),(124,964,'REC1734714831','Wintermelon',80,80,1,80,'2024-12-20 09:13:51','Walk-in',1055),(128,964,'REC20241005','Wintermelon',70,70,2,140,'2024-10-05 02:30:00','Walk-In',1055),(129,964,'REC20241012','Wintermelon',70,70,2,140,'2024-10-12 06:00:00','Walk-In',1055),(130,964,'REC20241020','Wintermelon',70,70,2,140,'2024-10-20 03:15:00','Walk-In',1055),(131,964,'REC20241103','Wintermelon',70,70,2,140,'2024-11-03 04:45:00','Walk-In',1055),(132,964,'REC20241115','Wintermelon',70,70,2,140,'2024-11-15 08:10:00','Walk-In',1055),(133,964,'REC20241125','Wintermelon',70,70,2,140,'2024-11-25 01:30:00','Walk-In',1055),(134,964,'REC20241201','Wintermelon',70,70,2,140,'2024-12-01 00:00:00','Walk-In',1055),(135,964,'REC20241210','Wintermelon',70,70,2,140,'2024-12-10 06:20:00','Walk-In',1055),(136,964,'REC20241222','Wintermelon',70,70,2,140,'2024-12-22 09:50:00','Walk-In',1055),(149,964,'REC1734745179','Chocolate',70,70,1,70,'2024-12-20 17:39:39','Walk-in',1055),(153,964,'REC1734747556','Chocolate',70,70,1,70,'2024-12-20 18:19:16','Walk-in',10895),(154,964,'REC1734748345','Chocolate',70,70,1,70,'2024-12-20 18:32:25','Walk-in',16519),(156,245,'REC1734750145','Wintermelon',90,90,1,90,'2024-12-20 19:02:25','Walk-in',13395),(157,245,'REC1734751419','Wintermelon',70,35,2,140,'2024-12-20 19:23:39','Walk-in',13395),(158,245,'REC1734751419','Hokkaido',90,30,3,270,'2024-12-20 19:23:39','Walk-in',13395),(159,245,'REC1734751467','Hokkaido',70,70,1,70,'2024-12-20 19:24:27','Walk-in',13395),(160,245,'REC1734751827','Hokkaido',90,18,5,450,'2024-12-20 19:30:27','Walk-in',13395),(161,245,'REC1734754813','Cookies and Cream',100,100,1,100,'2024-12-20 20:20:13','Walk-in',13395),(162,245,'REC1734754813','Matcha',70,35,2,140,'2024-12-20 20:20:13','Walk-in',13395),(163,245,'REC1734754813','Hokkaido',70,70,1,70,'2024-12-20 20:20:13','Walk-in',13395),(165,964,'REC1758732503','Classic Milktea',70,70,1,70,'2025-09-24 10:48:23','Walk-in',15633),(166,964,'INV20250925173629','Wintermelon',70,70,1,70,'2025-09-25 09:36:29','Walk-in',15633),(167,964,'INV20250925173653','Matcha',70,70,1,70,'2025-09-25 09:36:53','Walk-in',15633),(168,964,'INV20250925173720','Matcha',70,70,1,70,'2025-09-25 09:37:20','Walk-in',15633),(172,245,'INV20250925174207','Okinawa',70,70,1,70,'2025-09-25 09:42:07','Walk-in',15633),(173,245,'INV20250925174417','Okinawa',70,70,1,70,'2025-09-25 09:44:17','Walk-in',15633),(174,245,'INV20250925174723','Wintermelon',70,70,1,70,'2025-09-25 09:47:23','Walk-in',15633),(175,245,'INV20250925174723','Okinawa',70,70,1,70,'2025-09-25 09:47:23','Walk-in',15633),(176,245,'INV20251020200024','Hokkaido',90,90,1,90,'2025-10-20 12:00:24','Walk-in',15633),(189,245,'INV20251020201558','Hokkaido',70,70,1,70,'2025-10-20 12:15:58','Walk-in',15633),(190,245,'INV20251020205646','Hokkaido',80,80,1,80,'2025-10-20 12:56:46','Walk-in',15633);
+INSERT INTO `sales` VALUES (46,964,'REC1734408571','Classic Milktea',70,0,1,70.00,'2024-12-16 20:09:31','Walk-in',1055),(47,964,'REC1734408626','Classic Milktea',70,0,1,70.00,'2024-12-16 20:10:26','Walk-in',1055),(48,964,'REC1734408677','Classic Milktea',70,0,1,70.00,'2024-12-16 20:11:17','Walk-in',1055),(50,964,'REC1734408782','Classic Milktea',70,40,6,420.00,'2024-12-16 20:13:02','Walk-in',1055),(51,964,'REC1734414627','Chocolate',70,70,1,70.00,'2024-12-16 21:50:27','Walk-in',1055),(52,964,'REC1734414655','Cookies and Cream',70,70,1,70.00,'2024-12-16 21:50:55','Walk-in',1055),(53,964,'REC1734414673','Cookies and Cream',70,70,1,70.00,'2024-12-16 21:51:13','Walk-in',1055),(54,964,'REC1734414882','Cookies and Cream',70,70,1,70.00,'2024-12-16 21:54:42','Walk-in',1055),(55,964,'REC1734415001','Cookies and Cream',70,70,1,70.00,'2024-12-16 21:56:41','Walk-in',1055),(56,964,'REC1734415038','Chocolate',70,70,1,70.00,'2024-12-16 21:57:18','Walk-in',1055),(57,964,'REC1734415054','Cookies and Cream',70,70,1,70.00,'2024-12-16 21:57:34','Walk-in',1055),(58,964,'REC1734415127','Cookies and Cream',70,70,1,70.00,'2024-12-16 21:58:47','Walk-in',1055),(59,964,'REC1734415171','Cookies and Cream',70,70,1,70.00,'2024-12-16 21:59:31','Walk-in',1055),(60,964,'REC1734417572','Chocolate',70,35,1,70.00,'2024-12-16 22:39:32','Walk-in',1055),(61,964,'REC1734418347','Classic Milktea',70,70,1,70.00,'2024-12-16 22:52:27','Walk-in',16519),(62,964,'REC1734418347','Cookies and Cream',80,80,1,80.00,'2024-12-16 22:52:27','Walk-in',16519),(63,964,'REC1734418469','Okinawa',70,70,1,70.00,'2024-12-16 22:54:29','Walk-in',1055),(64,964,'REC1734420933','Hazelnut',70,70,1,70.00,'2024-12-16 23:35:33','Walk-in',1055),(65,964,'REC1734421017','Cookies and Cream',70,70,1,70.00,'2024-12-16 23:36:57','Walk-in',1055),(66,964,'REC1734421102','Cookies and Cream',70,70,1,70.00,'2024-12-16 23:38:22','Walk-in',1055),(67,964,'REC1734422348','Hokkaido',70,70,1,70.00,'2024-12-16 23:59:08','Walk-in',1055),(68,964,'REC1734422423','Hokkaido',70,70,1,70.00,'2024-12-17 00:00:23','Walk-in',1055),(69,964,'REC1734422533','Wintermelon',70,70,1,70.00,'2024-12-17 00:02:13','Walk-in',1055),(70,964,'REC1734422655','Classic Milktea',70,70,1,70.00,'2024-12-17 00:04:15','Walk-in',1055),(71,964,'REC1734424280','Hokkaido',70,70,1,70.00,'2024-12-17 00:31:20','Walk-in',16519),(72,964,'REC1734424693','Okinawa',70,70,1,70.00,'2024-12-17 00:38:13','Walk-in',16519),(73,8954,'REC1734424835','Wintermelon',70,70,1,70.00,'2024-12-17 00:40:35','Walk-in',16519),(74,964,'REC1734424912','Wintermelon',70,70,1,70.00,'2024-12-17 00:41:52','Walk-in',16519),(75,964,'REC1734425145','Classic Milktea',70,70,1,70.00,'2024-12-17 00:45:45','Walk-in',16519),(76,964,'REC1734426550','Okinawa',80,80,1,80.00,'2024-12-17 01:09:10','Walk-in',16519),(77,964,'REC1734426550','Okinawa',80,80,1,80.00,'2024-12-17 01:09:10','Walk-in',16519),(78,964,'REC1734426564','Okinawa',80,80,1,80.00,'2024-12-17 01:09:24','Walk-in',16519),(79,964,'REC1734426587','Hokkaido',70,70,1,70.00,'2024-12-17 01:09:47','Walk-in',1055),(80,964,'REC1734426587','Cookies and Cream',70,70,1,70.00,'2024-12-17 01:09:47','Walk-in',1055),(81,964,'REC1734426686','Chocolate',90,90,1,90.00,'2024-12-17 01:11:26','Walk-in',16519),(82,964,'REC1734426686','Cookies and Cream',90,90,1,90.00,'2024-12-17 01:11:26','Walk-in',16519),(83,964,'REC1734426686','Hokkaido',70,70,1,70.00,'2024-12-17 01:11:26','Walk-in',16519),(84,964,'REC1734426686','Hokkaido',90,90,1,90.00,'2024-12-17 01:11:26','Walk-in',16519),(85,964,'REC1734426686','Okinawa',90,4,1,90.00,'2024-12-17 01:11:26','Walk-in',16519),(86,964,'REC1734426686','Wintermelon',100,5,1,100.00,'2024-12-17 01:11:26','Walk-in',16519),(87,964,'REC1734426686','Chocolate',100,6,1,100.00,'2024-12-17 01:11:26','Walk-in',16519),(88,964,'REC1734426686','Hazelnut',100,5,1,100.00,'2024-12-17 01:11:26','Walk-in',16519),(89,964,'REC1734426686','Hazelnut',80,4,1,80.00,'2024-12-17 01:11:26','Walk-in',16519),(90,964,'REC1734426686','Matcha',100,5,1,100.00,'2024-12-17 01:11:26','Walk-in',16519),(91,964,'REC1734426686','Hokkaido',100,6,1,100.00,'2024-12-17 01:11:26','Walk-in',16519),(92,964,'REC1734426686','Chocolate',100,100,1,100.00,'2024-12-17 01:11:26','Walk-in',16519),(93,964,'REC1734426686','Classic Milktea',100,6,1,100.00,'2024-12-17 01:11:26','Walk-in',16519),(94,964,'REC1734426686','Classic Milktea',80,8,1,80.00,'2024-12-17 01:11:26','Walk-in',16519),(95,964,'REC1734427469','Hokkaido',90,10,1,90.00,'2024-12-17 01:24:29','Walk-in',16519),(96,964,'REC1734427491','Okinawa',90,13,1,90.00,'2024-12-17 01:24:51','Walk-in',16519),(97,964,'REC1734427531','Cookies and Cream',100,14,1,100.00,'2024-12-17 01:25:31','Walk-in',16519),(98,964,'REC1734427538','Cookies and Cream',100,14,1,100.00,'2024-12-17 01:25:38','Walk-in',16519),(99,964,'REC1734427571','Cookies and Cream',100,14,1,100.00,'2024-12-17 01:26:11','Walk-in',16519),(100,964,'REC1734427851','Cookies and Cream',70,70,1,70.00,'2024-12-17 01:30:51','Walk-in',1055),(101,964,'REC1734427851','Cookies and Cream',80,10,1,80.00,'2024-12-17 01:30:51','Walk-in',1055),(102,964,'REC1734427901','Cookies and Cream',80,13,1,80.00,'2024-12-17 01:31:41','Walk-in',1055),(103,964,'REC1734428011','Chocolate',80,11,1,80.00,'2024-12-17 01:33:31','Walk-in',1055),(104,964,'REC1734428038','Hokkaido',70,18,1,70.00,'2024-12-17 01:33:58','Walk-in',1055),(105,964,'REC1734428103','Hokkaido',70,18,4,280.00,'2024-12-17 01:35:03','Walk-in',1055),(106,964,'REC1734431759','Matcha',80,80,1,80.00,'2024-12-17 02:35:59','Walk-in',16519),(107,964,'REC1734613231','Okinawa',70,70,1,70.00,'2024-12-19 05:00:31','Walk-in',1055),(108,964,'REC1734613326','Hokkaido',70,70,1,70.00,'2024-12-19 05:02:06','Walk-in',1055),(109,964,'REC1734613373','Hokkaido',70,70,1,70.00,'2024-12-19 05:02:53','Walk-in',1055),(110,964,'REC1734620058','Hokkaido',70,70,1,70.00,'2024-12-19 06:54:18','Walk-in',1055),(111,964,'REC1734620121','Hokkaido',70,23,3,210.00,'2024-12-19 06:55:21','Walk-in',1055),(112,964,'REC1734620150','Hokkaido',70,18,4,280.00,'2024-12-19 06:55:50','Walk-in',1055),(113,964,'REC1734620150','Cookies and Cream',70,12,6,420.00,'2024-12-19 06:55:50','Walk-in',1055),(114,964,'REC1734622067','Hokkaido',70,70,1,70.00,'2024-12-19 07:27:47','Walk-in',1055),(115,964,'REC1734622112','Chocolate',70,70,1,70.00,'2024-12-19 07:28:32','Walk-in',1055),(116,964,'REC1734622112','Wintermelon',70,18,4,280.00,'2024-12-19 07:28:32','Walk-in',1055),(117,964,'REC1734622144','Wintermelon',70,70,1,70.00,'2024-12-19 07:29:04','Walk-in',1055),(121,964,'REC1734623351','Wintermelon',70,70,1,70.00,'2024-12-19 07:49:11','Walk-in',1055),(122,964,'REC1734714739','Wintermelon',70,70,1,70.00,'2024-12-20 09:12:19','Walk-in',1055),(123,964,'REC1734714776','Wintermelon',70,70,1,70.00,'2024-12-20 09:12:56','Walk-in',1055),(124,964,'REC1734714831','Wintermelon',80,80,1,80.00,'2024-12-20 09:13:51','Walk-in',1055),(128,964,'REC20241005','Wintermelon',70,70,2,140.00,'2024-10-05 02:30:00','Walk-In',1055),(129,964,'REC20241012','Wintermelon',70,70,2,140.00,'2024-10-12 06:00:00','Walk-In',1055),(130,964,'REC20241020','Wintermelon',70,70,2,140.00,'2024-10-20 03:15:00','Walk-In',1055),(131,964,'REC20241103','Wintermelon',70,70,2,140.00,'2024-11-03 04:45:00','Walk-In',1055),(132,964,'REC20241115','Wintermelon',70,70,2,140.00,'2024-11-15 08:10:00','Walk-In',1055),(133,964,'REC20241125','Wintermelon',70,70,2,140.00,'2024-11-25 01:30:00','Walk-In',1055),(134,964,'REC20241201','Wintermelon',70,70,2,140.00,'2024-12-01 00:00:00','Walk-In',1055),(135,964,'REC20241210','Wintermelon',70,70,2,140.00,'2024-12-10 06:20:00','Walk-In',1055),(136,964,'REC20241222','Wintermelon',70,70,2,140.00,'2024-12-22 09:50:00','Walk-In',1055),(149,964,'REC1734745179','Chocolate',70,70,1,70.00,'2024-12-20 17:39:39','Walk-in',1055),(153,964,'REC1734747556','Chocolate',70,70,1,70.00,'2024-12-20 18:19:16','Walk-in',10895),(154,964,'REC1734748345','Chocolate',70,70,1,70.00,'2024-12-20 18:32:25','Walk-in',16519),(156,245,'REC1734750145','Wintermelon',90,90,1,90.00,'2024-12-20 19:02:25','Walk-in',13395),(157,245,'REC1734751419','Wintermelon',70,35,2,140.00,'2024-12-20 19:23:39','Walk-in',13395),(158,245,'REC1734751419','Hokkaido',90,30,3,270.00,'2024-12-20 19:23:39','Walk-in',13395),(159,245,'REC1734751467','Hokkaido',70,70,1,70.00,'2024-12-20 19:24:27','Walk-in',13395),(160,245,'REC1734751827','Hokkaido',90,18,5,450.00,'2024-12-20 19:30:27','Walk-in',13395),(161,245,'REC1734754813','Cookies and Cream',100,100,1,100.00,'2024-12-20 20:20:13','Walk-in',13395),(162,245,'REC1734754813','Matcha',70,35,2,140.00,'2024-12-20 20:20:13','Walk-in',13395),(163,245,'REC1734754813','Hokkaido',70,70,1,70.00,'2024-12-20 20:20:13','Walk-in',13395),(165,964,'REC1758732503','Classic Milktea',70,70,1,70.00,'2025-09-24 10:48:23','Walk-in',15633),(166,964,'INV20250925173629','Wintermelon',70,70,1,70.00,'2025-09-25 09:36:29','Walk-in',15633),(167,964,'INV20250925173653','Matcha',70,70,1,70.00,'2025-09-25 09:36:53','Walk-in',15633),(168,964,'INV20250925173720','Matcha',70,70,1,70.00,'2025-09-25 09:37:20','Walk-in',15633),(172,245,'INV20250925174207','Okinawa',70,70,1,70.00,'2025-09-25 09:42:07','Walk-in',15633),(173,245,'INV20250925174417','Okinawa',70,70,1,70.00,'2025-09-25 09:44:17','Walk-in',15633),(174,245,'INV20250925174723','Wintermelon',70,70,1,70.00,'2025-09-25 09:47:23','Walk-in',15633),(175,245,'INV20250925174723','Okinawa',70,70,1,70.00,'2025-09-25 09:47:23','Walk-in',15633),(176,245,'INV20251020200024','Hokkaido',90,90,1,90.00,'2025-10-20 12:00:24','Walk-in',15633),(189,245,'INV20251020201558','Hokkaido',70,70,1,70.00,'2025-10-20 12:15:58','Walk-in',15633),(190,245,'INV20251020205646','Hokkaido',80,80,1,80.00,'2025-10-20 12:56:46','Walk-in',15633),(191,NULL,'RET-20251024-1060',NULL,NULL,NULL,NULL,3.00,'2025-10-23 16:00:00',NULL,NULL),(192,NULL,'RET-20251024-0737',NULL,NULL,NULL,NULL,2.00,'2025-10-23 16:00:00',NULL,NULL),(193,NULL,'RET-20251024-3235',NULL,NULL,NULL,NULL,3.00,'2025-10-23 16:00:00',NULL,NULL),(194,NULL,'RET-20251024-7131',NULL,2,NULL,-1,-2.50,'2025-10-23 16:00:00',NULL,NULL);
 /*!40000 ALTER TABLE `sales` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -329,13 +430,13 @@ CREATE TABLE `schedules` (
   `id` int NOT NULL AUTO_INCREMENT,
   `employee_id` int NOT NULL,
   `week_start` date NOT NULL,
-  `monday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
-  `tuesday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
-  `wednesday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
-  `thursday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
-  `friday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
-  `saturday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
-  `sunday_shift` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `monday_shift` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `tuesday_shift` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `wednesday_shift` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `thursday_shift` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `friday_shift` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `saturday_shift` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'OFF',
+  `sunday_shift` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'OFF',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_schedule` (`employee_id`,`week_start`)
@@ -353,6 +454,39 @@ INSERT INTO `schedules` VALUES (1,15633,'2025-10-20','6:00 AM - 2:00 PM','7:00 A
 UNLOCK TABLES;
 
 --
+-- Table structure for table `tax_records`
+--
+
+DROP TABLE IF EXISTS `tax_records`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tax_records` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `tax_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `period_start` date NOT NULL,
+  `period_end` date NOT NULL,
+  `branch_id` int DEFAULT NULL,
+  `status` enum('pending','filed','paid') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'pending',
+  `due_date` date DEFAULT NULL,
+  `payment_date` date DEFAULT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_period` (`period_start`,`period_end`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tax_records`
+--
+
+LOCK TABLES `tax_records` WRITE;
+/*!40000 ALTER TABLE `tax_records` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tax_records` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `transactions`
 --
 
@@ -363,11 +497,11 @@ CREATE TABLE `transactions` (
   `id` int NOT NULL AUTO_INCREMENT,
   `branchID` int DEFAULT NULL,
   `cashierID` int DEFAULT NULL,
-  `cashierName` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `receiptID` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `transactionNumber` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `invoiceNumber` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `customerName` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `cashierName` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `receiptID` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `transactionNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `invoiceNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `customerName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `totalAmount` decimal(10,2) DEFAULT NULL,
   `salesDate` datetime DEFAULT NULL,
   `orderItems` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
@@ -401,7 +535,7 @@ CREATE TABLE `users` (
   `lname` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `password_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `role` enum('admin','manager','cashier','encoder','hr','production','inventory') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `role` enum('admin','employee','cashier','hr','finance','inventory','sales') COLLATE utf8mb4_general_ci NOT NULL,
   `branch_assignment` int DEFAULT NULL,
   `password_changed` tinyint(1) DEFAULT '0',
   `is_archived` tinyint(1) DEFAULT '0',
@@ -412,6 +546,7 @@ CREATE TABLE `users` (
   `hire_date` date DEFAULT NULL,
   `employee_status` enum('active','training','for_interview','applying','terminated') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `users`
@@ -419,24 +554,9 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` (`id`, `fname`, `lname`, `email`, `password_hash`, `role`, `branch_assignment`, `password_changed`, `is_archived`, `department_id`, `hourly_rate`, `phone`, `address`, `hire_date`, `employee_status`) VALUES
-(12194, 'Vaughn', 'Maco', 'maco@lovetea.com', '$2y$10$YowGxyP9i2dmcR4uv8WuaeLJqc8bOW.D8jNT39tJl/je9O8jrNBFm', 'encoder', 245, 0, 0, NULL, 0.00, NULL, NULL, NULL, 'active'),
-(14158, 'Admin', 'Yes', 'admin@lovetea.com', '$2y$10$jY1mlQRNp03qy6../b.5ye664xWBSmRTuYkem6jbY1T.AbA/v4XjG', 'admin', 245, 0, 0, NULL, 0.00, NULL, NULL, NULL, 'active'),
-(16114, 'Kyle', 'Estacio', 'estacio@lovetea.com', '$2y$10$nl.0Bay01zbXxNDnNPgibuoAylKZTJE4mg73PL7JEIS7fNvnNeHCy', 'hr', 245, 0, 0, NULL, 0.00, NULL, NULL, NULL, 'active'),
-(17642, 'Arturo', 'Calma', 'calma@lovetea.com', '$2y$10$HJ/Ztrpx3C5e50jW8v/rU.rlvFdff1Ory.BuP7h9E1jzZDu0IyrzO', 'cashier', 245, 0, 0, NULL, 0.00, NULL, NULL, NULL, 'active'),
-(18044, 'Roselyn', 'Mongado', 'mongado@lovetea.com', '$2y$10$b1ecnuqD2kRNG/z..IXMcOVkJzkkbAh8.nIwwKQhnbFG30NCrEIJy', 'cashier', 245, 0, 0, NULL, 0.00, NULL, NULL, NULL, 'active'),
-(19129, 'Darrem', 'Garrate', 'darrem@lovetea.com', '$2y$10$n93nl.RaNQK4FMUN1cM3fuJ3aruRWhLmnVeC2wrHEcfxZsXWsCLya', 'cashier', 245, 0, 0, NULL, 0.00, NULL, NULL, NULL, 'active'),
-(20002, 'HR', 'Manager', 'hr@lovetea.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 245, 1, 0, 3, 0.00, '', '', '2025-10-23', 'active');
+INSERT INTO `users` VALUES (12194,'Vaughn','Maco','maco@lovetea.com','$2y$10$A4meJwL3LCc3FfgzxkAjKuMw9NV8HNGEcJaw20ZbyZnlKsDEzbe4G','inventory',245,1,0,NULL,0.00,NULL,NULL,NULL,'active'),(14158,'Admin','Yes','admin@lovetea.com','$2y$10$jY1mlQRNp03qy6../b.5ye664xWBSmRTuYkem6jbY1T.AbA/v4XjG','admin',245,0,0,NULL,0.00,NULL,NULL,NULL,'active'),(16114,'Kyle','Estacio','estacio@lovetea.com','$2y$10$EC5WGMW4kOzWg9Kras437OqlMzmUFKblhhJf8vcpiFFiqM6mg/IUm','hr',245,1,0,NULL,0.00,NULL,NULL,NULL,'active'),(17642,'Arturo','Calma','calma@lovetea.com','$2y$10$HJ/Ztrpx3C5e50jW8v/rU.rlvFdff1Ory.BuP7h9E1jzZDu0IyrzO','finance',245,0,0,NULL,0.00,NULL,NULL,NULL,'active'),(18044,'Roselyn','Mongado','mongado@lovetea.com','$2y$10$x7X8.XKbsmOYqXiSuyOfVOFJE61m3oTPoCWJs/qmeaU0MLf/6SlsC','cashier',245,1,0,NULL,0.00,NULL,NULL,NULL,'active'),(19129,'Darrem','Garrate','darrem@lovetea.com','$2y$10$n93nl.RaNQK4FMUN1cM3fuJ3aruRWhLmnVeC2wrHEcfxZsXWsCLya','cashier',245,0,0,NULL,0.00,NULL,NULL,NULL,'active'),(20002,'HR','Manager','hr@lovetea.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','admin',245,1,0,3,0.00,'','','2025-10-23','active'),(99999,'Finance','Manager','finance@lovetea.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','finance',245,1,0,NULL,0.00,NULL,NULL,NULL,'active');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Dumping events for database 'milkteashop2'
---
-
---
--- Dumping routines for database 'milkteashop2'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -447,4 +567,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-24  2:27:34
+-- Dump completed on 2025-10-24 17:31:08

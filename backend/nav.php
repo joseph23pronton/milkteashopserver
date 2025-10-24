@@ -83,7 +83,7 @@ $user_role = $_SESSION['role'] ?? null;
         <?php endif; ?>
 
         
-        <?php if ($user_role === 'cashier'): ?>
+        <?php if ($user_role === 'sales'): ?>
             <li class="nav-item">
                 <a class="nav-link" href="pos.php">
                     <i class="fas fa-fw fa-cash-register"></i>
