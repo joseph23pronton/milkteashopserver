@@ -123,9 +123,7 @@ $mysqli->close();
                 <h1 class="h3 mb-0 text-gray-800">Dashboard (Overall Of All Branches)</h1>
 
             </div>
-            <?php if (isset($_GET['welcome'])): ?>
-                <div class="alert alert-success mt-3">Password Updated Successfully! Welcome Aboard</div>
-            <?php endif; ?>
+            
             
             <div class="row">
                 <div class="col-xl-3 col-md-6 mb-4">

@@ -15,13 +15,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         $mysqli = require __DIR__ . "/database.php";
 
-        $sql = "UPDATE users SET password_hash = ?, password_changed = 1, role = 'cashier' WHERE id = ?";
+        $sql = "UPDATE users SET password_hash = ?, password_changed = 1 WHERE id = ?";
         $stmt = $mysqli->prepare($sql);
         $stmt->bind_param("si", $password_hash, $_SESSION["user_id"]);
         $stmt->execute();
 
         $_SESSION["password_changed"] = 1; 
-        header("Location: index.php?welcome=true");
+        header("Location: login.php?welcome=true");
         exit;
     } else {
         $error = "Passwords do not match!";

@@ -57,8 +57,8 @@ $transactions_query = "SELECT * FROM (
         r.created_at as date,
         r.branchID as branch_id,
         CONCAT(ih.name, ' (', r.restock_amount, ' ', ih.unit, ')') as description
-    FROM restockorder r
-    LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id
+    FROM restockOrder r
+    LEFT JOIN ingredientsHeader ih ON r.ingredientsID = ih.id
     WHERE r.is_confirmed = 1
 ) as all_transactions
 $where_clause
@@ -218,7 +218,7 @@ $branches = $mysqli->query($branches_query);
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
                                 <i class="fas fa-user-circle fa-2x"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">

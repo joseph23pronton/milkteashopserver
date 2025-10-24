@@ -12,8 +12,8 @@ $total_payroll_query = "SELECT SUM(net_pay) as total FROM payroll WHERE status =
 $total_payroll = $mysqli->query($total_payroll_query)->fetch_assoc()['total'] ?? 0;
 
 $purchase_orders_costs_query = "SELECT SUM(r.restock_amount * COALESCE(ih.price_per_unit, 0)) as total 
-                                 FROM restockorder r 
-                                 LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id 
+                                 FROM restockOrder r 
+                                 LEFT JOIN ingredientsHeader ih ON r.ingredientsID = ih.id 
                                  WHERE r.is_confirmed = 1";
 $purchase_orders_costs = $mysqli->query($purchase_orders_costs_query)->fetch_assoc()['total'] ?? 0;
 
@@ -26,7 +26,7 @@ $monthly_sales_query = "SELECT DATE_FORMAT(sales_date, '%Y-%m') as month, SUM(to
                         LIMIT 6";
 $monthly_sales = $mysqli->query($monthly_sales_query);
 
-$pending_orders_query = "SELECT COUNT(*) as count FROM restockorder WHERE is_confirmed = 0";
+$pending_orders_query = "SELECT COUNT(*) as count FROM restockOrder WHERE is_confirmed = 0";
 $pending_orders = $mysqli->query($pending_orders_query)->fetch_assoc()['count'] ?? 0;
 
 $recent_transactions_query = "SELECT 
@@ -55,8 +55,8 @@ SELECT
     COALESCE(r.invoice_number, CONCAT('INV-', DATE_FORMAT(r.created_at, '%Y%m%d'), '-', LPAD(r.id, 4, '0'))) as reference,
     (r.restock_amount * COALESCE(ih.price_per_unit, 0)) as amount,
     r.created_at as date
-FROM restockorder r
-LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id
+FROM restockOrder r
+LEFT JOIN ingredientsHeader ih ON r.ingredientsID = ih.id
 WHERE r.is_confirmed = 1
 ORDER BY date DESC
 LIMIT 5";
@@ -210,7 +210,7 @@ $recent_transactions = $mysqli->query($recent_transactions_query);
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
                                 <i class="fas fa-user-circle fa-2x"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">

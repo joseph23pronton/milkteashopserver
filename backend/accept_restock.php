@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mysqli->begin_transaction();
     
     try {
-        $order_query = "SELECT * FROM restockorder WHERE id = ? AND is_confirmed = 0";
+        $order_query = "SELECT * FROM restockOrder WHERE id = ? AND is_confirmed = 0";
         $order_stmt = $mysqli->prepare($order_query);
         
         if (!$order_stmt) {
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($order['invoice_number'])) {
             $invoice_number = 'INV-' . date('Ymd') . '-' . str_pad($restock_id, 4, '0', STR_PAD_LEFT);
             
-            $update_invoice_query = "UPDATE restockorder SET invoice_number = ? WHERE id = ?";
+            $update_invoice_query = "UPDATE restockOrder SET invoice_number = ? WHERE id = ?";
             $update_invoice_stmt = $mysqli->prepare($update_invoice_query);
             
             if (!$update_invoice_stmt) {
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $redirect_to = '../finance/supplies.php';
         }
         
-        $update_sql = "UPDATE restockorder SET is_accepted = 1, is_confirmed = 1, confirmed_at = NOW() WHERE id = ?";
+        $update_sql = "UPDATE restockOrder SET is_accepted = 1, is_confirmed = 1, confirmed_at = NOW() WHERE id = ?";
         $update_stmt = $mysqli->prepare($update_sql);
         
         if (!$update_stmt) {

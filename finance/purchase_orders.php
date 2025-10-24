@@ -4,22 +4,22 @@ require_once 'db_connection.php';
 $confirmed_restocks_query = "SELECT r.*, b.name as branch_name, ih.name as ingredient_name, ih.price_per_unit, ih.unit as ingredient_unit,
                               (r.restock_amount * COALESCE(ih.price_per_unit, 0)) AS total_cost,
                               COALESCE(r.invoice_number, CONCAT('INV-', DATE_FORMAT(r.created_at, '%Y%m%d'), '-', LPAD(r.id, 4, '0'))) AS invoice_number
-                              FROM restockorder r
+                              FROM restockOrder r
                               LEFT JOIN branches b ON r.branchID = b.id
-                              LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id
+                              LEFT JOIN ingredientsHeader ih ON r.ingredientsID = ih.id
                               WHERE r.is_confirmed = 1
                               ORDER BY r.created_at DESC";
 $confirmed_restocks = $mysqli->query($confirmed_restocks_query);
 
 $total_confirmed_cost_query = "SELECT SUM(r.restock_amount * COALESCE(ih.price_per_unit, 0)) AS total_confirmed_cost
-                                FROM restockorder r
-                                LEFT JOIN ingredientsheader ih ON r.ingredientsID = ih.id
+                                FROM restockOrder r
+                                LEFT JOIN ingredientsHeader ih ON r.ingredientsID = ih.id
                                 WHERE r.is_confirmed = 1";
 $total_confirmed_result = $mysqli->query($total_confirmed_cost_query);
 $total_confirmed_row = $total_confirmed_result->fetch_assoc();
 $total_confirmed_cost = $total_confirmed_row['total_confirmed_cost'] ?: 0;
 
-$confirmed_count_query = "SELECT COUNT(*) as count FROM restockorder WHERE is_confirmed = 1";
+$confirmed_count_query = "SELECT COUNT(*) as count FROM restockOrder WHERE is_confirmed = 1";
 $confirmed_count = $mysqli->query($confirmed_count_query)->fetch_assoc()['count'];
 ?>
 <!DOCTYPE html>
@@ -171,7 +171,7 @@ $confirmed_count = $mysqli->query($confirmed_count_query)->fetch_assoc()['count'
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
                                 <i class="fas fa-user-circle fa-2x"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">

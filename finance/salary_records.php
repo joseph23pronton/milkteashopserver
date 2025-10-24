@@ -163,7 +163,7 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
                                 <i class="fas fa-user-circle fa-2x"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
@@ -180,7 +180,14 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Salary Records</h1>
                     </div>
-
+                    <?php if(isset($_GET['success'])): ?>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            Mark as Paid Successful
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    <?php endif; ?>
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="card border-left-success shadow h-100 py-2">

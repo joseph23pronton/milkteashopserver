@@ -73,7 +73,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['approve_return'])) {
 $returns_query = "SELECT pr.*, b.name as branch_name, ih.name as ingredient_name, ih.unit as ingredient_unit
                   FROM product_returns pr
                   LEFT JOIN branches b ON pr.branch_id = b.id
-                  LEFT JOIN ingredientsheader ih ON pr.ingredient_id = ih.id
+                  LEFT JOIN ingredientsHeader ih ON pr.ingredient_id = ih.id
                   ORDER BY pr.created_at DESC";
 $returns = $mysqli->query($returns_query);
 
@@ -81,7 +81,7 @@ if (!$returns) {
     die("Query failed: " . $mysqli->error);
 }
 
-$ingredients_query = "SELECT * FROM ingredientsheader WHERE is_archived = 0";
+$ingredients_query = "SELECT * FROM ingredientsHeader WHERE is_archived = 0";
 $ingredients = $mysqli->query($ingredients_query);
 
 $branches_query = "SELECT * FROM branches";
@@ -242,7 +242,7 @@ $branches = $mysqli->query($branches_query);
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Finance Admin</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
                                 <i class="fas fa-user-circle fa-2x"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">

@@ -7,7 +7,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $stmt = $mysqli->prepare("INSERT INTO users (id, fname, lname, email, password_hash, role, branch_assignment, department_id, hourly_rate, phone, address, hire_date, employee_status, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0)");
         $id = rand(10000, 99999);
         $default_password = password_hash('LoveTea123', PASSWORD_DEFAULT);
-        $stmt->bind_param("isssssiddss", $id, $_POST['fname'], $_POST['lname'], $_POST['email'], $default_password, $_POST['role'], $_POST['branch_assignment'], $_POST['department_id'], $_POST['hourly_rate'], $_POST['phone'], $_POST['address'], $_POST['hire_date']);
+        $stmt->bind_param("isssssiidiss", 
+        $id, $_POST['fname'], $_POST['lname'], $_POST['email'], $default_password, $_POST['role'], $_POST['branch_assignment'], $_POST['department_id'],
+         $_POST['hourly_rate'], $_POST['phone'], $_POST['address'], $_POST['hire_date']);
         $stmt->execute();
         header("Location: employees.php?success=added");
         exit;

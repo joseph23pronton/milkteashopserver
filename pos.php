@@ -30,8 +30,20 @@ $conn = include('database.php');
 </head>
 <body class="p-2 md:p-3">
     <div class="max-w-[1400px] mx-auto mb-2 flex justify-start">
-        <a href="branch_index.php" class="bg-gradient-to-r from-green-500 to-green-600 text-white py-1 px-3 text-xs rounded-lg shadow hover:from-green-600 hover:to-white-700 transition-all">Go Back to Branch</a>
-    </div>
+    <?php
+    // check if the session role exists and is "sales"
+    if (isset($_SESSION['role']) && $_SESSION['role'] === 'sales') {
+        $link = "sales_index.php";
+        $text = "Go Back to Sales";
+    } else {
+        $link = "branch_index.php";
+        $text = "Go Back to Branch";
+    }
+    ?>
+    <a href="<?= htmlspecialchars($link) ?>" class="bg-gradient-to-r from-green-500 to-green-600 text-white py-1 px-3 text-xs rounded-lg shadow hover:from-green-600 hover:to-white-700 transition-all">
+        <?= htmlspecialchars($text) ?>
+    </a>
+</div>
     <div class="max-w-[1400px] mx-auto">
         <div class="text-center mb-3">
             <h1 class="text-2xl md:text-3xl font-bold text-white mb-0.5">LOVE, TEA ♥</h1>

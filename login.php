@@ -67,13 +67,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($_SESSION["role"] == "hr") {
                 header("Location: HR/dashboard.php");
             } elseif ($_SESSION["role"] == "sales") {
-                header("Location: branch_index.php");
+                header("Location: sales_index.php");
             } elseif ($_SESSION["role"] == "inventory") {
-                header("Location: index.php");
+                header("Location: branch_index.php");
             } elseif ($_SESSION["role"] == "finance") {
                 header("Location: finance/dashboard.php");  
             } elseif ($_SESSION["role"] == "admin") {
                 header("Location: employee.php");
+            } elseif ($_SESSION["role"] == "cashier") {
+                header("Location: pos.php");
             }else {
                 header("Location: index.php");
             }
@@ -133,6 +135,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                             <div class="alert alert-danger mt-3">
                                             Invalid email or password. Please try again.
                                         </div>
+                                        <?php endif; ?>
+                                        <?php if (isset($_GET['welcome'])): ?>
+                                            <div class="alert alert-success mt-3">Password Updated Successfully! Login Again.</div>
                                         <?php endif; ?>
                                     <div class="form-group">
                                         <input type="email" class="form-control form-control-user"

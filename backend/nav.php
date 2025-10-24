@@ -33,7 +33,7 @@ $user_role = $_SESSION['role'] ?? null;
 
 <ul class="navbar-nav bg-gradient-success sidebar sidebar-dark accordion" id="accordionSidebar">
 
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center">
         <div class="sidebar-brand-icon rotate-n-15">
             <img src="/uploads/logo.png" class="logo" alt="Logo">
         </div>
@@ -56,14 +56,15 @@ $user_role = $_SESSION['role'] ?? null;
 
     <?php else: ?>
 
-        <li class="nav-item">
-            <a class="nav-link" href="branch_index.php">
-                <i class="fas fa-fw fa-tachometer-alt"></i>
-                <span>Branch Dashboard</span>
-            </a>
-        </li>
+        
 
         <?php if ($user_role === 'inventory'): ?>
+            <li class="nav-item">
+                <a class="nav-link" href="branch_index.php">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Inventory Dashboard</span>
+                </a>
+            </li>
             <?php foreach ($branches as $branch): ?>
                 <?php if ($branch['id'] == $assigned_branch): ?>
                     <li class="nav-item">
@@ -84,6 +85,12 @@ $user_role = $_SESSION['role'] ?? null;
 
         
         <?php if ($user_role === 'sales'): ?>
+            <li class="nav-item">
+                <a class="nav-link" href="sales_index.php">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Sales Dashboard</span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link" href="pos.php">
                     <i class="fas fa-fw fa-cash-register"></i>
