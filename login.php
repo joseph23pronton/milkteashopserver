@@ -74,8 +74,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: finance/dashboard.php");  
             } elseif ($_SESSION["role"] == "admin") {
                 header("Location: employee.php");
-            } elseif ($_SESSION["role"] == "cashier") {
-                header("Location: pos.php");
+            } elseif ($_SESSION["role"] == "production") {
+                header("Location: products.php");
             }else {
                 header("Location: index.php");
             }
