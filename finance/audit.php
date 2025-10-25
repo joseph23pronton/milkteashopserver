@@ -21,7 +21,7 @@ SELECT
     'Payroll' as type,
     CONCAT('PAY-', id) as reference,
     net_pay as amount,
-    pay_period_start as date,
+    created_at as date,
     NULL as branch_id
 FROM payroll WHERE status = 'paid'
 ORDER BY date DESC
