@@ -1,3 +1,73 @@
+<style>
+    #accordionSidebar {
+        width: 14rem;
+        transition: width 0.15s ease-in-out;
+    }
+
+    #accordionSidebar.toggled {
+        width: 4.5rem;
+        overflow-x: hidden;
+    }
+
+    #accordionSidebar.toggled .sidebar-brand-text {
+        display: none;
+    }
+
+    #accordionSidebar.toggled .nav-item .nav-link span {
+        display: none;
+    }
+
+    #accordionSidebar.toggled .sidebar-heading {
+        display: none;
+    }
+
+    #accordionSidebar.toggled .sidebar-divider {
+        margin: 0.5rem 0;
+    }
+
+    #sidebarToggle {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: all 0.15s ease-in-out;
+    font-size: 0;
+    margin-left: auto; 
+    margin-right: 5rem; 
+}
+
+#sidebarToggle:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+#sidebarToggle::before {
+    content: '\f104';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 1rem; /* Set font size for the arrow */
+    color: rgba(255, 255, 255, 0.5);
+    transition: transform 0.15s ease-in-out;
+    display: block;
+}
+
+#accordionSidebar.toggled #sidebarToggle {
+    transform: rotate(180deg);
+    margin-left: auto;
+    margin-right: auto; /* Center it when collapsed */
+}
+    @media (min-width: 768px) {
+        #accordionSidebar {
+            width: 14rem !important;
+        }
+
+        #accordionSidebar.toggled {
+            width: 4.5rem !important;
+        }
+    }
+</style>
+
 <ul class="navbar-nav bg-gradient-success sidebar sidebar-dark accordion" id="accordionSidebar">
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="dashboard.php">
         <div class="sidebar-brand-icon">
@@ -21,14 +91,12 @@
         Financial Management
     </div>
 
-
     <li class="nav-item <?php echo basename($_SERVER['PHP_SELF']) == 'expenses.php' ? 'active' : ''; ?>">
         <a class="nav-link" href="expenses.php">
             <i class="fas fa-fw fa-receipt"></i>
             <span>Expenses</span>
         </a>
     </li>
-
 
     <hr class="sidebar-divider">
 
@@ -83,11 +151,10 @@
         </a>
     </li>
 
-
-    <li class="nav-item <?php echo basename($_SERVER['PHP_SELF']) == 'transaction_history.php' ? 'active' : ''; ?>">
-        <a class="nav-link" href="sales_history.php">
+    <li class="nav-item <?php echo basename($_SERVER['PHP_SELF']) == 'transactions_history.php' ? 'active' : ''; ?>">
+        <a class="nav-link" href="transactions_history.php">
             <i class="fas fa-fw fa-history"></i>
-            <span>Sales History</span>
+            <span>Transactions History</span>
         </a>
     </li>
 
@@ -98,3 +165,31 @@
     </div>
 
 </ul>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var sidebarToggle = document.getElementById('sidebarToggle');
+    var sidebar = document.getElementById('accordionSidebar');
+    
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            sidebar.classList.toggle('toggled');
+            
+            if (typeof(Storage) !== 'undefined') {
+                if (sidebar.classList.contains('toggled')) {
+                    localStorage.setItem('sb|sidebar-toggle', 'true');
+                } else {
+                    localStorage.removeItem('sb|sidebar-toggle');
+                }
+            }
+        });
+    }
+    
+    if (typeof(Storage) !== 'undefined') {
+        if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
+            sidebar.classList.add('toggled');
+        }
+    }
+});
+</script>

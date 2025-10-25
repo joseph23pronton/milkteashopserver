@@ -7,12 +7,15 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_expense'])) {
     $amount = $_POST['amount'];
     $branch_id = $_POST['branch_id'];
     $expense_date = $_POST['expense_date'];
+    $expense_time = $_POST['expense_time'];
     $payment_method = $_POST['payment_method'];
     
+    $expense_datetime = $expense_date . ' ' . $expense_time;
+    
     $sql = "INSERT INTO expenses (category, description, amount, branch_id, expense_date, payment_method, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, NOW())";
+            VALUES (?, ?, ?, ?, ?, ?, ?)";
     $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param("ssdiss", $category, $description, $amount, $branch_id, $expense_date, $payment_method);
+    $stmt->bind_param("ssdisss", $category, $description, $amount, $branch_id, $expense_date, $payment_method, $expense_datetime);
     $stmt->execute();
     header("Location: expenses.php?success=1");
     exit();
@@ -25,13 +28,13 @@ if ($show_archived) {
                        FROM expenses e 
                        LEFT JOIN branches b ON e.branch_id = b.id 
                        WHERE e.is_archived = 1
-                       ORDER BY e.expense_date DESC";
+                       ORDER BY e.created_at DESC";
 } else {
     $expenses_query = "SELECT e.*, b.name as branch_name 
                        FROM expenses e 
                        LEFT JOIN branches b ON e.branch_id = b.id 
                        WHERE e.is_archived = 0 OR e.is_archived IS NULL
-                       ORDER BY e.expense_date DESC";
+                       ORDER BY e.created_at DESC";
 }
 
 $expenses = $mysqli->query($expenses_query);
@@ -365,7 +368,7 @@ $archived_count = $mysqli->query($archived_count_query)->fetch_assoc()['count'];
                                             <th>Description</th>
                                             <th>Amount</th>
                                             <th>Branch</th>
-                                            <th>Date</th>
+                                            <th>Date & Time</th>
                                             <th>Payment Method</th>
                                             <th>Actions</th>
                                         </tr>
@@ -378,7 +381,7 @@ $archived_count = $mysqli->query($archived_count_query)->fetch_assoc()['count'];
                                             <td><?php echo htmlspecialchars($row['description']); ?></td>
                                             <td><strong>₱<?php echo number_format($row['amount'], 2); ?></strong></td>
                                             <td><?php echo htmlspecialchars($row['branch_name']); ?></td>
-                                            <td><?php echo date('M d, Y', strtotime($row['expense_date'])); ?></td>
+                                            <td data-order="<?php echo strtotime($row['created_at']); ?>"><?php echo date('M d, Y H:i', strtotime($row['created_at'])); ?></td>
                                             <td><?php echo htmlspecialchars($row['payment_method']); ?></td>
                                             <td>
                                                 <?php if ($show_archived): ?>
@@ -446,6 +449,10 @@ $archived_count = $mysqli->query($archived_count_query)->fetch_assoc()['count'];
                         <div class="form-group">
                             <label>Expense Date</label>
                             <input type="date" name="expense_date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Expense Time</label>
+                            <input type="time" name="expense_time" class="form-control" required>
                         </div>
                         <div class="form-group">
                             <label>Payment Method</label>

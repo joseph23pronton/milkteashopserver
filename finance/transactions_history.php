@@ -36,7 +36,7 @@ $transactions_query = "SELECT * FROM (
         'Expense' as type,
         CONCAT('EXP-', id) as reference,
         amount,
-        expense_date as date,
+        created_at as date,
         branch_id,
         description
     FROM expenses
@@ -75,7 +75,7 @@ $branches = $mysqli->query($branches_query);
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Finance Dashboard - Sales History</title>
+    <title>Finance Dashboard - Transactions History</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
@@ -233,7 +233,7 @@ $branches = $mysqli->query($branches_query);
 
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Sales History</h1>
+                        <h1 class="h3 mb-0 text-gray-800">Transactions History</h1>
                        
                     </div>
 
@@ -325,7 +325,7 @@ $branches = $mysqli->query($branches_query);
                                                     <span class="text-danger">-₱<?php echo number_format($row['amount'], 2); ?></span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><?php echo date('M d, Y H:i', strtotime($row['date'])); ?></td>
+                                            <td data-order="<?php echo strtotime($row['date']); ?>"><?php echo date('M d, Y H:i', strtotime($row['date'])); ?></td>
                                         </tr>
                                         <?php endwhile; 
                                         else: ?>
@@ -354,8 +354,6 @@ $branches = $mysqli->query($branches_query);
                 pageLength: 25
             });
         });
-
-       
     </script>
 </body>
 </html>

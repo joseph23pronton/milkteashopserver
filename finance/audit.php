@@ -13,7 +13,7 @@ SELECT
     'Expense' as type,
     CONCAT('EXP-', id) as reference,
     amount,
-    expense_date as date,
+    created_at as date,
     branch_id
 FROM expenses
 UNION ALL
@@ -48,6 +48,7 @@ $discrepancies = $mysqli->query($discrepancies_query);
     <title>Finance Dashboard</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
     <style>
         body {
             overflow-x: hidden;
@@ -240,7 +241,7 @@ $discrepancies = $mysqli->query($discrepancies_query);
                                             </td>
                                             <td><?php echo $row['reference']; ?></td>
                                             <td>₱<?php echo number_format($row['amount'], 2); ?></td>
-                                            <td><?php echo date('M d, Y H:i', strtotime($row['date'])); ?></td>
+                                            <td data-order="<?php echo strtotime($row['date']); ?>"><?php echo date('M d, Y H:i', strtotime($row['date'])); ?></td>
                                             
                                         </tr>
                                         <?php endwhile; ?>
@@ -260,7 +261,10 @@ $discrepancies = $mysqli->query($discrepancies_query);
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#auditTable').DataTable();
+            $('#auditTable').DataTable({
+                order: [[3, 'desc']],
+                pageLength: 25
+            });
         });
 
         function generateReport() {

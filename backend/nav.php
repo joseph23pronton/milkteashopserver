@@ -61,8 +61,6 @@ $user_role = $_SESSION['role'] ?? null;
             </a>
         </li>
 
-        <hr class="sidebar-divider d-none d-md-block">
-
     <?php endif; ?>
 
     <?php if ($user_role === 'inventory'): ?>

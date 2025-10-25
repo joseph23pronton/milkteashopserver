@@ -107,6 +107,38 @@ ob_start();
             font-weight: 600;
             color: #5a5c69;
         }
+
+        #accordionSidebar {
+            width: 14rem;
+            transition: width 0.15s ease-in-out;
+        }
+
+        #accordionSidebar.toggled {
+            width: 6.5rem;
+            overflow-x: hidden;
+        }
+
+        #accordionSidebar.toggled .sidebar-brand-text {
+            display: none;
+        }
+
+        #accordionSidebar.toggled .nav-item .nav-link span {
+            display: none;
+        }
+
+        #accordionSidebar.toggled .sidebar-heading {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            #accordionSidebar {
+                width: 14rem !important;
+            }
+
+            #accordionSidebar.toggled {
+                width: 6.5rem !important;
+            }
+        }
     </style>
 
 </head>
