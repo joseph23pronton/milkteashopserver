@@ -140,7 +140,6 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
                                     <th>Quantity</th>
                                     <th>Total Price</th>
                                     <th>Sales Date</th>
-                                    <th>Customer Name</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,7 +175,6 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
                                         <td>{$row['total_quantity']}</td>
                                         <td>" . '₱' . "{$row['total_price']}</td>
                                         <td>{$row['sales_date']}</td>
-                                        <td>{$row['customer_name']}</td>
                                     </tr>";
                                     }
                                 } else {
