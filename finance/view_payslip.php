@@ -23,6 +23,11 @@ if(!$payroll) {
     header('Location: salary_records.php');
     exit();
 }
+
+$total_deductions = $payroll['late_deductions'] + 
+                   ($payroll['sss_contribution'] ?? 0) + 
+                   ($payroll['pagibig_contribution'] ?? 0) + 
+                   ($payroll['philhealth_contribution'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -180,6 +185,12 @@ if(!$payroll) {
             font-weight: 700;
             color: #1cc88a;
         }
+        .amount-row.subtotal {
+            border-top: 1px solid #e3e6f0;
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: 600;
+        }
         @media print {
             .sidebar, .topbar, .no-print {
                 display: none !important;
@@ -281,16 +292,20 @@ if(!$payroll) {
                                         <span class="info-value">₱<?php echo number_format($payroll['late_deductions'], 2); ?></span>
                                     </div>
                                     <div class="amount-row">
-                                        <span class="info-label">Absence Deductions:</span>
-                                        <span class="info-value">₱<?php echo number_format($payroll['absence_deductions'], 2); ?></span>
+                                        <span class="info-label">SSS Contribution:</span>
+                                        <span class="info-value">₱<?php echo number_format($payroll['sss_contribution'] ?? 0, 2); ?></span>
                                     </div>
                                     <div class="amount-row">
-                                        <span class="info-label">Tax Deductions:</span>
-                                        <span class="info-value">₱<?php echo number_format($payroll['tax_deductions'], 2); ?></span>
+                                        <span class="info-label">Pag-IBIG Contribution:</span>
+                                        <span class="info-value">₱<?php echo number_format($payroll['pagibig_contribution'] ?? 0, 2); ?></span>
                                     </div>
                                     <div class="amount-row">
+                                        <span class="info-label">PhilHealth Contribution:</span>
+                                        <span class="info-value">₱<?php echo number_format($payroll['philhealth_contribution'] ?? 0, 2); ?></span>
+                                    </div>
+                                    <div class="amount-row subtotal">
                                         <span class="info-label">Total Deductions:</span>
-                                        <span class="info-value">₱<?php echo number_format($payroll['late_deductions'] + $payroll['absence_deductions'] + $payroll['tax_deductions'], 2); ?></span>
+                                        <span class="info-value">₱<?php echo number_format($total_deductions, 2); ?></span>
                                     </div>
 
                                     <div class="amount-row total">

@@ -3,13 +3,24 @@
 require_once 'auth_check.php';
 $mysqli = require __DIR__ . "/../database.php";
 
-$total_employees = $mysqli->query("SELECT COUNT(*) as count FROM users WHERE role IN ('cashier', 'encoder', 'hr') AND is_archived = 0")->fetch_assoc()['count'];
+date_default_timezone_set('Asia/Manila');
+$mysqli->query("SET time_zone = '+08:00'");
+
+$total_employees = $mysqli->query("SELECT COUNT(*) as count FROM users WHERE role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') AND is_archived = 0")->fetch_assoc()['count'];
 
 $total_departments = $mysqli->query("SELECT COUNT(*) as count FROM departments")->fetch_assoc()['count'];
 
-$dept_employees = $mysqli->query("SELECT d.name, COUNT(u.id) as count FROM departments d LEFT JOIN users u ON d.id = u.department_id AND u.is_archived = 0 AND u.role IN ('cashier', 'encoder', 'hr') GROUP BY d.id, d.name");
+$dept_employees = $mysqli->query("SELECT d.name, COUNT(u.id) as count FROM departments d LEFT JOIN users u ON d.id = u.department_id AND u.is_archived = 0 AND u.role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') GROUP BY d.id, d.name");
 
-$attendance_data = $mysqli->query("SELECT DATE(attendance_date) as date, COUNT(*) as present_count, (SELECT COUNT(*) FROM users WHERE role IN ('cashier', 'encoder', 'hr') AND is_archived = 0) as total_employees FROM attendance WHERE attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND status = 'present' GROUP BY DATE(attendance_date) ORDER BY date ASC");
+// FIXED: Count all attendance statuses (present, late, on_leave) - NOT just 'present'
+$attendance_data = $mysqli->query("SELECT DATE(attendance_date) as date, 
+    COUNT(*) as present_count, 
+    (SELECT COUNT(*) FROM users WHERE role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') AND is_archived = 0) as total_employees 
+    FROM attendance 
+    WHERE attendance_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) 
+    AND status IN ('present', 'late', 'on_leave') 
+    GROUP BY DATE(attendance_date) 
+    ORDER BY date ASC");
 
 $dates = [];
 $present = [];
@@ -20,7 +31,8 @@ while ($row = $attendance_data->fetch_assoc()) {
     $absent[] = $row['total_employees'] - $row['present_count'];
 }
 
-$today_attendance = $mysqli->query("SELECT COUNT(*) as count FROM attendance WHERE DATE(attendance_date) = CURDATE() AND status = 'present'")->fetch_assoc()['count'];
+// FIXED: Count all attendance today (present, late, on_leave) - NOT just 'present'
+$today_attendance = $mysqli->query("SELECT COUNT(*) as count FROM attendance WHERE DATE(attendance_date) = CURDATE() AND status IN ('present', 'late', 'on_leave')")->fetch_assoc()['count'];
 $attendance_rate = $total_employees > 0 ? round(($today_attendance / $total_employees) * 100, 1) : 0;
 ?>
 <!DOCTYPE html>
@@ -106,6 +118,7 @@ $attendance_rate = $total_employees > 0 ? round(($today_attendance / $total_empl
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Today's Attendance</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $today_attendance; ?> / <?php echo $total_employees; ?></div>
+                                            <div class="text-xs text-gray-600 mt-1">(<?php echo $attendance_rate; ?>% attendance rate)</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
@@ -153,14 +166,6 @@ $attendance_rate = $total_employees > 0 ? round(($today_attendance / $total_empl
                     </div>
                 </div>
             </div>
-
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; LoveTea HR 2024</span>
-                    </div>
-                </div>
-            </footer>
         </div>
     </div>
 

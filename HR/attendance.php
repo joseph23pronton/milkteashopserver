@@ -81,7 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $date = $_POST['bulk_date'];
         $status = $_POST['bulk_status'];
         
-        $employees = $mysqli->query("SELECT id FROM users WHERE role IN ('cashier', 'encoder', 'hr') AND is_archived = 0 AND employee_status = 'active'");
+        // Fixed: Include all relevant roles for bulk marking
+        $employees = $mysqli->query("SELECT id FROM users WHERE role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') AND is_archived = 0 AND employee_status = 'active'");
         
         while ($emp = $employees->fetch_assoc()) {
             $scheduled_shift = getScheduledTime($mysqli, $emp['id'], $date);
@@ -136,12 +137,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 $selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
-$attendance = $mysqli->query("SELECT a.*, u.fname, u.lname, u.role, d.name as dept_name FROM attendance a JOIN users u ON a.employee_id = u.id LEFT JOIN departments d ON u.department_id = d.id WHERE DATE(a.attendance_date) = '$selected_date' AND u.role IN ('cashier', 'encoder', 'hr') ORDER BY u.fname ASC");
+// Fixed: Include all relevant roles in the attendance display query
+$attendance = $mysqli->query("SELECT a.*, u.fname, u.lname, u.role, d.name as dept_name FROM attendance a JOIN users u ON a.employee_id = u.id LEFT JOIN departments d ON u.department_id = d.id WHERE DATE(a.attendance_date) = '$selected_date' AND u.role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') ORDER BY u.fname ASC");
 
-$employees = $mysqli->query("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.role IN ('cashier', 'encoder', 'hr') AND u.is_archived = 0 AND u.employee_status = 'active' ORDER BY u.fname ASC");
+// Fixed: Include all relevant roles in the employees query (for unrecorded attendance and modals)
+$employees = $mysqli->query("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') AND u.is_archived = 0 AND u.employee_status = 'active' ORDER BY u.fname ASC");
 
 $current_user_attendance = null;
 $current_user_schedule = null;
+// The logic for displaying individual user attendance is based on $_SESSION['role'] != 'admin'
+// and fetching by $_SESSION['user_id'], which is correct as it's specific to the logged-in user.
 if ($_SESSION['role'] != 'admin') {
     $user_id = $_SESSION['user_id'];
     $current_date = date('Y-m-d');
@@ -382,9 +387,11 @@ $status_badges = [
                                             </td>
                                             <td><?php echo htmlspecialchars($att['notes'] ?? '-'); ?></td>
                                         </tr>
+                                        
                                         <?php endwhile; ?>
                                         
                                         <?php
+                                        // Reset pointer for $employees query to use it again
                                         $employees->data_seek(0);
                                         while ($emp = $employees->fetch_assoc()):
                                             if (!in_array($emp['id'], $existing_ids)):
@@ -438,8 +445,10 @@ $status_badges = [
                             <select name="employee_id" id="employee_select" class="form-control" required onchange="loadSchedule()">
                                 <option value="">Select Employee</option>
                                 <?php 
-                                $employees->data_seek(0);
-                                while ($emp = $employees->fetch_assoc()): 
+                                // Fixed: Ensure this dropdown also includes all roles
+                                $employees_for_modal = $mysqli->query("SELECT u.id, u.fname, u.lname, u.role FROM users u WHERE u.role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') AND u.is_archived = 0 AND u.employee_status = 'active' ORDER BY u.fname ASC");
+                                $employees_for_modal->data_seek(0); // Reset pointer if already used
+                                while ($emp = $employees_for_modal->fetch_assoc()): 
                                 ?>
                                 <option value="<?php echo $emp['id']; ?>">
                                     <?php echo htmlspecialchars($emp['fname'] . ' ' . $emp['lname']) . ' - ' . strtoupper($emp['role']); ?>
@@ -569,7 +578,7 @@ $status_badges = [
             
             if (employeeId && date) {
                 $.ajax({
-                    url: 'HR/get_schedule.php',
+                    url: 'HR/get_schedule.php', // Assuming this path is correct for your schedule fetching
                     method: 'POST',
                     data: { employee_id: employeeId, date: date },
                     success: function(response) {
@@ -583,6 +592,11 @@ $status_badges = [
                         } else {
                             $('#schedule_info').hide();
                         }
+                    },
+                    error: function() {
+                        // Handle error, e.g., show a message or log it
+                        console.error('Error fetching schedule');
+                        $('#schedule_info').hide();
                     }
                 });
             }

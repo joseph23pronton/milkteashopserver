@@ -5,14 +5,19 @@ date_default_timezone_set('Asia/Manila');
 if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
     $mysqli = require __DIR__ . "/database.php";
     
+    // Set MySQL timezone
+    $mysqli->query("SET time_zone = '+08:00'");
+    
     $user_id = $_SESSION['user_id'];
     $role = $_SESSION['role'];
     
-    if ($role == 'cashier' || $role == 'encoder' || $role == 'hr') {
+    // AUTO ATTENDANCE: Track time out for all non-admin roles
+    if ($role != 'admin') {
         $current_date = date('Y-m-d');
         $current_time = date('H:i:s');
         
-        $update_time_out = $mysqli->prepare("UPDATE attendance SET time_out = ? WHERE employee_id = ? AND attendance_date = ?");
+        // Update time out for today's attendance
+        $update_time_out = $mysqli->prepare("UPDATE attendance SET time_out = ? WHERE employee_id = ? AND attendance_date = ? AND time_out IS NULL");
         $update_time_out->bind_param("sis", $current_time, $user_id, $current_date);
         $update_time_out->execute();
     }
@@ -109,7 +114,7 @@ $login_url = $base_path . '/login.php';
         </div>
         <div class="spinner"></div>
         <h2>Logging Out</h2>
-        <p>Please wait...</p>
+        <p>Recording your time out...</p>
     </div>
     
     <script>

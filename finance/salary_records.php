@@ -24,6 +24,7 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
     <title>Finance Dashboard</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css" rel="stylesheet">
     <style>
         body {
             overflow-x: hidden;
@@ -244,16 +245,21 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php while($row = $payroll->fetch_assoc()): ?>
+                                        <?php while($row = $payroll->fetch_assoc()): 
+                                            $total_deductions = ($row['late_deductions'] ?? 0) + 
+                                                              ($row['sss_contribution'] ?? 0) + 
+                                                              ($row['pagibig_contribution'] ?? 0) + 
+                                                              ($row['philhealth_contribution'] ?? 0);
+                                        ?>
                                         <tr>
                                             <td><?php echo $row['id']; ?></td>
-                                            <td><?php echo $row['fname'] . ' ' . $row['lname']; ?></td>
-                                            <td><?php echo $row['department']; ?></td>
+                                            <td><?php echo htmlspecialchars($row['fname'] . ' ' . $row['lname']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['department'] ?? 'N/A'); ?></td>
                                             <td><?php echo date('M d, Y', strtotime($row['pay_period_start'])); ?></td>
                                             <td><?php echo date('M d, Y', strtotime($row['pay_period_end'])); ?></td>
-                                            <td><?php echo $row['total_hours']; ?></td>
+                                            <td><?php echo number_format($row['total_hours'], 2); ?></td>
                                             <td>₱<?php echo number_format($row['gross_pay'], 2); ?></td>
-                                            <td>₱<?php echo number_format($row['late_deductions'] + $row['absence_deductions'] + $row['tax_deductions'], 2); ?></td>
+                                            <td>₱<?php echo number_format($total_deductions, 2); ?></td>
                                             <td>₱<?php echo number_format($row['net_pay'], 2); ?></td>
                                             <td>
                                                 <?php if($row['status'] == 'paid'): ?>
@@ -292,7 +298,9 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#payrollTable').DataTable();
+            $('#payrollTable').DataTable({
+                "order": [[ 0, "desc" ]]
+            });
         });
 
         function viewPayslip(id) {
