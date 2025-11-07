@@ -21,13 +21,11 @@ function getScheduledTime($mysqli, $employee_id, $date) {
     return null;
 }
 
-// Function to parse shift time and get start time
 function getShiftStartTime($shift) {
     if (empty($shift) || $shift === 'OFF') {
         return null;
     }
     
-    // Parse "9:00 AM - 5:00 PM" format
     $parts = explode(' - ', $shift);
     if (count($parts) >= 1) {
         return date('H:i:s', strtotime($parts[0]));
@@ -35,7 +33,6 @@ function getShiftStartTime($shift) {
     return null;
 }
 
-// Function to calculate late minutes
 function calculateLateMinutes($time_in, $scheduled_start) {
     if (empty($scheduled_start)) {
         return 0;
@@ -59,16 +56,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $status = $_POST['status'];
         $notes = $_POST['notes'];
         
-        // Get scheduled shift
         $scheduled_shift = getScheduledTime($mysqli, $employee_id, $attendance_date);
-        $scheduled_start = getShiftStartTime($scheduled_shift);
         
-        // Calculate late minutes if time in is provided
-        $late_minutes = 0;
-        if (!empty($time_in) && $scheduled_start) {
-            $late_minutes = calculateLateMinutes($time_in, $scheduled_start);
-            if ($late_minutes > 0 && $status === 'present') {
-                $status = 'late';
+        if ($scheduled_shift === 'OFF') {
+            $status = 'off'; 
+            $time_in = null;
+            $time_out = null;
+            $late_minutes = 0;
+        } else {
+            $scheduled_start = getShiftStartTime($scheduled_shift);
+            $late_minutes = 0;
+            if (!empty($time_in) && $scheduled_start) {
+                $late_minutes = calculateLateMinutes($time_in, $scheduled_start);
+                if ($late_minutes > 0 && $status === 'present') {
+                    $status = 'late';
+                }
             }
         }
         
@@ -81,14 +83,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $date = $_POST['bulk_date'];
         $status = $_POST['bulk_status'];
         
-        // Fixed: Include all relevant roles for bulk marking
         $employees = $mysqli->query("SELECT id FROM users WHERE role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') AND is_archived = 0 AND employee_status = 'active'");
         
         while ($emp = $employees->fetch_assoc()) {
             $scheduled_shift = getScheduledTime($mysqli, $emp['id'], $date);
+            $final_status = $status;
             
+            if ($scheduled_shift === 'OFF') {
+                $final_status = 'off';
+            }
+
             $stmt = $mysqli->prepare("INSERT INTO attendance (employee_id, attendance_date, status, scheduled_shift) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE status=VALUES(status), scheduled_shift=VALUES(scheduled_shift)");
-            $stmt->bind_param("isss", $emp['id'], $date, $status, $scheduled_shift);
+            $stmt->bind_param("isss", $emp['id'], $date, $final_status, $scheduled_shift);
             $stmt->execute();
         }
         
@@ -99,7 +105,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $today = date('Y-m-d');
         $current_time = date('H:i:s');
         
-        // Get employee's scheduled shift for today
         $scheduled_shift = getScheduledTime($mysqli, $user_id, $today);
         
         if (!$scheduled_shift || $scheduled_shift === 'OFF') {
@@ -137,16 +142,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 $selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
-// Fixed: Include all relevant roles in the attendance display query
 $attendance = $mysqli->query("SELECT a.*, u.fname, u.lname, u.role, d.name as dept_name FROM attendance a JOIN users u ON a.employee_id = u.id LEFT JOIN departments d ON u.department_id = d.id WHERE DATE(a.attendance_date) = '$selected_date' AND u.role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') ORDER BY u.fname ASC");
 
-// Fixed: Include all relevant roles in the employees query (for unrecorded attendance and modals)
 $employees = $mysqli->query("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') AND u.is_archived = 0 AND u.employee_status = 'active' ORDER BY u.fname ASC");
 
 $current_user_attendance = null;
 $current_user_schedule = null;
-// The logic for displaying individual user attendance is based on $_SESSION['role'] != 'admin'
-// and fetching by $_SESSION['user_id'], which is correct as it's specific to the logged-in user.
+
 if ($_SESSION['role'] != 'admin') {
     $user_id = $_SESSION['user_id'];
     $current_date = date('Y-m-d');
@@ -161,7 +163,8 @@ $status_badges = [
     'present' => 'badge-success',
     'late' => 'badge-warning',
     'absent' => 'badge-danger',
-    'on_leave' => 'badge-info'
+    'on_leave' => 'badge-info',
+    'off' => 'badge-secondary'
 ];
 ?>
 <!DOCTYPE html>
@@ -235,7 +238,7 @@ $status_badges = [
                                                     </span>
                                                 </div>
                                                 <div class="text-sm">
-                                                    <strong>Time In:</strong> <?php echo date('h:i A', strtotime($current_user_attendance['time_in'])); ?>
+                                                    <strong>Time In:</strong> <?php echo $current_user_attendance['time_in'] ? date('h:i A', strtotime($current_user_attendance['time_in'])) : '-'; ?>
                                                     <?php if ($current_user_attendance['late_minutes'] > 0): ?>
                                                         <span class="text-warning"><i class="fas fa-exclamation-circle"></i> (<?php echo $current_user_attendance['late_minutes']; ?> mins late)</span>
                                                     <?php endif; ?>
@@ -245,7 +248,11 @@ $status_badges = [
                                             </div>
                                         </div>
                                         <div class="col-md-4 text-right">
-                                            <?php if ($current_user_attendance['time_out']): ?>
+                                            <?php if ($current_user_attendance['status'] == 'off'): ?>
+                                                <button class="btn btn-secondary btn-lg" disabled>
+                                                    <i class="fas fa-calendar-times"></i> Day Off
+                                                </button>
+                                            <?php elseif ($current_user_attendance['time_out']): ?>
                                                 <button class="btn btn-secondary btn-lg" disabled>
                                                     <i class="fas fa-check-circle"></i> Attendance Completed
                                                 </button>
@@ -391,8 +398,7 @@ $status_badges = [
                                         <?php endwhile; ?>
                                         
                                         <?php
-                                        // Reset pointer for $employees query to use it again
-                                        $employees->data_seek(0);
+                                        $employees->data_seek(0); 
                                         while ($emp = $employees->fetch_assoc()):
                                             if (!in_array($emp['id'], $existing_ids)):
                                                 $emp_schedule = getScheduledTime($mysqli, $emp['id'], $selected_date);
@@ -445,9 +451,8 @@ $status_badges = [
                             <select name="employee_id" id="employee_select" class="form-control" required onchange="loadSchedule()">
                                 <option value="">Select Employee</option>
                                 <?php 
-                                // Fixed: Ensure this dropdown also includes all roles
                                 $employees_for_modal = $mysqli->query("SELECT u.id, u.fname, u.lname, u.role FROM users u WHERE u.role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') AND u.is_archived = 0 AND u.employee_status = 'active' ORDER BY u.fname ASC");
-                                $employees_for_modal->data_seek(0); // Reset pointer if already used
+                                $employees_for_modal->data_seek(0); 
                                 while ($emp = $employees_for_modal->fetch_assoc()): 
                                 ?>
                                 <option value="<?php echo $emp['id']; ?>">
@@ -486,6 +491,7 @@ $status_badges = [
                                         <option value="late">Late</option>
                                         <option value="absent">Absent</option>
                                         <option value="on_leave">On Leave</option>
+                                        <option value="off">Day Off</option>
                                     </select>
                                 </div>
                             </div>
@@ -495,7 +501,7 @@ $status_badges = [
                             <textarea name="notes" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
                         </div>
                         <div class="alert alert-warning">
-                            <small><i class="fas fa-info-circle"></i> Late minutes will be automatically calculated based on scheduled shift</small>
+                            <small><i class="fas fa-info-circle"></i> Late minutes will be automatically calculated based on scheduled shift. If scheduled OFF, Time In/Out will be ignored and status set to 'Day Off'.</small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -518,7 +524,7 @@ $status_badges = [
                     </div>
                     <div class="modal-body">
                         <div class="alert alert-info">
-                            <small><i class="fas fa-info-circle"></i> This will mark attendance for all active employees based on their schedules</small>
+                            <small><i class="fas fa-info-circle"></i> This will mark attendance for all active employees. If an employee is scheduled OFF, their status will be set to 'Day Off' regardless of the selected status.</small>
                         </div>
                         <div class="form-group">
                             <label>Date <span class="text-danger">*</span></label>
@@ -578,7 +584,7 @@ $status_badges = [
             
             if (employeeId && date) {
                 $.ajax({
-                    url: 'HR/get_schedule.php', // Assuming this path is correct for your schedule fetching
+                    url: 'HR/get_schedule.php', 
                     method: 'POST',
                     data: { employee_id: employeeId, date: date },
                     success: function(response) {
@@ -594,7 +600,6 @@ $status_badges = [
                         }
                     },
                     error: function() {
-                        // Handle error, e.g., show a message or log it
                         console.error('Error fetching schedule');
                         $('#schedule_info').hide();
                     }

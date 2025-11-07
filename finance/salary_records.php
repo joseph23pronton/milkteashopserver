@@ -1,3 +1,4 @@
+
 <?php
 require_once 'db_connection.php';
 
@@ -238,7 +239,7 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
                                             <th>Period End</th>
                                             <th>Hours</th>
                                             <th>Gross Pay</th>
-                                            <th>Deductions</th>
+                                            <th>Deductions/Tax</th>
                                             <th>Net Pay</th>
                                             <th>Status</th>
                                             <th>Actions</th>
@@ -274,7 +275,7 @@ $pending_payroll = $mysqli->query($pending_payroll_query)->fetch_assoc()['total'
                                                 <button class="btn btn-sm btn-info" onclick="viewPayslip(<?php echo $row['id']; ?>)">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <?php if($row['status'] != 'paid'): ?>
+                                                <?php if($row['status'] == 'approved'): ?>
                                                 <button class="btn btn-sm btn-success" onclick="markPaid(<?php echo $row['id']; ?>)">
                                                     <i class="fas fa-check"></i>
                                                 </button>

@@ -81,8 +81,7 @@ $sql = "SELECT
         FROM ingredients i
         JOIN ingredientsheader ih ON i.ingredientsID = ih.id
         WHERE i.branchesID = ?
-        ORDER BY i.currentStock ASC
-        LIMIT 10";
+        ORDER BY i.currentStock ASC"; 
 $stmt = $mysqli->prepare($sql);
 
 if (!$stmt) {

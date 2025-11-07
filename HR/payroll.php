@@ -1,3 +1,4 @@
+
 <?php
 require_once 'auth_check.php';
 $mysqli = require __DIR__ . "/../database.php";
@@ -126,8 +127,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $period_end
                         );
                     } else {
-                        $stmt = $mysqli->prepare("INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, total_hours, gross_pay, late_deductions, sss_contribution, pagibig_contribution, philhealth_contribution, net_pay, status, is_archived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0)");
-                        $stmt->bind_param("issdddddddd", 
+                        $stmt = $mysqli->prepare("INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, total_hours, gross_pay, late_deductions, sss_contribution, pagibig_contribution, philhealth_contribution, net_pay, status, is_archived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $is_archived_val = 0; 
+                        $status_val = 'pending';
+                        $stmt->bind_param("issdddddddsi", 
                             $employee_id, 
                             $period_start, 
                             $period_end, 
@@ -137,11 +140,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $payroll_data['sss_contribution'],
                             $payroll_data['pagibig_contribution'],
                             $payroll_data['philhealth_contribution'],
-                            $payroll_data['net_pay']
+                            $payroll_data['net_pay'],
+                            $status_val, 
+                            $is_archived_val 
                         );
                     }
-                    $stmt->execute();
-                    $success_msg = "Payroll generated successfully for " . htmlspecialchars($emp['fname'] . ' ' . $emp['lname']) . "!";
+                    if ($stmt->execute()) {
+                        $success_msg = "Payroll generated successfully for " . htmlspecialchars($emp['fname'] . ' ' . $emp['lname']) . "!";
+                    } else {
+                        $error_msg = "Error generating payroll: " . $stmt->error;
+                    }
+                    $stmt->close();
                 } else {
                     $error_msg = "No attendance records found for this employee in the selected period.";
                 }
@@ -198,8 +207,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $period_end
                         );
                     } else {
-                        $stmt = $mysqli->prepare("INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, total_hours, gross_pay, late_deductions, sss_contribution, pagibig_contribution, philhealth_contribution, net_pay, status, is_archived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0)");
-                        $stmt->bind_param("issdddddddd", 
+                        $stmt = $mysqli->prepare("INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, total_hours, gross_pay, late_deductions, sss_contribution, pagibig_contribution, philhealth_contribution, net_pay, status, is_archived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $is_archived_val = 0; 
+                        $status_val = 'pending'; 
+                        $stmt->bind_param("issdddddddsi", 
                             $employee_id, 
                             $period_start, 
                             $period_end, 
@@ -209,11 +220,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $payroll_data['sss_contribution'],
                             $payroll_data['pagibig_contribution'],
                             $payroll_data['philhealth_contribution'],
-                            $payroll_data['net_pay']
+                            $payroll_data['net_pay'],
+                            $status_val, 
+                            $is_archived_val 
                         );
                     }
-                    $stmt->execute();
-                    $generated_count++;
+                    if ($stmt->execute()) {
+                        $generated_count++;
+                    } else {
+                        error_log("Error generating payroll for employee {$employee_id}: " . $stmt->error);
+                    }
+                    $stmt->close();
                 }
             }
             
@@ -226,8 +243,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->execute()) {
                 $success_msg = "Payroll status updated successfully!";
             } else {
-                $error_msg = "Error updating status.";
+                $error_msg = "Error updating status: " . $stmt->error;
             }
+            $stmt->close();
         } elseif ($_POST['action'] === 'archive_payroll') {
             $payroll_id = $_POST['payroll_id'];
             $stmt = $mysqli->prepare("UPDATE payroll SET is_archived = 1 WHERE id = ?");
@@ -235,8 +253,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->execute()) {
                 $success_msg = "Payroll archived successfully!";
             } else {
-                $error_msg = "Error archiving payroll.";
+                $error_msg = "Error archiving payroll: " . $stmt->error;
             }
+            $stmt->close();
         } elseif ($_POST['action'] === 'unarchive_payroll') {
             $payroll_id = $_POST['payroll_id'];
             $stmt = $mysqli->prepare("UPDATE payroll SET is_archived = 0 WHERE id = ?");
@@ -244,8 +263,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->execute()) {
                 $success_msg = "Payroll unarchived successfully!";
             } else {
-                $error_msg = "Error unarchiving payroll.";
+                $error_msg = "Error unarchiving payroll: " . $stmt->error;
             }
+            $stmt->close();
         }
     }
 }
@@ -518,17 +538,12 @@ $paid = $mysqli->query("SELECT COUNT(*) as count FROM payroll WHERE status = 'pa
                                                     <button class="btn btn-sm btn-info mb-1" onclick="viewPayroll(<?php echo htmlspecialchars(json_encode($payroll)); ?>)">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
-                                                    <?php if (!$show_archived && $payroll['status'] != 'paid'): ?>
+                                                    <?php if (!$show_archived && $payroll['status'] == 'pending'): ?>
                                                     <div class="btn-group mb-1"><button type="button" class="btn btn-sm btn-success dropdown-toggle" data-toggle="dropdown">
                                                             <i class="fas fa-check"></i>
                                                         </button>
                                                         <div class="dropdown-menu">
-                                                            <?php if ($payroll['status'] == 'pending'): ?>
                                                             <a class="dropdown-item" href="#" onclick="updateStatus(<?php echo $payroll['id']; ?>, 'approved')">Approve</a>
-                                                            <?php endif; ?>
-                                                            <?php if ($payroll['status'] == 'approved'): ?>
-                                                            <a class="dropdown-item" href="#" onclick="updateStatus(<?php echo $payroll['id']; ?>, 'paid')">Mark as Paid</a>
-                                                            <?php endif; ?>
                                                         </div>
                                                     </div>
                                                     <?php endif; ?>
