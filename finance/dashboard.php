@@ -172,6 +172,16 @@ $recent_transactions = $mysqli->query($recent_transactions_query);
         .card {
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
         }
+        .card-wrapper {
+            position: relative;
+        }
+        .card-hoverable {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .card-hoverable:hover {
+            transform: translateY(-5px);
+        }
         .border-left-primary {
             border-left: 0.25rem solid #4e73df !important;
         }
@@ -195,6 +205,49 @@ $recent_transactions = $mysqli->query($recent_transactions_query);
         }
         .text-warning {
             color: #f6c23e !important;
+        }
+        .breakdown-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e3e6f0;
+            border-radius: 0.35rem;
+            padding: 15px;
+            margin-top: 10px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease-out;
+            z-index: 1000;
+        }
+        .breakdown-box.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .breakdown-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            margin-top: 5px;
+            padding-top: 10px;
+            border-top: 2px solid #ddd;
+        }
+        .breakdown-label {
+            color: #5a5c69;
+            font-size: 0.9rem;
+        }
+        .breakdown-value {
+            font-weight: 600;
+            font-size: 0.9rem;
         }
     </style>
 </head> 
@@ -237,23 +290,8 @@ $recent_transactions = $mysqli->query($recent_transactions_query);
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Sales</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($total_sales, 2); ?></div>
                                         </div>
-                                        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+                                        <div class="col-auto">
                                             <i class="fas fa-peso-sign fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-4 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Profit</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($net_profit, 2); ?></div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -261,16 +299,76 @@ $recent_transactions = $mysqli->query($recent_transactions_query);
                         </div>
 
                         <div class="col-xl-4 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Expenses</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($total_expenses + $total_payroll + $purchase_orders_costs, 2); ?></div>
+                            <div class="card-wrapper">
+                                <div class="card border-left-success shadow h-100 py-2 card-hoverable" id="profitCard">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Profit</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($net_profit, 2); ?></div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                            </div>
                                         </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                                <div class="breakdown-box" id="profitBreakdown">
+                                    <div class="breakdown-item">
+                                        <span class="breakdown-label">Total Sales</span>
+                                        <span class="breakdown-value text-success">+₱<?php echo number_format($total_sales, 2); ?></span>
+                                    </div>
+                                    <div class="breakdown-item">
+                                        <span class="breakdown-label">Expenses</span>
+                                        <span class="breakdown-value text-danger">-₱<?php echo number_format($total_expenses, 2); ?></span>
+                                    </div>
+                                    <div class="breakdown-item">
+                                        <span class="breakdown-label">Payroll</span>
+                                        <span class="breakdown-value text-danger">-₱<?php echo number_format($total_payroll, 2); ?></span>
+                                    </div>
+                                    <div class="breakdown-item">
+                                        <span class="breakdown-label">Purchase Orders</span>
+                                        <span class="breakdown-value text-danger">-₱<?php echo number_format($purchase_orders_costs, 2); ?></span>
+                                    </div>
+                                    <div class="breakdown-item">
+                                        <span class="breakdown-label">Net Profit</span>
+                                        <span class="breakdown-value text-success">₱<?php echo number_format($net_profit, 2); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="card-wrapper">
+                                <div class="card border-left-warning shadow h-100 py-2 card-hoverable" id="expensesCard">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Expenses</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?php echo number_format($total_expenses + $total_payroll + $purchase_orders_costs, 2); ?></div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                                            </div>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="breakdown-box" id="expensesBreakdown">
+                                    <div class="breakdown-item">
+                                        <span class="breakdown-label">General Expenses</span>
+                                        <span class="breakdown-value text-danger">₱<?php echo number_format($total_expenses, 2); ?></span>
+                                    </div>
+                                    <div class="breakdown-item">
+                                        <span class="breakdown-label">Payroll</span>
+                                        <span class="breakdown-value text-danger">₱<?php echo number_format($total_payroll, 2); ?></span>
+                                    </div>
+                                    <div class="breakdown-item">
+                                        <span class="breakdown-label">Purchase Orders</span>
+                                        <span class="breakdown-value text-danger">₱<?php echo number_format($purchase_orders_costs, 2); ?></span>
+                                    </div>
+                                    <div class="breakdown-item">
+                                        <span class="breakdown-label">Total Expenses</span>
+                                        <span class="breakdown-value text-warning">₱<?php echo number_format($total_expenses + $total_payroll + $purchase_orders_costs, 2); ?></span>
                                     </div>
                                 </div>
                             </div>
@@ -404,6 +502,22 @@ $recent_transactions = $mysqli->query($recent_transactions_query);
                 responsive: true,
                 maintainAspectRatio: true
             }
+        });
+
+        document.getElementById('profitCard').addEventListener('mouseenter', function() {
+            document.getElementById('profitBreakdown').classList.add('show');
+        });
+
+        document.getElementById('profitCard').addEventListener('mouseleave', function() {
+            document.getElementById('profitBreakdown').classList.remove('show');
+        });
+
+        document.getElementById('expensesCard').addEventListener('mouseenter', function() {
+            document.getElementById('expensesBreakdown').classList.add('show');
+        });
+
+        document.getElementById('expensesCard').addEventListener('mouseleave', function() {
+            document.getElementById('expensesBreakdown').classList.remove('show');
         });
     </script>
 </body>

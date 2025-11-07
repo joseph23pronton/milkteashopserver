@@ -22,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-$employees = $mysqli->query("SELECT u.*, d.name as dept_name, b.name as branch_name FROM users u LEFT JOIN departments d ON u.department_id = d.id LEFT JOIN branches b ON u.branch_assignment = b.id WHERE u.role IN ('cashier', 'encoder', 'hr') AND u.is_archived = 0 AND u.employee_status = 'active' ORDER BY u.id DESC");
+// Fixed: Include all relevant roles in the query to display more employees
+$employees = $mysqli->query("SELECT u.*, d.name as dept_name, b.name as branch_name FROM users u LEFT JOIN departments d ON u.department_id = d.id LEFT JOIN branches b ON u.branch_assignment = b.id WHERE u.role IN ('cashier', 'encoder', 'hr', 'inventory', 'finance', 'sales', 'production') AND u.is_archived = 0 AND u.employee_status = 'active' ORDER BY u.id DESC");
 $departments = $mysqli->query("SELECT * FROM departments");
 $branches = $mysqli->query("SELECT * FROM branches");
 ?>
@@ -176,6 +177,10 @@ $branches = $mysqli->query("SELECT * FROM branches");
                                         <option value="cashier">Cashier</option>
                                         <option value="encoder">Encoder</option>
                                         <option value="hr">HR</option>
+                                        <option value="inventory">Inventory</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="sales">Sales</option>
+                                        <option value="production">Production</option>
                                     </select>
                                 </div>
                             </div>
@@ -274,6 +279,10 @@ $branches = $mysqli->query("SELECT * FROM branches");
                                 <option value="cashier">Cashier</option>
                                 <option value="encoder">Encoder</option>
                                 <option value="hr">HR</option>
+                                <option value="inventory">Inventory</option>
+                                <option value="finance">Finance</option>
+                                <option value="sales">Sales</option>
+                                <option value="production">Production</option>
                             </select>
                         </div>
                         <div class="form-group">

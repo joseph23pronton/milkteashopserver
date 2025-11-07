@@ -19,20 +19,7 @@ if ($result->num_rows === 0) {
 }
 
 $branch = $result->fetch_assoc();
-$sql_earnings = "
-    SELECT SUM(s.quantity * s.price) AS total_earnings
-    FROM sales s
-    WHERE s.branchID = ? 
-    AND MONTH(s.sales_date) = MONTH(CURRENT_DATE) 
-    AND YEAR(s.sales_date) = YEAR(CURRENT_DATE) 
-";
-$stmt_earnings = $mysqli->prepare($sql_earnings);
-$stmt_earnings->bind_param('i', $_GET['id']);
-$stmt_earnings->execute();
-$earnings_result = $stmt_earnings->get_result();
-$earnings_row = $earnings_result->fetch_assoc();
-$total_earnings = $earnings_row['total_earnings'] ?: 0;
-
+// Removed the sales earnings calculation as it's no longer needed for the sales card
 ?>
 
 <!DOCTYPE html>
@@ -68,26 +55,7 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0;
     <?php endif; ?>
 </p>
             
-            <div class="col-xl-3 col-md-6 mb-4">
-                <a href="sales.php?id=<?= $_GET['id'] ?>&b_id=<?= $_GET['id'] ?>" class="card-link">
-                    <div class="card border-left-primary shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                        Sales
-                                    </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?= number_format($total_earnings, 2) ?></div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                                </div>
-                                
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
+            <!-- Removed the Sales Card -->
             
             <div class="card shadow mb-4">
                 <div class="card-header py-3">

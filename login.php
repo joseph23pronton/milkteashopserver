@@ -4,6 +4,9 @@ date_default_timezone_set('Asia/Manila');
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $mysqli = require __DIR__ . "/database.php";
+    
+    // Set MySQL timezone
+    $mysqli->query("SET time_zone = '+08:00'");
 
     $sql = sprintf(
         "SELECT users.* FROM users WHERE email = '%s'",
@@ -31,30 +34,58 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $today = date('Y-m-d');
             $current_time = date('H:i:s');
             
-            if ($user["role"] == "cashier" || $user["role"] == "encoder" || $user["role"] == "hr" || $user["role"] == "finance") {
-                $work_start = '08:00:00';
+            // AUTO ATTENDANCE: Track attendance for all non-admin roles
+            if ($user["role"] != "admin") {
+                // Get scheduled shift from schedules table
+                $week_start = date('Y-m-d', strtotime('monday this week'));
+                $day_of_week = strtolower(date('l'));
+                
+                $schedule_query = $mysqli->prepare("SELECT {$day_of_week}_shift as shift FROM schedules WHERE employee_id = ? AND week_start = ?");
+                $schedule_query->bind_param("is", $user["id"], $week_start);
+                $schedule_query->execute();
+                $schedule_result = $schedule_query->get_result();
+                
+                $scheduled_shift = null;
+                if ($schedule_result->num_rows > 0) {
+                    $schedule = $schedule_result->fetch_assoc();
+                    $scheduled_shift = $schedule['shift'];
+                }
+                
+                // Calculate late minutes and status
                 $late_minutes = 0;
                 $status = 'present';
                 
-                if ($current_time > $work_start) {
-                    $diff = strtotime($current_time) - strtotime($work_start);
-                    $late_minutes = floor($diff / 60);
-                    $status = 'late';
-                }
-                
-                $check_existing = $mysqli->prepare("SELECT id FROM attendance WHERE employee_id = ? AND attendance_date = ?");
-                $check_existing->bind_param("is", $user["id"], $today);
-                $check_existing->execute();
-                $existing_result = $check_existing->get_result();
-                
-                if ($existing_result->num_rows > 0) {
-                    $update_attendance = $mysqli->prepare("UPDATE attendance SET time_in = ?, status = ?, late_minutes = ?, time_out = NULL WHERE employee_id = ? AND attendance_date = ?");
-                    $update_attendance->bind_param("ssiis", $current_time, $status, $late_minutes, $user["id"], $today);
-                    $update_attendance->execute();
-                } else {
-                    $insert_attendance = $mysqli->prepare("INSERT INTO attendance (employee_id, attendance_date, time_in, status, late_minutes) VALUES (?, ?, ?, ?, ?)");
-                    $insert_attendance->bind_param("isssi", $user["id"], $today, $current_time, $status, $late_minutes);
-                    $insert_attendance->execute();
+                if ($scheduled_shift && $scheduled_shift !== 'OFF') {
+                    // Extract start time from shift (e.g., "08:00 AM - 05:00 PM")
+                    $shift_parts = explode(' - ', $scheduled_shift);
+                    if (count($shift_parts) >= 1) {
+                        $scheduled_start = date('H:i:s', strtotime($shift_parts[0]));
+                        $time_in_timestamp = strtotime($current_time);
+                        $scheduled_timestamp = strtotime($scheduled_start);
+                        
+                        if ($time_in_timestamp > $scheduled_timestamp) {
+                            $late_minutes = floor(($time_in_timestamp - $scheduled_timestamp) / 60);
+                            $status = 'late';
+                        }
+                    }
+                    
+                    // Check if attendance already exists for today
+                    $check_existing = $mysqli->prepare("SELECT id FROM attendance WHERE employee_id = ? AND attendance_date = ?");
+                    $check_existing->bind_param("is", $user["id"], $today);
+                    $check_existing->execute();
+                    $existing_result = $check_existing->get_result();
+                    
+                    if ($existing_result->num_rows > 0) {
+                        // Update existing record (in case they login again)
+                        $update_attendance = $mysqli->prepare("UPDATE attendance SET time_in = ?, status = ?, late_minutes = ?, scheduled_shift = ?, time_out = NULL WHERE employee_id = ? AND attendance_date = ?");
+                        $update_attendance->bind_param("ssisss", $current_time, $status, $late_minutes, $scheduled_shift, $user["id"], $today);
+                        $update_attendance->execute();
+                    } else {
+                        // Insert new attendance record
+                        $insert_attendance = $mysqli->prepare("INSERT INTO attendance (employee_id, attendance_date, time_in, status, late_minutes, scheduled_shift) VALUES (?, ?, ?, ?, ?, ?)");
+                        $insert_attendance->bind_param("isssis", $user["id"], $today, $current_time, $status, $late_minutes, $scheduled_shift);
+                        $insert_attendance->execute();
+                    }
                 }
             }
 

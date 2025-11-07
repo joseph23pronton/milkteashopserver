@@ -2,21 +2,19 @@
 $screen = 'branch';
 ob_start();
 date_default_timezone_set('Asia/Manila');
-// Check if branch ID is provided in the URL
+
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("Branch ID is required.");
 }
 $mysqli = include('database.php');
 $branch_id = $_GET['id'];
 
-// Step 1: Get branch_name and branch_city from branches table
 $sql = "SELECT name, city FROM branches WHERE id = ?";
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param('i', $branch_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Check if branch exists
 if ($result->num_rows === 0) {
     die("No branch found with the provided ID.");
 }
@@ -25,23 +23,98 @@ $branch = $result->fetch_assoc();
 $branch_name = $branch['name'];
 $branch_city = $branch['city'];
 
-// Step 2: Construct the inventory table name
-$table_name = strtolower('name'); // Use lowercase for table names
+$table_name = strtolower('name');
 
-// Step 3: Calculate total earnings for the current month
+$filter_type = $_GET['filter'] ?? 'all';
+$selected_date = $_GET['date'] ?? date('Y-m-d');
+
+$date_condition = "1=1";
+$filter_label = "All Time";
+$table_date_condition = "1=1";
+$bind_value = null;
+$table_bind_value = null;
+
+switch($filter_type) {
+    case 'day':
+        $date_condition = "DATE(s.sales_date) = ?";
+        $table_date_condition = "DATE(s.sales_date) = ?";
+        $filter_label = "Daily";
+        $bind_value = $selected_date;
+        $table_bind_value = $selected_date;
+        break;
+    case 'month':
+        $month = date('Y-m', strtotime($selected_date));
+        $date_condition = "DATE_FORMAT(s.sales_date, '%Y-%m') = ?";
+        $table_date_condition = "DATE_FORMAT(s.sales_date, '%Y-%m') = ?";
+        $filter_label = "Monthly";
+        $bind_value = $month;
+        $table_bind_value = $month;
+        break;
+    case 'year':
+        $year = date('Y', strtotime($selected_date));
+        $date_condition = "YEAR(s.sales_date) = ?";
+        $table_date_condition = "YEAR(s.sales_date) = ?";
+        $filter_label = "Yearly";
+        $bind_value = $year;
+        $table_bind_value = $year;
+        break;
+    case 'all':
+        $date_condition = "1=1";
+        $table_date_condition = "1=1";
+        $filter_label = "All Time";
+        $bind_value = null;
+        $table_bind_value = null;
+        break;
+}
+
 $sql_earnings = "
     SELECT SUM(s.quantity * s.price) AS total_earnings
     FROM sales s
-    WHERE s.branchID = ? 
-    AND MONTH(s.sales_date) = MONTH(CURRENT_DATE) 
-    AND YEAR(s.sales_date) = YEAR(CURRENT_DATE) 
+    WHERE s.branchID = ? AND $date_condition
 ";
 $stmt_earnings = $mysqli->prepare($sql_earnings);
-$stmt_earnings->bind_param('i', $branch_id);
+if ($bind_value !== null) {
+    $stmt_earnings->bind_param('is', $branch_id, $bind_value);
+} else {
+    $stmt_earnings->bind_param('i', $branch_id);
+}
 $stmt_earnings->execute();
 $earnings_result = $stmt_earnings->get_result();
 $earnings_row = $earnings_result->fetch_assoc();
-$total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no earnings found
+$total_earnings = $earnings_row['total_earnings'] ?: 0;
+
+$sql_total_quantity = "
+    SELECT SUM(s.quantity) AS total_quantity_sold
+    FROM sales s
+    WHERE s.branchID = ? AND $date_condition
+";
+$stmt_quantity = $mysqli->prepare($sql_total_quantity);
+if ($bind_value !== null) {
+    $stmt_quantity->bind_param('is', $branch_id, $bind_value);
+} else {
+    $stmt_quantity->bind_param('i', $branch_id);
+}
+$stmt_quantity->execute();
+$quantity_result = $stmt_quantity->get_result();
+$quantity_row = $quantity_result->fetch_assoc();
+$total_quantity_sold = $quantity_row['total_quantity_sold'] ?: 0;
+
+$sql_profit = "
+    SELECT SUM(s.quantity * (s.price - COALESCE(p.initial_price, 0) - COALESCE(p.price_cushion, 0))) AS total_profit
+    FROM sales s
+    LEFT JOIN products p ON s.productName = p.name
+    WHERE s.branchID = ? AND $date_condition
+";
+$stmt_profit = $mysqli->prepare($sql_profit);
+if ($bind_value !== null) {
+    $stmt_profit->bind_param('is', $branch_id, $bind_value);
+} else {
+    $stmt_profit->bind_param('i', $branch_id);
+}
+$stmt_profit->execute();
+$profit_result = $stmt_profit->get_result();
+$profit_row = $profit_result->fetch_assoc();
+$total_profit = $profit_row['total_profit'] ?: 0;
 
 ?>
 
@@ -57,36 +130,64 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
 
     <title>Branch Dashboard</title>
 
-    <!-- Custom fonts for this template -->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link
         href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
         rel="stylesheet">
 
-    <!-- Custom styles for this template -->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
 
-    <!-- Custom styles for this page -->
     <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+    <style>
+        .filter-container {
+            background: #f8f9fc;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .filter-btn {
+            margin-right: 10px;
+        }
+    </style>
 
 </head>
 
 <body id="page-top">
 
-    <!-- Page Wrapper -->
     <div id="wrapper">
         <?php include "backend/nav.php"; ?>
 
-        <!-- Begin Page Content -->
         <div class="container-fluid">
 
-            <!-- Page Heading -->
             <h1 class="h3 mb-2 text-gray-800"><?= $branch_name ?> Sales</h1>
             <p class="mb-4">Sales in <?= $branch_name ?> </p>
+
+            <div class="filter-container">
+                <form method="GET" action="" class="form-inline">
+                    <input type="hidden" name="id" value="<?= $_GET['id'] ?>">
+                    
+                    <div class="form-group mr-3">
+                        <label class="mr-2">Filter by:</label>
+                        <select name="filter" class="form-control" id="filterType">
+                            <option value="all" <?= $filter_type == 'all' ? 'selected' : '' ?>>All Sales</option>
+                            <option value="day" <?= $filter_type == 'day' ? 'selected' : '' ?>>Day</option>
+                            <option value="month" <?= $filter_type == 'month' ? 'selected' : '' ?>>Month</option>
+                            <option value="year" <?= $filter_type == 'year' ? 'selected' : '' ?>>Year</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mr-3" id="dateInputGroup">
+                        <input type="date" name="date" class="form-control" value="<?= $selected_date ?>" id="dateInput">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                </form>
+            </div>
+
             <div class="row">
-                <!-- Inventory Card -->
                 <div class="col-xl-3 col-md-6 mb-4">
-                    <a href="view_branch.php?id=<?= $_GET['id'] ?>&b_id=<?= $_GET['id'] ?>" class="card-link">
+                    <a href="restock_inventory.php?id=<?= $_GET['id'] ?>&b_id=<?= $_GET['id'] ?>" class="card-link">
                         <div class="card border-left-primary shadow h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
@@ -105,27 +206,64 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
                     </a>
                 </div>
 
-                <!-- Earnings Card -->
                 <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card border-left-success shadow h-100 py-2">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                        Earnings (Monthly)
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Earnings (<?= $filter_label ?>)
                                     </div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800">
                                         ₱<?= number_format($total_earnings, 2) ?></div>
                                 </div>
                                 <div class="col-auto">
-                                    <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                    <i class="fas fa-peso-sign fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Total Quantity Sold (<?= $filter_label ?>)
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        <?= number_format($total_quantity_sold) ?></div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Total Profit (<?= $filter_label ?>)
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        ₱<?= number_format($total_profit, 2) ?></div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- DataTales Example -->
+
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Sales</h6>
@@ -138,47 +276,65 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
                                     <th>Receipt ID</th>
                                     <th>Products</th>
                                     <th>Quantity</th>
-                                    <th>Total Price</th>
+                                    <th>Initial Price</th>
+                                    <th>Price Cushion</th>
+                                    <th>Selling Price</th>
+                                    <th>Profit</th>
                                     <th>Sales Date</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
+                                $where_clause = "s.branchID = ?";
+                                $params = [$branch_id];
+                                $types = "i";
+
+                                if ($filter_type != 'all' && isset($_GET['date'])) {
+                                    $where_clause .= " AND $table_date_condition";
+                                    $params[] = $table_bind_value;
+                                    $types .= "s";
+                                }
+
                                 $sql = "
-                            SELECT 
-                                s.receiptID,
-                                GROUP_CONCAT(s.productName ORDER BY s.productName) AS products,
-                                SUM(s.quantity) AS total_quantity,
-                                SUM(s.quantity * s.price) AS total_price,
-                                MAX(s.sales_date) AS sales_date,  -- Use MAX or MIN to avoid errors
-                                MAX(s.customerName) AS customer_name  -- Same here, choose an aggregate function
-                            FROM 
-                                sales s
-                            WHERE 
-                                s.branchID = ? 
-                            GROUP BY 
-                                s.receiptID
-                            ORDER BY 
-                                sales_date DESC
-                        ";
+                                    SELECT 
+                                        s.receiptID,
+                                        s.productName,
+                                        s.quantity,
+                                        COALESCE(p.initial_price, 0) AS initial_price,
+                                        COALESCE(p.price_cushion, 0) AS price_cushion,
+                                        s.price AS selling_price,
+                                        (s.price - COALESCE(p.initial_price, 0) - COALESCE(p.price_cushion, 0)) AS profit_per_unit,
+                                        s.sales_date
+                                    FROM 
+                                        sales s
+                                    LEFT JOIN products p ON s.productName = p.name
+                                    WHERE 
+                                        $where_clause
+                                    ORDER BY 
+                                        s.sales_date DESC, s.receiptID
+                                ";
 
                                 $stmt = $mysqli->prepare($sql);
-                                $stmt->bind_param('i', $_GET['id']);
+                                $stmt->bind_param($types, ...$params);
                                 $stmt->execute();
                                 $result = $stmt->get_result();
 
                                 if ($result->num_rows > 0) {
                                     while ($row = $result->fetch_assoc()) {
+                                        $total_profit = $row['profit_per_unit'] * $row['quantity'];
                                         echo "<tr>
                                         <td>{$row['receiptID']}</td>
-                                        <td>{$row['products']}</td>
-                                        <td>{$row['total_quantity']}</td>
-                                        <td>" . '₱' . "{$row['total_price']}</td>
+                                        <td>{$row['productName']}</td>
+                                        <td>{$row['quantity']}</td>
+                                        <td>₱" . number_format($row['initial_price'], 2) . "</td>
+                                        <td>₱" . number_format($row['price_cushion'], 2) . "</td>
+                                        <td>₱" . number_format($row['selling_price'], 2) . "</td>
+                                        <td>₱" . number_format($total_profit, 2) . "</td>
                                         <td>{$row['sales_date']}</td>
                                     </tr>";
                                     }
                                 } else {
-                                    echo "<tr><td colspan='6'>No records found for this branch.</td></tr>";
+                                    echo "<tr><td colspan='8'>No records found for this branch.</td></tr>";
                                 }
                                 ?>
                             </tbody>
@@ -188,20 +344,13 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
             </div>
 
         </div>
-        <!-- /.container-fluid -->
 
     </div>
-    <!-- End of Main Content -->
 
-    </div>
-    <!-- End of Content Wrapper -->
-
-    <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <!-- Logout Modal-->
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -221,28 +370,41 @@ $total_earnings = $earnings_row['total_earnings'] ?: 0; // Default to 0 if no ea
         </div>
     </div>
 
-    <!-- Bootstrap core JavaScript-->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Core plugin JavaScript-->
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
 
-    <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
 
-    <!-- Page level plugins -->
     <script src="vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
-    <!-- Page level custom scripts -->
     <script src="js/demo/datatables-demo.js"></script>
+
+    <script>
+        document.getElementById('filterType').addEventListener('change', function() {
+            const dateInputGroup = document.getElementById('dateInputGroup');
+            if (this.value === 'all') {
+                dateInputGroup.style.display = 'none';
+            } else {
+                dateInputGroup.style.display = 'block';
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', function() {
+            const filterType = document.getElementById('filterType').value;
+            const dateInputGroup = document.getElementById('dateInputGroup');
+            if (filterType === 'all') {
+                dateInputGroup.style.display = 'none';
+            }
+        });
+    </script>
 
 </body>
 <?php
-// Closing the connection after all operations are done
 $stmt->close();
-$mysqli->close(); // Close the MySQLi connection here
+$mysqli->close();
 ob_end_flush();
 ?>
 

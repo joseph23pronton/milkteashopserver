@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         header("Location: departments.php?success=updated");
         exit;
     } elseif ($_POST['action'] === 'delete') {
-        $check = $mysqli->prepare("SELECT COUNT(*) as count FROM users WHERE department_id=?");
+        $check = $mysqli->prepare("SELECT COUNT(*) as count FROM users WHERE department_id=? AND is_archived = 0 AND employee_status = 'active'");
         $check->bind_param("i", $_POST['id']);
         $check->execute();
         $result = $check->get_result()->fetch_assoc();
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-$departments = $mysqli->query("SELECT d.*, COUNT(u.id) as employee_count FROM departments d LEFT JOIN users u ON d.id = u.department_id AND u.is_archived = 0 AND u.employee_status = 'active' AND u.role IN ('cashier', 'encoder', 'hr') GROUP BY d.id ORDER BY d.name ASC");
+$departments = $mysqli->query("SELECT d.*, COUNT(u.id) as employee_count FROM departments d LEFT JOIN users u ON d.id = u.department_id AND u.is_archived = 0 AND u.employee_status = 'active' GROUP BY d.id ORDER BY d.name ASC");
 ?>
 <!DOCTYPE html>
 <html lang="en">

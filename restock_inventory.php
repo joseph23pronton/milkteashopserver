@@ -18,19 +18,20 @@ if ($result->num_rows === 0) {
 }
 
 $branch = $result->fetch_assoc();
-$sql_earnings = "
-    SELECT SUM(s.quantity * s.price) AS total_earnings
-    FROM sales s
-    WHERE s.branchID = ? 
-    AND MONTH(s.sales_date) = MONTH(CURRENT_DATE) 
-    AND YEAR(s.sales_date) = YEAR(CURRENT_DATE) 
-";
-$stmt_earnings = $mysqli->prepare($sql_earnings);
-$stmt_earnings->bind_param('i', $_GET['id']);
-$stmt_earnings->execute();
-$earnings_result = $stmt_earnings->get_result();
-$earnings_row = $earnings_result->fetch_assoc();
-$total_earnings = $earnings_row['total_earnings'] ?: 0;
+// Removed SQL for earnings as the card is being removed
+// $sql_earnings = "
+//     SELECT SUM(s.quantity * s.price) AS total_earnings
+//     FROM sales s
+//     WHERE s.branchID = ? 
+//     AND MONTH(s.sales_date) = MONTH(CURRENT_DATE) 
+//     AND YEAR(s.sales_date) = YEAR(CURRENT_DATE) 
+// ";
+// $stmt_earnings = $mysqli->prepare($sql_earnings);
+// $stmt_earnings->bind_param('i', $_GET['id']);
+// $stmt_earnings->execute();
+// $earnings_result = $stmt_earnings->get_result();
+// $earnings_row = $earnings_result->fetch_assoc();
+// $total_earnings = $earnings_row['total_earnings'] ?: 0;
 
 $current_branch_id = $_GET['id'];
 ?>
@@ -65,6 +66,8 @@ $current_branch_id = $_GET['id'];
             </p>
 
             <div class="row">
+                <!-- Sales Card Removed -->
+                <!--
                 <div class="col-xl-3 col-md-6 mb-4">
                     <a href="sales.php?id=<?= $current_branch_id ?>&b_id=<?= $current_branch_id ?>" class="card-link">
                         <div class="card border-left-primary shadow h-100 py-2">
@@ -84,6 +87,7 @@ $current_branch_id = $_GET['id'];
                         </div>
                     </a>
                 </div>
+                -->
                 <div class="col-xl-4 col-md-6 mb-4">
                     <div class="card border-left-success shadow h-100 py-2">
                         <div class="card-body">

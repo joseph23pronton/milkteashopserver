@@ -12,18 +12,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $day = $_POST['day'];
         $shift = $_POST['shift'];
         
-        // Check if schedule exists
         $check = $mysqli->prepare("SELECT id FROM schedules WHERE employee_id = ? AND week_start = ?");
         $check->bind_param("is", $employee_id, $week_start);
         $check->execute();
         $result = $check->get_result();
         
         if ($result->num_rows > 0) {
-            // Update existing schedule
             $stmt = $mysqli->prepare("UPDATE schedules SET {$day}_shift = ? WHERE employee_id = ? AND week_start = ?");
             $stmt->bind_param("sis", $shift, $employee_id, $week_start);
         } else {
-            // Insert new schedule 
             $stmt = $mysqli->prepare("INSERT INTO schedules (employee_id, week_start, monday_shift, tuesday_shift, wednesday_shift, thursday_shift, friday_shift, saturday_shift, sunday_shift) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $off = 'OFF';
             $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -47,20 +44,16 @@ $current_week = isset($_GET['week']) ? $_GET['week'] : date('Y-m-d', strtotime('
 $week_start = date('Y-m-d', strtotime('monday', strtotime($current_week)));
 $week_end = date('Y-m-d', strtotime('sunday', strtotime($current_week)));
 
-// Pagination hehe
 $per_page = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $per_page;
 
-// Get total employee count
-$count_query = $mysqli->query("SELECT COUNT(*) as total FROM users WHERE role IN ('cashier', 'encoder', 'hr') AND is_archived = 0 AND employee_status = 'active'");
+$count_query = $mysqli->query("SELECT COUNT(*) as total FROM users WHERE role != 'admin' AND is_archived = 0 AND employee_status = 'active'");
 $total_employees = $count_query->fetch_assoc()['total'];
 $total_pages = ceil($total_employees / $per_page);
 
-// Get employees with pagination oma
-$employees = $mysqli->query("SELECT id, CONCAT(fname, ' ', lname) as name, role FROM users WHERE role IN ('cashier', 'encoder', 'hr') AND is_archived = 0 AND employee_status = 'active' ORDER BY fname, lname LIMIT $per_page OFFSET $offset");
+$employees = $mysqli->query("SELECT id, CONCAT(fname, ' ', lname) as name, role FROM users WHERE role != 'admin' AND is_archived = 0 AND employee_status = 'active' ORDER BY fname, lname LIMIT $per_page OFFSET $offset");
 
-// Get schedules for this week
 $schedules_data = [];
 $schedules_query = $mysqli->prepare("SELECT * FROM schedules WHERE week_start = ?");
 $schedules_query->bind_param("s", $week_start);
@@ -170,12 +163,10 @@ while ($row = $schedules_result->fetch_assoc()) {
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-calendar-week text-success"></i> Weekly Schedule Planning</h1>
                         <div>
-                            <a href="?week=<?php echo date('Y-m-d', strtotime('-7 days', strtotime($week_start))); ?>" class="btn btn-success">
+                            <a href="?week=<?php echo date('Y-m-d', strtotime('-7 days', strtotime($week_start))); ?>&page=<?php echo $page; ?>" class="btn btn-success">
                                 <i class="fas fa-chevron-left"></i> Previous Week
                             </a>
-
-                            </a>
-                            <a href="?week=<?php echo date('Y-m-d', strtotime('+7 days', strtotime($week_start))); ?>" class="btn btn-success">
+                            <a href="?week=<?php echo date('Y-m-d', strtotime('+7 days', strtotime($week_start))); ?>&page=<?php echo $page; ?>" class="btn btn-success">
                                 Next Week <i class="fas fa-chevron-right"></i>
                             </a>
                         </div>
@@ -230,7 +221,6 @@ while ($row = $schedules_result->fetch_assoc()) {
                                 </table>
                             </div>
                             
-                            <!-- Pagination -->
                             <?php if ($total_pages > 1): ?>
                             <div class="d-flex justify-content-between align-items-center mt-4">
                                 <div>
@@ -240,7 +230,6 @@ while ($row = $schedules_result->fetch_assoc()) {
                                 </div>
                                 <nav>
                                     <ul class="pagination mb-0">
-                                        <!-- Previous Button -->
                                         <li class="page-item <?php echo ($page <= 1) ? 'disabled' : ''; ?>">
                                             <a class="page-link" href="?week=<?php echo $week_start; ?>&page=<?php echo $page - 1; ?>">
                                                 <i class="fas fa-chevron-left"></i>
@@ -248,7 +237,6 @@ while ($row = $schedules_result->fetch_assoc()) {
                                         </li>
                                         
                                         <?php
-                                        // Show page numbers
                                         $start_page = max(1, $page - 2);
                                         $end_page = min($total_pages, $page + 2);
                                         
@@ -272,7 +260,6 @@ while ($row = $schedules_result->fetch_assoc()) {
                                         }
                                         ?>
                                         
-                                        <!-- Next Button -->
                                         <li class="page-item <?php echo ($page >= $total_pages) ? 'disabled' : ''; ?>">
                                             <a class="page-link" href="?week=<?php echo $week_start; ?>&page=<?php echo $page + 1; ?>">
                                                 <i class="fas fa-chevron-right"></i>
@@ -293,7 +280,6 @@ while ($row = $schedules_result->fetch_assoc()) {
         </div>
     </div>
 
-    <!-- Edit Shift Modal -->
     <div class="modal fade" id="editShiftModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -330,7 +316,6 @@ while ($row = $schedules_result->fetch_assoc()) {
         </div>
     </div>
 
-    <!-- Logout Modal -->
     <div class="modal fade" id="logoutModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">

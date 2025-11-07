@@ -20,7 +20,6 @@ $mysqli->close();
 
     <title>Dashboard - Milktea Shop</title>
 
-    <!-- Custom fonts for this template-->
     <script src="https://kit.fontawesome.com/ed626e6e0f.js" crossorigin="anonymous"></script>
 
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -28,7 +27,6 @@ $mysqli->close();
         href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
         rel="stylesheet">
 
-    <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="/css/login.css" rel="stylesheet">
 
@@ -42,7 +40,6 @@ $mysqli->close();
             padding: 5;
         }
     </style>
-       <!-- Toast Notification Container -->
        <div class="toast-container position-fixed top-0 end-0 p-3 mt-5" style="left: 80%;z-index: 1050;">
     <div id="stockToast" class="toast text-bg-warning" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
@@ -53,7 +50,6 @@ $mysqli->close();
     </div>
 </div>
 
-    <!-- Page Wrapper -->
     <div id="wrapper">
 
         <?php include "backend/nav.php";
@@ -72,8 +68,8 @@ if ($result->num_rows === 0) {
 
         $sql_earnings = "
     SELECT 
-        SUM(s.quantity * s.price) AS total_earnings,
-        SUM(s.quantity * s.initial_price) AS total_revenue
+        SUM(s.quantity * s.initial_price) AS total_sales,
+        SUM(s.quantity * s.price) AS total_revenue
     FROM sales s
     WHERE MONTH(s.sales_date) = MONTH(CURRENT_DATE) 
     AND YEAR(s.sales_date) = YEAR(CURRENT_DATE)
@@ -89,15 +85,14 @@ if ($stmt_earnings) {
     $earnings_result = $stmt_earnings->get_result();
     $earnings_row = $earnings_result->fetch_assoc();
 
-    $total_earnings = $earnings_row['total_earnings'] ?: 0; 
+    $total_sales = $earnings_row['total_sales'] ?: 0; 
     $total_revenue = $earnings_row['total_revenue'] ?: 0;
 
-    $profit = $total_earnings - $total_revenue;
+    $profit = $total_revenue - $total_sales;
 
     $stmt_earnings->close();
 } else {
-    // If statement preparation fails
-    $total_earnings = 0;
+    $total_sales = 0;
     $total_revenue = 0;
     $profit = 0;
     error_log("Failed to prepare SQL statement: " . $mysqli->error);
@@ -118,35 +113,33 @@ if ($stmt_stocks) {
 $sql = "SELECT 
             MONTH(sales_date) AS month, 
             YEAR(sales_date) AS year, 
-            SUM(quantity * price) AS total_earnings,
-            SUM(quantity * initial_price) AS total_revenue
+            SUM(quantity * initial_price) AS total_sales,
+            SUM(quantity * price) AS total_revenue
         FROM sales WHERE branchID = ?
         GROUP BY YEAR(sales_date), MONTH(sales_date)
-        ORDER BY YEAR(sales_date), MONTH(sales_date) "; // Orders by year and month
+        ORDER BY YEAR(sales_date), MONTH(sales_date) ";
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param('i', $branch_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 $months = [];
-$earnings = [];
-$revenues = []; // Add revenue data
+$sales = [];
+$revenues = [];
 
 while ($row = $result->fetch_assoc()) {
-    $month_name = date("F", mktime(0, 0, 0, $row['month'], 10)); // Get the month name from the number
-    $months[] = $month_name . ' ' . $row['year'];  // Store month and year
-    $earnings[] = $row['total_earnings']; // Store the total earnings
-    $revenues[] = $row['total_revenue']; // Store the total revenue
+    $month_name = date("F", mktime(0, 0, 0, $row['month'], 10));
+    $months[] = $month_name . ' ' . $row['year'];
+    $sales[] = $row['total_sales'];
+    $revenues[] = $row['total_revenue'];
 }
 
 
 
 ?>
  
-        <!-- Begin Page Content -->
         <div class="container-fluid">
 
-            <!-- Page Heading -->
             <div class="d-sm-flex align-items-center justify-content-between mb-4">
                 <h1 class="h3 mb-0 text-gray-800"><?= $branch['name'] ?>  - <?= $branch['city'] ?> Dashboard</h1>
 
@@ -162,7 +155,7 @@ while ($row = $result->fetch_assoc()) {
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                        Revenue</div>
+                                        Revenue (Sales + Add-ons)</div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800">
                                         ₱<?= number_format($total_revenue, 2) ?></div>
                                 </div>
@@ -181,9 +174,9 @@ while ($row = $result->fetch_assoc()) {
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                        Sales
+                                        Sales (Milktea Only)
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?= number_format($total_earnings, 2) ?></div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">₱<?= number_format($total_sales, 2) ?></div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -203,7 +196,6 @@ while ($row = $result->fetch_assoc()) {
                                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                             Stocks (Low Stock Notifications)
                                         </div>
-                                        <!-- Total low stocks displayed -->
                                         <div class="h5 mb-0 font-weight-bold text-gray-800" id="lowStockCount">Loading...</div>
                                     </div>
                                     <div class="col-auto">
@@ -219,12 +211,10 @@ while ($row = $result->fetch_assoc()) {
 
             <div class="row">
 
-                <!-- Area Chart -->
                 <div class="col-xl-8 col-lg-7">
                     <div class="card shadow mb-4">
-                        <!-- Card Header - Dropdown -->
                         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                            <h6 class="m-0 font-weight-bold text-primary">Earnings Overview</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Sales & Revenue Overview</h6>
                             <div class="dropdown no-arrow">
                                 <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -233,7 +223,6 @@ while ($row = $result->fetch_assoc()) {
 
                             </div>
                         </div>
-                        <!-- Card Body -->
                         <div class="card-body">
                             <div class="chart-area">
                                 <canvas id="myBarChart"></canvas>
@@ -244,7 +233,6 @@ while ($row = $result->fetch_assoc()) {
                 <?php
                    
                     if (isset($branch_id)) {
-                        // Prepare the SQL query to fetch restock orders for the specific branch with price information and invoice numbers
                         $query = "SELECT r.id, r.ingredientsName, r.restock_amount, r.requested_by, r.is_accepted, r.branchID, r.ingredientsID, r.created_at,
                                         b.name as branchName,
                                         ih.price_per_unit,
@@ -256,17 +244,13 @@ while ($row = $result->fetch_assoc()) {
                                 LEFT JOIN ingredientsHeader ih ON r.ingredientsID = ih.id
                                 WHERE r.branchID = ? AND r.is_confirmed = 0";
                         
-                        // Prepare the statement
                         $stmt = $mysqli->prepare($query);
                         
                         if ($stmt) {
-                            // Bind the branch_id parameter to the query
                             $stmt->bind_param("i", $branch_id);
                             
-                            // Execute the query
                             $stmt->execute();
                             
-                            // Get the result
                             $result = $stmt->get_result();
                         } else {
                             echo "Failed to prepare the query: " . $mysqli->error;
@@ -284,23 +268,17 @@ while ($row = $result->fetch_assoc()) {
     </div>
 
     </div>
-    <!-- /.container-fluid -->
 
     </div>
-    <!-- End of Main Content -->
 
     </div>
-    <!-- End of Content Wrapper -->
 
     </div>
-    <!-- End of Page Wrapper -->
 
-    <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <!-- Logout Modal-->
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -320,7 +298,6 @@ while ($row = $result->fetch_assoc()) {
         </div>
     </div>
 
-    <!-- Receipt Modal -->
     <div class="modal fade" id="receiptModal" tabindex="-1" role="dialog" aria-labelledby="receiptModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-md" role="document">
             <div class="modal-content">
@@ -349,54 +326,45 @@ while ($row = $result->fetch_assoc()) {
         </div>
     </div>
 
-    <!-- Bootstrap core JavaScript-->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Core plugin JavaScript-->
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
 
-    <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
 
-    <!-- Page level plugins -->
     <script src="vendor/chart.js/Chart.min.js"></script>
 
 
-<!-- jQuery (required for AJAX) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Bootstrap Bundle (for Toasts) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Pass PHP data to JavaScript
 var months = <?php echo json_encode($months); ?>;
-var earnings = <?php echo json_encode($earnings); ?>;
+var sales = <?php echo json_encode($sales); ?>;
 var revenues = <?php echo json_encode($revenues); ?>;
 
-// Log data to console for debugging
 console.log("Months:", months);
-console.log("Earnings:", earnings);
+console.log("Sales:", sales);
 console.log("Revenues:", revenues);
 
-// Initialize the bar chart
 var ctx = document.getElementById("myBarChart").getContext("2d");
 var myBarChart = new Chart(ctx, {
   type: 'bar',
   data: {
-    labels: months, // X-axis labels (Months and Years)
+    labels: months,
     datasets: [
       {
-        label: "Earnings",
-        data: earnings,
-        backgroundColor: "rgba(78, 115, 223, 0.8)", // Blue color
-        borderColor: "rgba(78, 115, 223, 1)", // Blue border
+        label: "Sales (Milktea Only)",
+        data: sales,
+        backgroundColor: "rgba(78, 115, 223, 0.8)",
+        borderColor: "rgba(78, 115, 223, 1)",
         borderWidth: 1
       },
       {
-        label: "Revenue",
+        label: "Revenue (Sales + Add-ons)",
         data: revenues,
-        backgroundColor: "rgba(28, 200, 138, 0.8)", // Green color
-        borderColor: "rgba(28, 200, 138, 1)", // Green border
+        backgroundColor: "rgba(28, 200, 138, 0.8)",
+        borderColor: "rgba(28, 200, 138, 1)",
         borderWidth: 1
       }
     ]
@@ -411,37 +379,33 @@ var myBarChart = new Chart(ctx, {
       y: {
         beginAtZero: true,
         ticks: {
-          stepSize: 1000 // Adjust step size for readability
+          stepSize: 1000
         }
       }
     },
     plugins: {
       tooltip: {
-        mode: "index", // Show data for all bars when hovered
+        mode: "index",
         intersect: false
       }
     }
   }
 });
 
-// For Low Stock Alert
 document.addEventListener("DOMContentLoaded", function () {
     fetch('backend/checkStock.php')
         .then(response => response.json())
         .then(data => {
             if (data.status === 'low_stock') {
-                // Update the card with the total number of low-stock items
                 const lowStockCount = data.notifications.length;
                 const lowStockDiv = document.getElementById("lowStockCount");
                 lowStockDiv.textContent = `⚠️ ${lowStockCount}`;
                 
-                // Add a tooltip to display low-stock items
                 const tooltipContent = data.notifications
                     .map(item => `${item.productName} (${item.stockQuantity}) - ${item.branchName}`)
                     .join('\n');
                 lowStockDiv.setAttribute("title", tooltipContent);
             } else {
-                // No low-stock items
                 document.getElementById("lowStockCount").textContent = "✅ All stocks are sufficient";
             }
         })
@@ -450,19 +414,16 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 <script>
     $(document).ready(function() {
-        // Check stock status
         $.ajax({
-            url: 'backend/checkStock.php', // Path to your checkStock.php
+            url: 'backend/checkStock.php',
             method: 'GET',
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'low_stock') {
-                    // Format the message with all low stock items
                     let message = response.notifications.map(item => 
                         `⚠️ ${item.productName} (Branch: ${item.branchName}) - ${item.stockQuantity} left`
                     ).join("<br>");
                     
-                    // Update toast body and show the toast
                     $('#toastMessage').html(message);
                     const stockToast = new bootstrap.Toast(document.getElementById('stockToast'));
                     stockToast.show();
@@ -476,12 +437,9 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script>
-// Receipt viewing functionality
 function viewReceipt(restockId, invoiceNumber) {
-    // Show the modal
     $('#receiptModal').modal('show');
     
-    // Load receipt content via AJAX
     $.ajax({
         url: 'backend/generate_receipt.php',
         method: 'POST',
@@ -498,7 +456,6 @@ function viewReceipt(restockId, invoiceNumber) {
     });
 }
 
-// Print receipt function
 function printReceipt() {
     const printContent = document.getElementById('receiptContent').innerHTML;
     const printWindow = window.open('', '', 'height=600,width=800');
@@ -520,35 +477,24 @@ function printReceipt() {
     
     printWindow.document.close();
     printWindow.print();
-    
-    // Optional: Close modal after printing (ask user first)
-    // Uncomment this if you want to auto-close modal after printing:
-    // setTimeout(function() {
-    //     $('#receiptModal').modal('hide');
-    // }, 2000);
 }
 </script>
 
 <script>
-// Additional modal controls for receipt modal
 $(document).ready(function() {
-    // Close receipt modal when clicking outside
     $('#receiptModal').on('click', function(e) {
         if (e.target === this) {
             $(this).modal('hide');
         }
     });
     
-    // Close modal with Escape key
     $(document).on('keyup', function(e) {
-        if (e.keyCode === 27) { // Escape key
+        if (e.keyCode === 27) {
             $('#receiptModal').modal('hide');
         }
     });
     
-    // Ensure modal closes properly when hidden
     $('#receiptModal').on('hidden.bs.modal', function() {
-        // Clear content when modal is closed
         $('#receiptContent').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
     });
 });

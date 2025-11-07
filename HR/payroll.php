@@ -1,3 +1,4 @@
+
 <?php
 require_once 'auth_check.php';
 $mysqli = require __DIR__ . "/../database.php";
@@ -7,14 +8,82 @@ date_default_timezone_set('Asia/Manila');
 $success_msg = '';
 $error_msg = '';
 
+function calculateMonthlySSS($monthlySalary) {
+    $sssTable = [
+        [4250, 180], [4750, 202.50], [5250, 225], [5750, 247.50], [6250, 270],
+        [6750, 292.50], [7250, 315], [7750, 337.50], [8250, 360], [8750, 382.50],
+        [9250, 405], [9750, 427.50], [10250, 450], [10750, 472.50], [11250, 495],
+        [11750, 517.50], [12250, 540], [12750, 562.50], [13250, 585], [13750, 607.50],
+        [14250, 630], [14750, 652.50], [15250, 675], [15750, 697.50], [16250, 720],
+        [16750, 742.50], [17250, 765], [17750, 787.50], [18250, 810], [18750, 832.50],
+        [19250, 855], [19750, 877.50], [20250, 900], [20750, 922.50], [21250, 945],
+        [21750, 967.50], [22250, 990], [22750, 1012.50], [23250, 1035], [23750, 1057.50],
+        [24250, 1080], [24750, 1102.50], [25250, 1125], [25750, 1147.50], [26250, 1170],
+        [26750, 1192.50], [27250, 1215], [27750, 1237.50], [28250, 1260], [28750, 1282.50],
+        [29250, 1305], [29750, 1327.50], [30250, 1350], [30750, 1372.50], [31250, 1395],
+        [31750, 1417.50], [32250, 1440], [32750, 1462.50], [33250, 1485], [33750, 1507.50],
+        [34250, 1530], [34750, 1552.50], [35250, 1575], [35750, 1597.50]
+    ];
+    
+    foreach ($sssTable as $bracket) {
+        if ($monthlySalary <= $bracket[0]) {
+            return $bracket[1];
+        }
+    }
+    return 1597.50;
+}
+
+function calculateMonthlyPagIBIG($monthlySalary) {
+    if ($monthlySalary <= 1500) {
+        return $monthlySalary * 0.01;
+    }
+    return min($monthlySalary * 0.02, 200);
+}
+
+function calculateMonthlyPhilHealth($monthlySalary) {
+    $salary = max(10000, min($monthlySalary, 100000));
+    return ($salary * 0.05) / 2;
+}
+
+function calculatePayrollDeductions($totalHours, $hourlyRate, $lateMinutes) {
+    $hoursPerMonth = 160;
+    $monthlySalary = $hourlyRate * $hoursPerMonth;
+    
+    $lateDeductions = ($lateMinutes / 60) * $hourlyRate;
+    $grossPay = $totalHours * $hourlyRate;
+    
+    $monthlySSSContribution = calculateMonthlySSS($monthlySalary);
+    $monthlyPagibigContribution = calculateMonthlyPagIBIG($monthlySalary);
+    $monthlyPhilhealthContribution = calculateMonthlyPhilHealth($monthlySalary);
+    
+    $prorateRatio = $totalHours / $hoursPerMonth;
+    
+    $sssContribution = $monthlySSSContribution * $prorateRatio;
+    $pagibigContribution = $monthlyPagibigContribution * $prorateRatio;
+    $philhealthContribution = $monthlyPhilhealthContribution * $prorateRatio;
+    
+    $totalDeductions = $lateDeductions + $sssContribution + $pagibigContribution + $philhealthContribution;
+    $netPay = $grossPay - $totalDeductions;
+    
+    return [
+        'gross_pay' => $grossPay,
+        'late_deductions' => $lateDeductions,
+        'sss_contribution' => $sssContribution,
+        'pagibig_contribution' => $pagibigContribution,
+        'philhealth_contribution' => $philhealthContribution,
+        'total_deductions' => $totalDeductions,
+        'net_pay' => $netPay
+    ];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'generate_individual_payroll') {
-            $employee_id = $_POST['employee_id'];
+            $employee_id = intval($_POST['employee_id']);
             $period_start = $_POST['period_start'];
             $period_end = $_POST['period_end'];
             
-            $emp_query = $mysqli->query("SELECT u.id, u.fname, u.lname, u.role, u.hourly_rate FROM users u WHERE u.id = $employee_id AND u.role IN ('cashier', 'encoder', 'hr') AND u.is_archived = 0 AND u.employee_status = 'active'");
+            $emp_query = $mysqli->query("SELECT u.id, u.fname, u.lname, u.role, u.hourly_rate FROM users u WHERE u.id = $employee_id AND u.role != 'admin' AND u.is_archived = 0 AND u.employee_status = 'active'");
             
             if ($emp = $emp_query->fetch_assoc()) {
                 $hourly_rate = $emp['hourly_rate'];
@@ -39,22 +108,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 if ($total_hours > 0) {
-                    $late_deductions = ($total_late_minutes / 60) * $hourly_rate;
-                    $gross_pay = $total_hours * $hourly_rate;
-                    $tax_deductions = $gross_pay * 0.10;
-                    $net_pay = $gross_pay - $late_deductions - $tax_deductions;
+                    $payroll_data = calculatePayrollDeductions($total_hours, $hourly_rate, $total_late_minutes);
                     
                     $check_existing = $mysqli->query("SELECT id FROM payroll WHERE employee_id = $employee_id AND pay_period_start = '$period_start' AND pay_period_end = '$period_end'");
                     
                     if ($check_existing->num_rows > 0) {
-                        $stmt = $mysqli->prepare("UPDATE payroll SET total_hours = ?, gross_pay = ?, late_deductions = ?, absence_deductions = 0, tax_deductions = ?, net_pay = ?, status = 'pending' WHERE employee_id = ? AND pay_period_start = ? AND pay_period_end = ?");
-                        $stmt->bind_param("dddddiis", $total_hours, $gross_pay, $late_deductions, $tax_deductions, $net_pay, $employee_id, $period_start, $period_end);
+                        $stmt = $mysqli->prepare("UPDATE payroll SET total_hours = ?, gross_pay = ?, late_deductions = ?, sss_contribution = ?, pagibig_contribution = ?, philhealth_contribution = ?, net_pay = ?, status = 'pending' WHERE employee_id = ? AND pay_period_start = ? AND pay_period_end = ?");
+                        $stmt->bind_param("dddddddiss", 
+                            $total_hours, 
+                            $payroll_data['gross_pay'], 
+                            $payroll_data['late_deductions'], 
+                            $payroll_data['sss_contribution'],
+                            $payroll_data['pagibig_contribution'],
+                            $payroll_data['philhealth_contribution'],
+                            $payroll_data['net_pay'], 
+                            $employee_id, 
+                            $period_start, 
+                            $period_end
+                        );
                     } else {
-                        $stmt = $mysqli->prepare("INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, total_hours, gross_pay, late_deductions, absence_deductions, tax_deductions, net_pay, status, is_archived) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, 'pending', 0)");
-                        $stmt->bind_param("issddddd", $employee_id, $period_start, $period_end, $total_hours, $gross_pay, $late_deductions, $tax_deductions, $net_pay);
+                        $stmt = $mysqli->prepare("INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, total_hours, gross_pay, late_deductions, sss_contribution, pagibig_contribution, philhealth_contribution, net_pay, status, is_archived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $is_archived_val = 0; 
+                        $status_val = 'pending';
+                        $stmt->bind_param("issdddddddsi", 
+                            $employee_id, 
+                            $period_start, 
+                            $period_end, 
+                            $total_hours, 
+                            $payroll_data['gross_pay'], 
+                            $payroll_data['late_deductions'],
+                            $payroll_data['sss_contribution'],
+                            $payroll_data['pagibig_contribution'],
+                            $payroll_data['philhealth_contribution'],
+                            $payroll_data['net_pay'],
+                            $status_val, 
+                            $is_archived_val 
+                        );
                     }
-                    $stmt->execute();
-                    $success_msg = "Payroll generated successfully for " . htmlspecialchars($emp['fname'] . ' ' . $emp['lname']) . "!";
+                    if ($stmt->execute()) {
+                        $success_msg = "Payroll generated successfully for " . htmlspecialchars($emp['fname'] . ' ' . $emp['lname']) . "!";
+                    } else {
+                        $error_msg = "Error generating payroll: " . $stmt->error;
+                    }
+                    $stmt->close();
                 } else {
                     $error_msg = "No attendance records found for this employee in the selected period.";
                 }
@@ -65,17 +161,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $period_start = $_POST['period_start'];
             $period_end = $_POST['period_end'];
             
-            $employees = $mysqli->query("SELECT u.id, u.fname, u.lname, u.role, u.hourly_rate FROM users u WHERE u.role IN ('cashier', 'encoder', 'hr') AND u.is_archived = 0 AND u.employee_status = 'active'");
+            $employees = $mysqli->query("SELECT u.id, u.fname, u.lname, u.role, u.hourly_rate FROM users u WHERE u.role != 'admin' AND u.is_archived = 0 AND u.employee_status = 'active'");
             
             $generated_count = 0;
             while ($emp = $employees->fetch_assoc()) {
-                $employee_id = $emp['id'];
-                $hourly_rate = $emp['hourly_rate'];
+                $employee_id = intval($emp['id']);
+                $hourly_rate = floatval($emp['hourly_rate']);
                 
                 $attendance_query = "SELECT * FROM attendance WHERE employee_id = $employee_id AND attendance_date BETWEEN '$period_start' AND '$period_end' AND time_in IS NOT NULL";
                 $attendance_records = $mysqli->query($attendance_query);
                 
-                $total_hours = 0;
+                $total_hours = 0.0;
                 $total_late_minutes = 0;
                 
                 while ($att = $attendance_records->fetch_assoc()) {
@@ -92,22 +188,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 if ($total_hours > 0) {
-                    $late_deductions = ($total_late_minutes / 60) * $hourly_rate;
-                    $gross_pay = $total_hours * $hourly_rate;
-                    $tax_deductions = $gross_pay * 0.10;
-                    $net_pay = $gross_pay - $late_deductions - $tax_deductions;
+                    $payroll_data = calculatePayrollDeductions($total_hours, $hourly_rate, $total_late_minutes);
                     
                     $check_existing = $mysqli->query("SELECT id FROM payroll WHERE employee_id = $employee_id AND pay_period_start = '$period_start' AND pay_period_end = '$period_end'");
                     
                     if ($check_existing->num_rows > 0) {
-                        $stmt = $mysqli->prepare("UPDATE payroll SET total_hours = ?, gross_pay = ?, late_deductions = ?, absence_deductions = 0, tax_deductions = ?, net_pay = ?, status = 'pending' WHERE employee_id = ? AND pay_period_start = ? AND pay_period_end = ?");
-                        $stmt->bind_param("dddddiis", $total_hours, $gross_pay, $late_deductions, $tax_deductions, $net_pay, $employee_id, $period_start, $period_end);
+                        $stmt = $mysqli->prepare("UPDATE payroll SET total_hours = ?, gross_pay = ?, late_deductions = ?, sss_contribution = ?, pagibig_contribution = ?, philhealth_contribution = ?, net_pay = ?, status = 'pending' WHERE employee_id = ? AND pay_period_start = ? AND pay_period_end = ?");
+                        $stmt->bind_param("dddddddiss", 
+                            $total_hours, 
+                            $payroll_data['gross_pay'], 
+                            $payroll_data['late_deductions'], 
+                            $payroll_data['sss_contribution'],
+                            $payroll_data['pagibig_contribution'],
+                            $payroll_data['philhealth_contribution'],
+                            $payroll_data['net_pay'], 
+                            $employee_id, 
+                            $period_start, 
+                            $period_end
+                        );
                     } else {
-                        $stmt = $mysqli->prepare("INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, total_hours, gross_pay, late_deductions, absence_deductions, tax_deductions, net_pay, status, is_archived) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, 'pending', 0)");
-                        $stmt->bind_param("issddddd", $employee_id, $period_start, $period_end, $total_hours, $gross_pay, $late_deductions, $tax_deductions, $net_pay);
+                        $stmt = $mysqli->prepare("INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, total_hours, gross_pay, late_deductions, sss_contribution, pagibig_contribution, philhealth_contribution, net_pay, status, is_archived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $is_archived_val = 0; 
+                        $status_val = 'pending'; 
+                        $stmt->bind_param("issdddddddsi", 
+                            $employee_id, 
+                            $period_start, 
+                            $period_end, 
+                            $total_hours, 
+                            $payroll_data['gross_pay'], 
+                            $payroll_data['late_deductions'],
+                            $payroll_data['sss_contribution'],
+                            $payroll_data['pagibig_contribution'],
+                            $payroll_data['philhealth_contribution'],
+                            $payroll_data['net_pay'],
+                            $status_val, 
+                            $is_archived_val 
+                        );
                     }
-                    $stmt->execute();
-                    $generated_count++;
+                    if ($stmt->execute()) {
+                        $generated_count++;
+                    } else {
+                        error_log("Error generating payroll for employee {$employee_id}: " . $stmt->error);
+                    }
+                    $stmt->close();
                 }
             }
             
@@ -120,8 +243,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->execute()) {
                 $success_msg = "Payroll status updated successfully!";
             } else {
-                $error_msg = "Error updating status.";
+                $error_msg = "Error updating status: " . $stmt->error;
             }
+            $stmt->close();
         } elseif ($_POST['action'] === 'archive_payroll') {
             $payroll_id = $_POST['payroll_id'];
             $stmt = $mysqli->prepare("UPDATE payroll SET is_archived = 1 WHERE id = ?");
@@ -129,8 +253,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->execute()) {
                 $success_msg = "Payroll archived successfully!";
             } else {
-                $error_msg = "Error archiving payroll.";
+                $error_msg = "Error archiving payroll: " . $stmt->error;
             }
+            $stmt->close();
         } elseif ($_POST['action'] === 'unarchive_payroll') {
             $payroll_id = $_POST['payroll_id'];
             $stmt = $mysqli->prepare("UPDATE payroll SET is_archived = 0 WHERE id = ?");
@@ -138,13 +263,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->execute()) {
                 $success_msg = "Payroll unarchived successfully!";
             } else {
-                $error_msg = "Error unarchiving payroll.";
+                $error_msg = "Error unarchiving payroll: " . $stmt->error;
             }
+            $stmt->close();
         }
     }
 }
 
-// Check if showing archived records
 $show_archived = isset($_GET['archived']) && $_GET['archived'] == '1';
 $archive_filter = $show_archived ? "p.is_archived = 1" : "(p.is_archived = 0 OR p.is_archived IS NULL)";
 
@@ -156,9 +281,8 @@ if ($filter_status != 'all') {
 $filter_query .= " ORDER BY p.pay_period_end DESC, u.fname, u.lname";
 $payrolls = $mysqli->query($filter_query);
 
-$employees = $mysqli->query("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.role IN ('cashier', 'encoder', 'hr') AND u.is_archived = 0 AND u.employee_status = 'active' ORDER BY u.fname ASC");
+$employees = $mysqli->query("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.role != 'admin' AND u.is_archived = 0 AND u.employee_status = 'active' ORDER BY u.fname ASC");
 
-// Get counts for active payrolls only
 $active_filter = "(is_archived = 0 OR is_archived IS NULL)";
 $pending = $mysqli->query("SELECT COUNT(*) as count FROM payroll WHERE status = 'pending' AND $active_filter");
 $approved = $mysqli->query("SELECT COUNT(*) as count FROM payroll WHERE status = 'approved' AND $active_filter");
@@ -395,7 +519,9 @@ $paid = $mysqli->query("SELECT COUNT(*) as count FROM payroll WHERE status = 'pa
                                                 <td>
                                                     <small>
                                                         Late: ₱<?php echo number_format($payroll['late_deductions'], 2); ?><br>
-                                                        Tax: ₱<?php echo number_format($payroll['tax_deductions'], 2); ?>
+                                                        SSS: ₱<?php echo number_format($payroll['sss_contribution'] ?? 0, 2); ?><br>
+                                                        Pag-IBIG: ₱<?php echo number_format($payroll['pagibig_contribution'] ?? 0, 2); ?><br>
+                                                        PhilHealth: ₱<?php echo number_format($payroll['philhealth_contribution'] ?? 0, 2); ?>
                                                     </small>
                                                 </td>
                                                 <td><strong>₱<?php echo number_format($payroll['net_pay'], 2); ?></strong></td>
@@ -412,18 +538,12 @@ $paid = $mysqli->query("SELECT COUNT(*) as count FROM payroll WHERE status = 'pa
                                                     <button class="btn btn-sm btn-info mb-1" onclick="viewPayroll(<?php echo htmlspecialchars(json_encode($payroll)); ?>)">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
-                                                    <?php if (!$show_archived && $payroll['status'] != 'paid'): ?>
-                                                    <div class="btn-group mb-1">
-                                                        <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-toggle="dropdown">
+                                                    <?php if (!$show_archived && $payroll['status'] == 'pending'): ?>
+                                                    <div class="btn-group mb-1"><button type="button" class="btn btn-sm btn-success dropdown-toggle" data-toggle="dropdown">
                                                             <i class="fas fa-check"></i>
                                                         </button>
                                                         <div class="dropdown-menu">
-                                                            <?php if ($payroll['status'] == 'pending'): ?>
                                                             <a class="dropdown-item" href="#" onclick="updateStatus(<?php echo $payroll['id']; ?>, 'approved')">Approve</a>
-                                                            <?php endif; ?>
-                                                            <?php if ($payroll['status'] == 'approved'): ?>
-                                                            <a class="dropdown-item" href="#" onclick="updateStatus(<?php echo $payroll['id']; ?>, 'paid')">Mark as Paid</a>
-                                                            <?php endif; ?>
                                                         </div>
                                                     </div>
                                                     <?php endif; ?>
@@ -452,8 +572,6 @@ $paid = $mysqli->query("SELECT COUNT(*) as count FROM payroll WHERE status = 'pa
                     </div>
                 </div>
             </div>
-
-           
         </div>
     </div>
 
@@ -586,8 +704,16 @@ $paid = $mysqli->query("SELECT COUNT(*) as count FROM payroll WHERE status = 'pa
                                 <td class="text-right text-danger">- ₱<span id="view_late"></span></td>
                             </tr>
                             <tr>
-                                <td>&nbsp;&nbsp;&nbsp;Tax Deduction (10%)</td>
-                                <td class="text-right text-danger">- ₱<span id="view_tax"></span></td>
+                                <td>&nbsp;&nbsp;&nbsp;SSS Contribution</td>
+                                <td class="text-right text-danger">- ₱<span id="view_sss"></span></td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp;&nbsp;&nbsp;Pag-IBIG Contribution</td>
+                                <td class="text-right text-danger">- ₱<span id="view_pagibig"></span></td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp;&nbsp;&nbsp;PhilHealth Contribution</td>
+                                <td class="text-right text-danger">- ₱<span id="view_philhealth"></span></td>
                             </tr>
                             <tr class="table-success">
                                 <td><strong>Net Pay</strong></td>
@@ -650,7 +776,6 @@ $paid = $mysqli->query("SELECT COUNT(*) as count FROM payroll WHERE status = 'pa
                 "order": [[ 2, "desc" ]]
             });
 
-            // Archive toggle functionality
             $('#archiveToggle').change(function() {
                 const currentStatus = new URLSearchParams(window.location.search).get('status') || 'all';
                 if (this.checked) {
@@ -670,7 +795,9 @@ $paid = $mysqli->query("SELECT COUNT(*) as count FROM payroll WHERE status = 'pa
             document.getElementById('view_hours').textContent = parseFloat(payroll.total_hours).toFixed(2);
             document.getElementById('view_gross').textContent = parseFloat(payroll.gross_pay).toFixed(2);
             document.getElementById('view_late').textContent = parseFloat(payroll.late_deductions).toFixed(2);
-            document.getElementById('view_tax').textContent = parseFloat(payroll.tax_deductions).toFixed(2);
+            document.getElementById('view_sss').textContent = parseFloat(payroll.sss_contribution || 0).toFixed(2);
+            document.getElementById('view_pagibig').textContent = parseFloat(payroll.pagibig_contribution || 0).toFixed(2);
+            document.getElementById('view_philhealth').textContent = parseFloat(payroll.philhealth_contribution || 0).toFixed(2);
             document.getElementById('view_net').textContent = parseFloat(payroll.net_pay).toFixed(2);
             $('#viewPayrollModal').modal('show');
         }
