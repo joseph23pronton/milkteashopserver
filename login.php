@@ -101,9 +101,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: sales_index.php");
             } elseif ($_SESSION["role"] == "inventory") {
                 header("Location: branch_index.php");
-            } elseif ($_SESSION["role"] == "admin") {
-                header("Location: finance/dashboard.php");  
             } elseif ($_SESSION["role"] == "finance") {
+                header("Location: finance/dashboard.php");  
+            } elseif ($_SESSION["role"] == "admin") {
                 header("Location: employee.php");
             } elseif ($_SESSION["role"] == "production") {
                 header("Location: products.php");

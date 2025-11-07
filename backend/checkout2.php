@@ -28,29 +28,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    $transactionNumber = 'TXN' . time() . rand(100, 999); // unique transaction number
-    $invoiceNumber = 'INV' . date('YmdHis'); // invoice with datetime
+    $transactionNumber = 'TXN' . time() . rand(100, 999);
+    $invoiceNumber = 'INV' . date('YmdHis');
     $receiptID = 'REC' . time(); 
     $salesDate = date('Y-m-d H:i:s');
     $mysqli->begin_transaction();
 
     try {
+        $totalAmount = 0;
+        $orderItemsArray = [];
+
         foreach ($orderItems as $item) {
             $productID = $item['productID'];
             $productName = $item['product'];
             $size = $item['size'];
-            $price = $item['price'];
-            $initialPrice = $item['initial_price'];
+            $totalPriceWithAddons = $item['price'];
             $quantity = $item['quantity'];
-            $totalPrice = $price * $quantity;
+            
+            $baseMilkteaPrice = ($size === 'medium') ? 70 : 80;
+            
+            $itemTotal = $totalPriceWithAddons * $quantity;
+            $totalAmount += $itemTotal;
         
-            // INSERT???? YES OO INSERT
             $stmt = $mysqli->prepare("INSERT INTO sales (branchID, receiptID, productName, price, initial_price, quantity, totalPrice, sales_date, customerName, cashierID) 
                                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("issddiissi", $branchID, $invoiceNumber, $productName, $price, $initialPrice, $quantity, $totalPrice, $salesDate, $customerName, $cashierID);
+            $stmt->bind_param("issddiissi", $branchID, $invoiceNumber, $productName, $totalPriceWithAddons, $baseMilkteaPrice, $quantity, $itemTotal, $salesDate, $customerName, $cashierID);
             $stmt->execute();
         
-            // KUKUNIN AND MAGBABAWAS NA NG INGREDIENTS TO
             $ingredientQuery = "SELECT ingredientsID, quantityRequired FROM products_ingredient WHERE productID = ?";
             $ingredientStmt = $mysqli->prepare($ingredientQuery);
             $ingredientStmt->bind_param("i", $productID);
@@ -61,7 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ingredientID = $ingredient['ingredientsID'];
                 $requiredQty = $ingredient['quantityRequired'] * $quantity; 
         
-                // Update stock? OO UUPDATE TAYO STOCK PAR
                 $updateQuery = "UPDATE ingredients 
                                 SET currentStock = currentStock - ? 
                                 WHERE ingredientsID = ? AND branchesID = ? AND currentStock >= ?";
@@ -73,30 +76,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception("Insufficient stock for ingredient ID: $ingredientID");
                 }
             }
+
+            $orderItemsArray[] = [
+                'product' => $productName,
+                'size' => $size,
+                'price' => $totalPriceWithAddons,
+                'quantity' => $quantity
+            ];
         }
+
+        $orderItemsJson = json_encode($orderItemsArray);
+
         $stmtTrans = $mysqli->prepare("INSERT INTO transactions 
                         (branchID, cashierID, receiptID, transactionNumber, invoiceNumber, customerName, totalAmount, salesDate, orderItems) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmtTrans->bind_param("iissssdss", 
-                        $branchID, 
-                        $cashierID, 
-                        $receiptID, 
-                        $transactionNumber, 
-                        $invoiceNumber, 
-                        $customerName, 
-                        $totalAmount, 
-                        $salesDate,
-                        $orderItemsJson
-                    );
-                    $stmtTrans->execute();
+        $stmtTrans->bind_param("iissssdss", 
+            $branchID, 
+            $cashierID, 
+            $receiptID, 
+            $transactionNumber, 
+            $invoiceNumber, 
+            $customerName, 
+            $totalAmount, 
+            $salesDate,
+            $orderItemsJson
+        );
+        $stmtTrans->execute();
+
         $mysqli->commit();
         echo json_encode([
-                                'status' => 'success',
-                                'receiptID' => $receiptID,
-                                'transactionNumber' => $transactionNumber,
-                                'invoiceNumber' => $invoiceNumber,
-                                'orderItems' => $orderItems,
-                                'salesDate' => $salesDate]);
+            'status' => 'success',
+            'receiptID' => $receiptID,
+            'transactionNumber' => $transactionNumber,
+            'invoiceNumber' => $invoiceNumber,
+            'orderItems' => $orderItems,
+            'salesDate' => $salesDate
+        ]);
     } catch (Exception $e) {
         $mysqli->rollback();
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);

@@ -99,6 +99,23 @@ $quantity_result = $stmt_quantity->get_result();
 $quantity_row = $quantity_result->fetch_assoc();
 $total_quantity_sold = $quantity_row['total_quantity_sold'] ?: 0;
 
+$sql_profit = "
+    SELECT SUM(s.quantity * (s.price - COALESCE(p.initial_price, 0) - COALESCE(p.price_cushion, 0))) AS total_profit
+    FROM sales s
+    LEFT JOIN products p ON s.productName = p.name
+    WHERE s.branchID = ? AND $date_condition
+";
+$stmt_profit = $mysqli->prepare($sql_profit);
+if ($bind_value !== null) {
+    $stmt_profit->bind_param('is', $branch_id, $bind_value);
+} else {
+    $stmt_profit->bind_param('i', $branch_id);
+}
+$stmt_profit->execute();
+$profit_result = $stmt_profit->get_result();
+$profit_row = $profit_result->fetch_assoc();
+$total_profit = $profit_row['total_profit'] ?: 0;
+
 ?>
 
 <!DOCTYPE html>
@@ -226,6 +243,25 @@ $total_quantity_sold = $quantity_row['total_quantity_sold'] ?: 0;
                         </div>
                     </div>
                 </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Total Profit (<?= $filter_label ?>)
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        ₱<?= number_format($total_profit, 2) ?></div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="card shadow mb-4">
@@ -240,9 +276,11 @@ $total_quantity_sold = $quantity_row['total_quantity_sold'] ?: 0;
                                     <th>Receipt ID</th>
                                     <th>Products</th>
                                     <th>Quantity</th>
-                                    <th>Total Price</th>
+                                    <th>Initial Price</th>
+                                    <th>Price Cushion</th>
+                                    <th>Selling Price</th>
+                                    <th>Profit</th>
                                     <th>Sales Date</th>
-                                    <th>Customer Name</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -260,19 +298,20 @@ $total_quantity_sold = $quantity_row['total_quantity_sold'] ?: 0;
                                 $sql = "
                                     SELECT 
                                         s.receiptID,
-                                        GROUP_CONCAT(s.productName ORDER BY s.productName) AS products,
-                                        SUM(s.quantity) AS total_quantity,
-                                        SUM(s.quantity * s.price) AS total_price,
-                                        MAX(s.sales_date) AS sales_date,
-                                        MAX(s.customerName) AS customer_name
+                                        s.productName,
+                                        s.quantity,
+                                        COALESCE(p.initial_price, 0) AS initial_price,
+                                        COALESCE(p.price_cushion, 0) AS price_cushion,
+                                        s.price AS selling_price,
+                                        (s.price - COALESCE(p.initial_price, 0) - COALESCE(p.price_cushion, 0)) AS profit_per_unit,
+                                        s.sales_date
                                     FROM 
                                         sales s
+                                    LEFT JOIN products p ON s.productName = p.name
                                     WHERE 
                                         $where_clause
-                                    GROUP BY 
-                                        s.receiptID
                                     ORDER BY 
-                                        sales_date DESC
+                                        s.sales_date DESC, s.receiptID
                                 ";
 
                                 $stmt = $mysqli->prepare($sql);
@@ -282,17 +321,20 @@ $total_quantity_sold = $quantity_row['total_quantity_sold'] ?: 0;
 
                                 if ($result->num_rows > 0) {
                                     while ($row = $result->fetch_assoc()) {
+                                        $total_profit = $row['profit_per_unit'] * $row['quantity'];
                                         echo "<tr>
                                         <td>{$row['receiptID']}</td>
-                                        <td>{$row['products']}</td>
-                                        <td>{$row['total_quantity']}</td>
-                                        <td>" . '₱' . "{$row['total_price']}</td>
+                                        <td>{$row['productName']}</td>
+                                        <td>{$row['quantity']}</td>
+                                        <td>₱" . number_format($row['initial_price'], 2) . "</td>
+                                        <td>₱" . number_format($row['price_cushion'], 2) . "</td>
+                                        <td>₱" . number_format($row['selling_price'], 2) . "</td>
+                                        <td>₱" . number_format($total_profit, 2) . "</td>
                                         <td>{$row['sales_date']}</td>
-                                        <td>{$row['customer_name']}</td>
                                     </tr>";
                                     }
                                 } else {
-                                    echo "<tr><td colspan='6'>No records found for this branch.</td></tr>";
+                                    echo "<tr><td colspan='8'>No records found for this branch.</td></tr>";
                                 }
                                 ?>
                             </tbody>
